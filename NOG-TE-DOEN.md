@@ -2,132 +2,111 @@
 
 Bijgewerkt 25-08-2026. Alles hieronder is gecontroleerd, niet aangenomen.
 
----
-
-## Wat er staat
+## LIVE op https://topschilder.nl
 
 | Onderdeel | Status |
 |---|---|
+| Site | 263 pagina's live, https actief, certificaat uitgegeven |
 | Repository | [github.com/joukesluimer/topschilder](https://github.com/joukesluimer/topschilder) — public |
-| Automatische build | GitHub Actions, groen. Bouwt en controleert bij elke push |
-| Site gepubliceerd | 263 pagina's live, sitemap en assets gecontroleerd |
-| Supabase | Project **TopSchilder**, schema uitgevoerd, RLS actief |
-| Formulieren | Getest: insert lukt (201), uitlezen wordt geweigerd (401) |
-| KvK 97150975 | Staat in de footer en op de contactpagina |
-| Custom domain | `topschilder.nl` gekoppeld, wacht op DNS |
+| Automatische build | GitHub Actions. Push → bouwen → controleren → publiceren |
+| DNS | 4 A-records, 4 AAAA-records, CNAME www — geverifieerd bij Mijndomein |
+| www | `www.topschilder.nl` stuurt door naar `topschilder.nl` |
+| Enforce HTTPS | Aan |
+| Supabase | Project TopSchilder, RLS actief |
+| Formulieren | Getest vanaf het live domein: lead binnen (201), uitlezen geweigerd (401) |
+| KvK 97150975 | In de footer en op contact |
+| SPF / DMARC | Ongemoeid gelaten, e-mail werkt gewoon door |
 
-**Eén ding blijft over: de DNS.** Dat kan ik niet voor je doen, want daarvoor moet
-ik inloggen bij je registrar.
-
----
-
-## Wat jij nog moet doen — DNS bij Mijndomein
-
-Je domein staat bij **Mijndomein** (nameservers `nsn1.mijndomein.nl` en
-`nsn2.mijndomein.nl`). Op dit moment wijst topschilder.nl naar `213.249.67.10`,
-een parkeerpagina. Die moet eruit.
-
-1. Log in op [mijndomein.nl](https://www.mijndomein.nl) → **Domeinnamen** →
-   topschilder.nl → **DNS-instellingen**
-2. **Verwijder** het bestaande A-record op `@` dat naar `213.249.67.10` wijst
-3. Voeg **vier A-records** toe op `@`:
-
-```
-185.199.108.153
-185.199.109.153
-185.199.110.153
-185.199.111.153
-```
-
-4. Voeg **vier AAAA-records** toe op `@` (IPv6, aanrader):
-
-```
-2606:50c0:8000::153
-2606:50c0:8001::153
-2606:50c0:8002::153
-2606:50c0:8003::153
-```
-
-5. Voeg **één CNAME** toe:
-
-```
-Naam:   www
-Waarde: joukesluimer.github.io
-```
-
-Let op: `joukesluimer.github.io` **zonder** `/topschilder` erachter.
-
-Sla op. Reken op een half uur tot maximaal 24 uur.
-
-### Daarna, en dit is belangrijk
-
-Ga naar [Settings → Pages](https://github.com/joukesluimer/topschilder/settings/pages)
-en vink **Enforce HTTPS** aan. Die optie verschijnt pas zodra GitHub je DNS ziet
-kloppen. Zonder dat vinkje krijgen bezoekers een browserwaarschuwing en vult
-niemand je formulier in.
-
-**Zet Google Ads en Search Console pas aan als dat vinkje staat.**
-
-### topschilders.nl
-
-Die staat nog nergens geregistreerd — geen nameservers, geen SOA-record. Heb je
-'m wel gekocht, dan is de registratie nog niet doorgevoerd. Zodra dat wel zo is:
-zet 'm bij je registrar door naar `https://topschilder.nl` met een **301**
-(permanent). Niet als tweede site inrichten, dan concurreer je met jezelf.
+Gecontroleerd met een echte HTTP-check: `/`, `/prijzen/`, `/schilder/lelystad/`,
+`/schilder/zeewolde/buitenschilderwerk/`, `/voor-schilders/`, `/offerte-aanvragen/`,
+`/contact/`, `/sitemap.xml`, `/robots.txt` en alle assets geven 200.
 
 ---
 
-## Twee dingen om te weten
+## Twee kleine dingen voor jou
 
-**De github.io-URL ziet er kaal uit.** Op
-`joukesluimer.github.io/topschilder/` laadt de opmaak niet, omdat de site met
-absolute paden werkt (`/assets/css/style.css`). Dat is correct voor
-topschilder.nl, maar niet voor een submap. Zodra je DNS staat, klopt alles. Geen
-bug, gewoon hoe het werkt.
+**Testleads weghalen.** Er staan twee testregels in je database (naam "Test Claude" en
+"Test live", beide met "TESTLEAD" in de omschrijving). Ik heb ze gebruikt om de keten
+te controleren. Weghalen: Supabase → Table Editor → `leads` → rijen selecteren → verwijderen.
 
-**Er staat één testlead in je database.** Die heb ik erin gezet om te
-controleren of de keten werkt — naam "Test Claude", omschrijving "TESTLEAD - mag
-weg". Weghalen doe je in Supabase → Table Editor → leads → rij selecteren →
-verwijderen.
+**Btw-nummer.** Staat leeg in `data.py` bij `SITE`. Vul je 'm in, dan verschijnt hij
+vanzelf op contact en in de voorwaarden. Laat je 'm leeg, dan toont de site die regel niet.
 
 ---
 
-## Hoe je hierna iets aanpast
+## Wat er nu gebeurt zonder dat je iets doet
 
-Je hoeft geen Python te kunnen. Alles wat je normaal verandert staat in
-`data.py`, en dat bestand kun je gewoon in GitHub in je browser bewerken:
-
-1. Ga naar [data.py](https://github.com/joukesluimer/topschilder/blob/main/data.py)
-2. Klik op het potloodje rechtsboven
-3. Pas aan, klik **Commit changes**
-4. GitHub bouwt de site opnieuw, controleert 'm, en publiceert. Twee minuten later staat het live
-
-Wat waar staat:
-
-| Wat je wilt aanpassen | Waar |
-|---|---|
-| Btw-nummer toevoegen | `data.py`, bovenin bij `SITE`, regel `"btw": ""` — vul in en het verschijnt vanzelf op contact en in de voorwaarden |
-| Plaats toevoegen | `data.py`, lijst `PLAATSEN` (levert automatisch 7 nieuwe pagina's) |
-| Prijzen bijstellen | `data.py`, `prijs_van` / `prijs_tot`, of `PRIJSINDEX` per provincie |
-| E-mailadres | `data.py`, bij `SITE` |
-| Leadtarieven voor schilders | `build.py`, functie `build_voor_schilders` |
-| Vormgeving | `assets.py`, `STYLE_CSS` |
-| Supabase-koppeling | `assets.py`, `CONFIG_JS` |
-
-Gaat er iets mis in je aanpassing, dan faalt de controlestap en blijft de oude
-site gewoon staan. Je kunt de boel dus niet slopen met een typefout.
+Google gaat de site vanzelf vinden, maar dat duurt weken. Wil je het versnellen, dan
+is Search Console de eerste stap. Zie hieronder.
 
 ---
 
 ## De volgorde die geld oplevert
 
-Uit `STARTGIDS.md`, maar dit is het stukje dat telt:
+**1. Search Console** (20 min, vandaag)
 
-1. **DNS zetten** (vandaag)
-2. **Enforce HTTPS aanvinken** (zodra het kan)
-3. **Search Console** — sitemap indienen, tien belangrijkste plaatspagina's handmatig laten indexeren
-4. **Schilders bellen** — 25 bedrijven in Zeewolde, Almere, Lelystad, Dronten, Harderwijk. Doel: 6 aangesloten. Belscript staat in de startgids
-5. **Pas dán Google Ads aanzetten**, €15 per dag, alleen in plaatsen waar je schilders hebt
+[search.google.com/search-console](https://search.google.com/search-console) → property
+toevoegen → **Domein** → `topschilder.nl` → verifiëren met een TXT-record bij Mijndomein.
+Dien daarna `sitemap.xml` in en vraag via URL-inspectie handmatig indexering aan voor:
+`/`, `/prijzen/`, `/schilder/lelystad/`, `/schilder/zeewolde/`, `/schilder/almere/`,
+`/schilder/emmeloord/`, `/schilder/dronten/`, `/schilder/harderwijk/`,
+`/schilder/hilversum/`, `/schilder/amersfoort/`.
 
-Stap 4 vóór stap 5. Een lead die je aan niemand kunt verkopen is een kostenpost,
-en dat is precies waar bijna iedereen in deze markt op stukloopt.
+Saai handwerk, maar het scheelt makkelijk twee weken.
+
+**2. Schilders bellen** (deze week — dit is het echte werk)
+
+25 bedrijven in Zeewolde, Almere, Lelystad, Dronten en Harderwijk. Doel: 6 aangesloten.
+Belscript en bezwaarafhandeling staan in `STARTGIDS.md`, hoofdstuk 5.
+
+Je doelgroep is de eenmanszaak of het bedrijfje met twee man en een matige website —
+niet de partij met 50+ reviews en een volle agenda.
+
+**3. Pas dán Google Ads** (€15 per dag, alleen in plaatsen waar je schilders hebt)
+
+Stap 2 vóór stap 3. Een lead die je aan niemand kunt verkopen is een kostenpost, en dat
+is precies waar bijna iedereen in deze markt op stukloopt. De rekensom staat in de
+startgids: dezelfde lead is €2 verlies bij één afnemer en €74 winst bij drie.
+
+**4. topschilders.nl** — staat nog nergens geregistreerd (geen nameservers, geen SOA).
+Heb je 'm gekocht, check dan bij je registrar of de registratie is doorgevoerd. Daarna
+via Mijndomein → Doorverwijzen een **301** naar `https://topschilder.nl`.
+
+---
+
+## Iets aanpassen aan de site
+
+Geen Python nodig, het kan gewoon in je browser:
+
+1. Open [data.py](https://github.com/joukesluimer/topschilder/blob/main/data.py)
+2. Klik het potloodje rechtsboven
+3. Wijzig, klik **Commit changes**
+4. GitHub bouwt, controleert en publiceert — na twee minuten staat het live
+
+| Wat je wilt aanpassen | Waar |
+|---|---|
+| Btw-nummer | `data.py` → `SITE` → `"btw": ""` |
+| Plaats toevoegen | `data.py` → `PLAATSEN` (levert automatisch 7 pagina's op) |
+| Prijzen | `data.py` → `prijs_van` / `prijs_tot`, of `PRIJSINDEX` per provincie |
+| E-mailadres | `data.py` → `SITE` |
+| Leadtarieven schilders | `build.py` → `build_voor_schilders` |
+| Vormgeving | `assets.py` → `STYLE_CSS` |
+| Supabase-koppeling | `assets.py` → `CONFIG_JS` |
+
+Maak je een fout, dan faalt de controlestap en blijft de oude site staan. Je kunt de
+boel dus niet slopen met een typefout.
+
+---
+
+## Je leads bekijken
+
+Supabase → SQL Editor:
+
+```sql
+select * from leads_dashboard;    -- alle aanvragen, met kanaal en campagne
+select * from omzet_per_week;     -- leads binnen, verkocht, omzet per week
+select * from vraag_per_plaats;   -- waar komt de vraag vandaan
+```
+
+`vraag_per_plaats` vertelt je precies waar je de volgende schilders moet werven: veel
+aanvragen en weinig verkocht betekent een gat in je aanbod.
