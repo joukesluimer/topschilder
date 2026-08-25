@@ -354,12 +354,65 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
     });
   }
 
-  function postToWebhook(payload) {
+  // De webhook krijgt een PLATTE payload met kant-en-klare velden, zodat je in
+  // Make/Zapier alleen "onderwerp" en "samenvatting" hoeft te mappen en klaar bent.
+  function buildWebhookPayload(table, d) {
+    var soort = table === "leads" ? "Offerteaanvraag"
+              : table === "schilders" ? "Schilder aanmelding"
+              : table === "offerte_checks" ? "Offerte-check"
+              : "Contactbericht";
+
+    var kanaal = d.gclid ? "Google Ads"
+               : d.utm_source ? d.utm_source
+               : (d.referrer || "").indexOf("google") > -1 ? "Google organisch"
+               : !d.referrer ? "Direct" : "Overig";
+
+    var titel = table === "leads"
+        ? (d.dienst || "Aanvraag") + " " + (d.plaats || "") + " — " + (d.telefoon || "")
+        : table === "schilders"
+        ? "Schilder: " + (d.bedrijfsnaam || "") + " (" + (d.werkgebied || "") + ")"
+        : soort + " — " + (d.naam || "");
+
+    var regels = [
+      soort,
+      "",
+      d.dienst      ? "Klus:        " + d.dienst : "",
+      d.plaats      ? "Plaats:      " + d.plaats + (d.postcode ? " (" + d.postcode + ")" : "") : "",
+      d.pandtype    ? "Pand:        " + d.pandtype : "",
+      d.omvang      ? "Omvang:      " + d.omvang : "",
+      d.planning    ? "Planning:    " + d.planning : "",
+      "",
+      d.naam        ? "Naam:        " + d.naam : "",
+      d.telefoon    ? "Telefoon:    " + d.telefoon : "",
+      d.email       ? "E-mail:      " + d.email : "",
+      "",
+      d.bedrijfsnaam   ? "Bedrijf:     " + d.bedrijfsnaam : "",
+      d.contactpersoon ? "Contact:     " + d.contactpersoon : "",
+      d.kvk            ? "KvK:         " + d.kvk : "",
+      d.werkgebied     ? "Werkgebied:  " + d.werkgebied : "",
+      d.diensten       ? "Diensten:    " + d.diensten : "",
+      d.bedrag         ? "Offertebedrag: " + d.bedrag : "",
+      "",
+      d.omschrijving   ? "Omschrijving:\n" + d.omschrijving : "",
+      d.offerte_tekst  ? "Offerte:\n" + d.offerte_tekst : "",
+      d.bericht        ? "Bericht:\n" + d.bericht : "",
+      "",
+      "Kanaal:      " + kanaal,
+      d.utm_campaign ? "Campagne:    " + d.utm_campaign : "",
+      "Pagina:      https://topschilder.nl" + (d.bron_url || "")
+    ];
+
+    var plat = { soort: soort, tabel: table, onderwerp: titel, samenvatting: regels.filter(Boolean).join("\n"), kanaal: kanaal };
+    Object.keys(d).forEach(function (k) { if (!(k in plat)) plat[k] = d[k]; });
+    return plat;
+  }
+
+  function postToWebhook(table, data) {
     if (!CFG.WEBHOOK_URL) return Promise.resolve();
     return fetch(CFG.WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(buildWebhookPayload(table, data))
     }).catch(function () { /* webhook mag nooit de bezoeker blokkeren */ });
   }
 
@@ -483,7 +536,7 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
       var table = form.dataset.table || CFG.LEADS_TABLE;
 
       postToSupabase(table, payload)
-        .then(function () { return postToWebhook({ table: table, data: payload }); })
+        .then(function () { return postToWebhook(table, payload); })
         .then(function () {
           fireConversion();
           var card = form.closest(".formcard") || form.parentNode;
@@ -552,9 +605,9 @@ window.TS_CONFIG = {
   // Zet tijdelijk op true als je iets wilt testen zonder data op te slaan.
   DEMO_MODE: false,
 
-  // Optioneel: extra webhook (Make.com, Zapier, n8n, Slack) die óók een
-  // kopie van elke lead krijgt. Laat leeg als je dit niet gebruikt.
-  WEBHOOK_URL: "",
+  // Make.com-scenario "Topschilder - nieuwe lead". Elke aanvraag gaat hier
+  // ook naartoe, zodat je meteen een mail krijgt.
+  WEBHOOK_URL: "https://hook.eu1.make.com/lg5v26xqlpa34gmkolamf1e0opd2uhy9",
 
   // Google Ads conversietracking. Vul in zodra je een conversieactie hebt
   // aangemaakt, dan telt elke ingestuurde offerteaanvraag als conversie.
