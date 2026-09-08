@@ -13,9 +13,10 @@ import datetime
 
 from data import (SITE, DIENSTEN, PLAATSEN, buurplaatsen,
                   PRIJSINDEX, INDEX_TOELICHTING, lokale_prijs)
+from illustraties import illustratie, voor_na
 from components import (
     page, crumbs, offerte_form, hoe_werkt_het, waarom_blok, dienst_cards,
-    faq_blok, cta_blok, prijstabel, icon, eur, title, desc,
+    faq_blok, cta_blok, prijstabel, icon, eur, title, desc, calculator,
 )
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -49,7 +50,7 @@ def build_home():
     hero = f"""<section class="hero">
 <div class="wrap hero-in">
   <div>
-    <span class="badge badge-dark">Gratis &amp; vrijblijvend</span>
+    <span class="badge badge-dark badge-live"><i></i>Gratis &amp; vrijblijvend</span>
     <h1>Vergelijk schilders bij jou in de buurt</h1>
     <p class="lead">Eén aanvraag, tot drie offertes van schildersbedrijven uit jouw regio. Zo weet je binnen een paar dagen wat je klus écht hoort te kosten.</p>
     <ul class="hero-usps">
@@ -62,6 +63,7 @@ def build_home():
       <span>Houtrot &amp; spuitwerk</span><span>·</span>
       <span>Particulier en zakelijk</span>
     </div>
+    <div style="margin-top:30px;max-width:460px">{illustratie('hero')}</div>
   </div>
   <div>{offerte_form()}</div>
 </div>
@@ -221,6 +223,11 @@ def dienst_body(d, plaats=None):
         h1 = f"{d['naam']}: kosten, werkwijze en offertes"
         intro_extra = ""
 
+    vn_blok = ("" if d["slug"] not in ("buitenschilderwerk", "houtrot-reparatie") else
+        '<h2>Het verschil, in beeld</h2>'
+        '<p>Sleep de streep opzij. Links een gevel die vier jaar te lang heeft gewacht, '
+        'rechts dezelfde gevel na een beurt. Het gaat niet alleen om hoe het oogt: die '
+        'verflaag houdt het water uit je houtwerk.</p>' + voor_na())
     wat = "".join(f"<li>{x}</li>" for x in d["wat"])
     werk = "".join(
         f"<li><h3>{t}</h3><p>{p}</p></li>" for t, p in
@@ -246,18 +253,21 @@ def dienst_body(d, plaats=None):
         <p><strong>Richtprijs{inplaats}:</strong> {eur(p_van)} – {eur(p_tot)} {d['prijs_eenheid']}, inclusief materiaal en 9% btw op arbeid.{prijsnoot}</p>
         <p style="font-size:.93rem;margin-top:8px">{d['prijs_extra']}</p>
       </div>
+      <div class="reveal" style="margin-top:24px">{illustratie(d['slug'])}</div>
     </div>
     <div>{offerte_form(f"Offertes voor {d['naam_kort'].lower()}{inplaats}", "Vier korte vragen · gratis en vrijblijvend")}</div>
   </div>
 </div>
 </section>"""
 
-    content = f"""<section class="section soft"><div class="wrap narrow prose">
+    content = f"""<section class="section soft"><div class="wrap narrow prose reveal">
   <h2>Wat valt er onder {d['naam'].lower()}?</h2>
   <ul class="checklist">{wat}</ul>
 
   <h2>Zo gaat een schilder te werk</h2>
   {werk}
+
+  {vn_blok}
 
   <h2>Waar hangt de prijs vanaf?</h2>
   <p>Twee offertes voor ogenschijnlijk dezelfde klus kunnen honderden euro's uit elkaar liggen. Dat komt zelden door de winstmarge en bijna altijd door deze factoren:</p>
@@ -885,6 +895,12 @@ def build_prijzen():
   <p>Een schilder rekent gemiddeld <strong>€45 tot €65 per uur exclusief btw</strong>. Toch krijg je zelden een offerte op uurbasis. De meeste bedrijven werken met een prijs per vierkante meter of per stuk, omdat je dan vooraf weet waar je aan toe bent en de schilder het risico van tegenvallers zelf draagt.</p>
   <p>Werken op regie (dus per gewerkt uur) zie je vooral bij klussen waarvan de omvang vooraf onduidelijk is — houtrotherstel is het klassieke voorbeeld. Vraag in dat geval altijd om een maximumbedrag, zodat je niet voor verrassingen komt te staan.</p>
 
+  <h2>Reken het snel even uit</h2>
+  <p>Kies je klus en schuif naar de omvang. Je krijgt de bandbreedte die schilders in
+  Nederland hiervoor rekenen — geen offerte, wel een ijkpunt waarmee je weet of een
+  prijs redelijk is.</p>
+  {calculator()}
+
   <h2>Richtprijzen per type schilderwerk</h2>
   {prijstabel()}
 
@@ -1159,6 +1175,14 @@ def build_assets():
         os.makedirs(os.path.dirname(full), exist_ok=True)
         with open(full, "w", encoding="utf-8") as f:
             f.write(inhoud)
+
+    # logo en witte variant (base64 in merk_data.py)
+    from merk_data import BESTANDEN as MERK
+    merkmap = os.path.join(OUT, "assets", "merk")
+    os.makedirs(merkmap, exist_ok=True)
+    for naam, data in MERK.items():
+        with open(os.path.join(merkmap, naam), "w", encoding="utf-8") as f:
+            f.write(data)
 
 
 def build_sitemap():

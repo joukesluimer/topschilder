@@ -3,6 +3,7 @@
 
 import json
 from data import SITE, DIENSTEN
+from illustraties import illustratie, voor_na
 
 # Zet op True zodra je ECHTE reviews hebt verzameld. Verzonnen reviews op een
 # live site zijn in Nederland een misleidende handelspraktijk (ACM) en Google
@@ -62,8 +63,8 @@ def head(title, description, canonical, jsonld=None, depth_ok=True, noindex=Fals
 <meta property="og:description" content="{description}">
 <meta property="og:url" content="{SITE['url']}{canonical}">
 <meta property="og:locale" content="nl_NL">
-<meta name="theme-color" content="#0f2740">
-<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#3c290f">
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml"><meta property="og:image" content="https://topschilder.nl/assets/merk/logo.svg">
 <link rel="stylesheet" href="/assets/css/style.css">
 {ld}
 </head>"""
@@ -73,9 +74,8 @@ def header():
     diensten_nav = ""
     return f"""<header class="header">
 <div class="wrap header-in">
-  <a class="logo" href="/">
-    <span class="logo-mark">{icon('roller', 17)}</span>
-    Topschilder<span class="dot">.</span>
+  <a class="logo" href="/" aria-label="Topschilder.nl, naar de homepage">
+    <img src="/assets/merk/logo.svg" alt="Topschilder.nl — de schilder bij u in de buurt" width="843" height="367">
   </a>
   <button class="burger" aria-label="Menu" aria-expanded="false">☰</button>
   <nav class="nav">
@@ -96,7 +96,7 @@ def footer():
 <div class="wrap">
   <div class="footer-grid">
     <div>
-      <a class="logo" href="/" style="color:#fff"><span class="logo-mark">{icon('roller',17)}</span> Topschilder<span class="dot">.</span></a>
+      <a class="logo" href="/" aria-label="Topschilder.nl"><img src="/assets/merk/logo-wit.svg" alt="Topschilder.nl" width="843" height="367" loading="lazy"></a>
       <p style="margin-top:14px;max-width:34ch">Vergelijk vrijblijvend offertes van schilders bij jou in de buurt. Gratis, zonder verplichtingen en met maximaal drie bedrijven die contact opnemen.</p>
       <p><a href="/offerte-aanvragen/" style="color:#ffd9ab;font-weight:700">Offertes aanvragen →</a></p>
     </div>
@@ -354,8 +354,8 @@ def waarom_blok():
          "Genoeg om echt te kunnen vergelijken, weinig genoeg om niet plat gebeld te worden. Je nummer gaat nooit naar meer partijen dan dat."),
     ]
     cards = "".join(
-        f'<div class="card"><div class="ic">{icon(i)}</div><h3>{t}</h3><p>{p}</p></div>'
-        for i, t, p in items
+        f'<div class="card reveal reveal-d{n%4}"><div class="ic">{icon(i)}</div><h3>{t}</h3><p>{p}</p></div>'
+        for n, (i, t, p) in enumerate(items)
     )
     return f"""<section class="section">
 <div class="wrap">
@@ -376,8 +376,8 @@ def dienst_cards(plaats_slug=None, plaats_naam=None, exclude=None):
         url = f"/schilder/{plaats_slug}/{d['slug']}/" if plaats_slug else f"/schilderwerk/{d['slug']}/"
         titel = f"{d['naam']}{' in ' + plaats_naam if plaats_naam else ''}"
         out.append(
-            f'<a class="card" href="{url}">'
-            f'<div class="ic">{icon(d["icon"])}</div>'
+            f'<a class="card reveal" href="{url}">'
+            f'{illustratie(d["slug"])}'
             f"<h3>{titel}</h3><p>{d['kort']}</p>"
             f'<div class="price">Vanaf {eur(d["prijs_van"])} {d["prijs_eenheid"]}</div>'
             f'<p style="margin:10px 0 0"><span class="go">Bekijk &amp; vraag offertes aan →</span></p></a>'
@@ -419,6 +419,46 @@ def cta_blok(titel="Klaar om te vergelijken?", tekst=None, knop="Gratis offertes
   </div>
 </div>
 </section>"""
+
+
+def calculator():
+    """Prijsindicator. Rekent met dezelfde richtprijzen als de rest van de site."""
+    OMVANG = {
+        "binnenschilderwerk":   (10, 200, 45,  "m² muur/plafond",  "Een gemiddelde woonkamer is 45 tot 70 m² wand en plafond."),
+        "buitenschilderwerk":   (2,  30,  10,  "kozijnen",         "Een tussenwoning heeft doorgaans 8 tot 14 kozijnen."),
+        "houtrot-reparatie":    (1,  12,  3,   "reparatieplekken", "Tel de plekken waar het hout meegeeft als je erin prikt."),
+        "spuitwerk":            (1,  20,  6,   "deuren",           "Een keuken telt vaak 10 tot 18 fronten."),
+        "behangen":             (10, 120, 30,  "m² wand",          "Eén wand van 4 bij 2,6 meter is ruim 10 m²."),
+        "zakelijk-schilderwerk":(4,  80,  16,  "uren",             "Voor grotere projecten werkt een schilder met een vaste aanneemsom."),
+    }
+    opties = ""
+    for d in DIENSTEN:
+        mn, mx, start, eenheid, uitleg = OMVANG[d["slug"]]
+        opties += (f'<option value="{d["slug"]}" data-van="{d["prijs_van"]}" data-tot="{d["prijs_tot"]}" '
+                   f'data-min="{mn}" data-max="{mx}" data-start="{start}" data-eenheid="{eenheid}" '
+                   f'data-uitleg="{uitleg}">{d["naam"]}</option>')
+    eerste = OMVANG[DIENSTEN[0]["slug"]]
+    return f"""<div class="calc" data-calc>
+  <h3>Wat kost mijn klus ongeveer?</h3>
+  <div class="rij">
+    <label for="calc-dienst">Klus</label>
+    <select id="calc-dienst">{opties}</select>
+  </div>
+  <div class="rij">
+    <label for="calc-omvang">Omvang</label>
+    <input type="range" id="calc-omvang" min="{eerste[0]}" max="{eerste[1]}" value="{eerste[2]}" step="1">
+    <span class="waarde" data-aantal></span>
+  </div>
+  <div class="calc-uit">
+    <div class="bedrag" data-bedrag></div>
+    <div class="sub" data-sub></div>
+  </div>
+  <p style="margin:18px 0 0;font-size:.88rem;color:var(--muted)">
+    Indicatie inclusief materiaal en 9% btw op arbeid. De echte prijs hangt af van de staat
+    van de ondergrond en de bereikbaarheid. <a href="/offerte-aanvragen/">Vraag gratis drie offertes aan</a>
+    voor een prijs die op jouw situatie klopt, of <a data-cta href="/schilderwerk/binnenschilderwerk/">lees waar de prijs door bepaald wordt</a>.
+  </p>
+</div>"""
 
 
 def prijstabel(diensten=None, plaats=None):

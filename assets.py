@@ -13,23 +13,23 @@ CONFIG_JS. Vormgeving zit in STYLE_CSS.
 STYLE_CSS = r'''/* Topschilder.nl — eigen CSS, geen frameworks. ~14kb, geen render-blocking JS. */
 
 :root{
-  --navy:#0f2740;
-  --navy-700:#173857;
-  --navy-500:#2b5480;
+  --navy:#3c290f;
+  --navy-700:#513a17;
+  --navy-500:#6b5024;
   --accent:#f4820b;
   --accent-dark:#d96f00;
   --accent-soft:#fff4e6;
   --green:#0f8a5f;
-  --ink:#16212e;
-  --body:#42525f;
-  --muted:#6c7b89;
-  --line:#e3e8ee;
+  --ink:#241906;
+  --body:#57492f;
+  --muted:#8a7a5e;
+  --line:#e9e2d6;
   --bg:#ffffff;
-  --bg-soft:#f6f8fb;
+  --bg-soft:#faf7f1;
   --radius:12px;
   --radius-lg:18px;
-  --shadow:0 1px 2px rgba(15,39,64,.06), 0 8px 24px rgba(15,39,64,.07);
-  --shadow-lg:0 2px 4px rgba(15,39,64,.06), 0 18px 46px rgba(15,39,64,.13);
+  --shadow:0 1px 2px rgba(60,41,15,.06), 0 8px 24px rgba(60,41,15,.07);
+  --shadow-lg:0 2px 4px rgba(60,41,15,.06), 0 18px 46px rgba(60,41,15,.13);
   --max:1160px;
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 }
@@ -104,7 +104,7 @@ small{font-size:.85rem}
 .btn-block{display:block;width:100%}
 
 /* ---------- Hero ---------- */
-.hero{background:linear-gradient(165deg,var(--navy) 0%,#0b1d31 60%,#132e4c 100%);color:#c7d6e5;position:relative;overflow:hidden}
+.hero{background:linear-gradient(165deg,var(--navy) 0%,#241906 60%,#5c431a 100%);color:#c7d6e5;position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;inset:auto -10% -60% 40%;height:520px;background:radial-gradient(closest-side,rgba(244,130,11,.20),transparent);pointer-events:none}
 .hero-in{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center;padding:74px 0 84px;position:relative;z-index:2}
 .hero h1{color:#fff;margin-bottom:.4em}
@@ -237,7 +237,7 @@ td.num{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:650;colo
 .callout strong{color:var(--ink)}
 
 /* ---------- CTA blok ---------- */
-.cta{background:linear-gradient(150deg,var(--navy),#0b1d31);border-radius:var(--radius-lg);padding:44px;color:#c7d6e5;text-align:center}
+.cta{background:linear-gradient(150deg,var(--navy),#241906);border-radius:var(--radius-lg);padding:44px;color:#c7d6e5;text-align:center}
 .cta h2{color:#fff;margin-bottom:.4em}
 .cta p{max-width:52ch;margin:0 auto 24px;color:#b8cadd}
 @media(max-width:600px){.cta{padding:30px 22px}}
@@ -265,7 +265,7 @@ td.num{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:650;colo
   .sticky-cta{
     display:block;position:fixed;left:0;right:0;bottom:0;z-index:70;
     background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:10px 16px;
-    box-shadow:0 -4px 20px rgba(15,39,64,.10)
+    box-shadow:0 -4px 20px rgba(60,41,15,.10)
   }
   body{padding-bottom:76px}
 }
@@ -278,6 +278,66 @@ td.num{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:650;colo
 .dark .stat .n{color:#fff}
 .stat .l{font-size:.88rem;color:var(--muted)}
 .dark .stat .l{color:#93a9c0}
+
+
+
+/* =========================================================================
+   Beeld, beweging en interactie — toegevoegd bij de visuele upgrade
+   ========================================================================= */
+
+/* ---------- Logo in de header ---------- */
+.logo img{height:38px;width:auto;display:block}
+.footer .logo img{height:40px}
+@media(max-width:520px){.logo img{height:32px}}
+
+/* ---------- Illustraties ---------- */
+.illu{width:100%;height:auto;display:block;border-radius:var(--radius-lg)}
+.illu-card{background:var(--bg-soft);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--line)}
+.card .illu{border-radius:10px;margin:-4px 0 14px}
+.hero .illu{border-radius:var(--radius-lg);box-shadow:var(--shadow-lg)}
+
+/* ---------- Scroll-onthulling ---------- */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}
+.reveal.in{opacity:1;transform:none}
+.reveal-d1{transition-delay:.08s}.reveal-d2{transition-delay:.16s}.reveal-d3{transition-delay:.24s}
+
+/* ---------- Voor/na-schuif ---------- */
+.vn{position:relative;border-radius:var(--radius-lg);overflow:hidden;user-select:none;touch-action:none;border:1px solid var(--line);background:var(--bg-soft)}
+.vn img,.vn svg{display:block;width:100%;height:auto}
+.vn-na{position:absolute;inset:0;clip-path:inset(0 0 0 50%)}
+.vn-greep{position:absolute;top:0;bottom:0;left:50%;width:3px;background:#fff;box-shadow:0 0 0 1px rgba(60,41,15,.25);cursor:ew-resize}
+.vn-greep::after{content:"";position:absolute;top:50%;left:50%;width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;background:#fff;box-shadow:var(--shadow)}
+.vn-greep::before{content:"◀ ▶";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;font-size:.7rem;color:var(--accent-dark);letter-spacing:-1px}
+.vn-label{position:absolute;bottom:14px;font-size:.78rem;font-weight:700;background:rgba(36,25,6,.82);color:#fff;padding:5px 12px;border-radius:99px;letter-spacing:.03em}
+.vn-label.l{left:14px}.vn-label.r{right:14px}
+
+/* ---------- Prijsindicator ---------- */
+.calc{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:26px;box-shadow:var(--shadow)}
+.calc h3{margin-bottom:18px}
+.calc .rij{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.calc label{margin:0;flex:0 0 120px}
+.calc select{flex:1;min-width:180px}
+.calc input[type=range]{flex:1;min-width:160px;accent-color:var(--accent);height:6px}
+.calc .waarde{font-weight:750;color:var(--ink);min-width:74px;text-align:right;font-variant-numeric:tabular-nums}
+.calc-uit{background:var(--accent-soft);border-radius:var(--radius);padding:20px;text-align:center;margin-top:6px}
+.calc-uit .bedrag{font-size:2rem;font-weight:800;color:var(--ink);letter-spacing:-.03em;line-height:1.15;font-variant-numeric:tabular-nums}
+.calc-uit .sub{font-size:.87rem;color:var(--muted);margin-top:4px}
+
+/* ---------- Kleine verfijningen ---------- */
+a.card{position:relative;overflow:hidden}
+a.card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .25s ease}
+a.card:hover::after{transform:scaleX(1)}
+.hero-in{position:relative}
+.badge-live{display:inline-flex;align-items:center;gap:7px}
+.badge-live i{width:7px;height:7px;border-radius:50%;background:#7ee2b0;display:inline-block;animation:pols 2.4s ease-in-out infinite}
+@keyframes pols{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+
+@media(prefers-reduced-motion:reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+  .badge-live i{animation:none}
+  a.card::after{transition:none}
+  html{scroll-behavior:auto}
+}
 
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 '''
@@ -563,6 +623,86 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
 
   document.querySelectorAll("form[data-wizard]").forEach(initWizard);
 
+
+  /* ------------------------------------------------- scroll-onthulling */
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var onthul = document.querySelectorAll(".reveal");
+  if (reduce || !("IntersectionObserver" in window)) {
+    onthul.forEach(function (e) { e.classList.add("in"); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
+    onthul.forEach(function (e) { io.observe(e); });
+  }
+
+  /* ------------------------------------------------ voor/na-vergelijker */
+  document.querySelectorAll("[data-vn]").forEach(function (vn) {
+    var na = vn.querySelector(".vn-na");
+    var greep = vn.querySelector(".vn-greep");
+    if (!na || !greep) return;
+
+    function zet(pct) {
+      pct = Math.max(2, Math.min(98, pct));
+      na.style.clipPath = "inset(0 0 0 " + pct + "%)";
+      greep.style.left = pct + "%";
+      greep.setAttribute("aria-valuenow", Math.round(pct));
+    }
+    function uitEvent(ev) {
+      var r = vn.getBoundingClientRect();
+      var x = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+      zet((x / r.width) * 100);
+    }
+    var sleept = false;
+    greep.addEventListener("pointerdown", function (e) {
+      sleept = true; greep.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    greep.addEventListener("pointerup", function () { sleept = false; });
+    greep.addEventListener("pointermove", function (e) { if (sleept) uitEvent(e); });
+    vn.addEventListener("click", function (e) {
+      if (e.target !== greep) uitEvent(e);
+    });
+    greep.addEventListener("keydown", function (e) {
+      var nu = parseFloat(greep.style.left) || 50;
+      if (e.key === "ArrowLeft") { zet(nu - 5); e.preventDefault(); }
+      if (e.key === "ArrowRight") { zet(nu + 5); e.preventDefault(); }
+    });
+    zet(50);
+  });
+
+  /* ------------------------------------------------------ prijsindicator */
+  var calc = document.querySelector("[data-calc]");
+  if (calc) {
+    var kies = calc.querySelector("select");
+    var schuif = calc.querySelector("input[type=range]");
+    var aantalUit = calc.querySelector("[data-aantal]");
+    var bedragUit = calc.querySelector("[data-bedrag]");
+    var subUit = calc.querySelector("[data-sub]");
+    var link = calc.querySelector("[data-cta]");
+
+    function euro(n) {
+      return "€" + Math.round(n).toLocaleString("nl-NL");
+    }
+    function reken() {
+      var o = kies.options[kies.selectedIndex];
+      var van = parseFloat(o.dataset.van), tot = parseFloat(o.dataset.tot);
+      var n = parseInt(schuif.value, 10);
+      aantalUit.textContent = n + " " + (o.dataset.eenheid || "");
+      bedragUit.textContent = euro(van * n) + " – " + euro(tot * n);
+      subUit.textContent = o.dataset.uitleg || "";
+      if (link) link.href = "/schilderwerk/" + o.value + "/";
+    }
+    kies.addEventListener("change", function () {
+      var o = kies.options[kies.selectedIndex];
+      schuif.min = o.dataset.min; schuif.max = o.dataset.max; schuif.value = o.dataset.start;
+      reken();
+    });
+    schuif.addEventListener("input", reken);
+    reken();
+  }
+
   /* --------------------------------------------- pagina-context voorvullen */
   var ctx = document.body.dataset;
   document.querySelectorAll("form[data-wizard]").forEach(function (f) {
@@ -617,8 +757,11 @@ window.TS_CONFIG = {
 '''
 
 FAVICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-<rect width="64" height="64" rx="14" fill="#0f2740"/>
-<rect x="12" y="16" width="28" height="13" rx="2.5" fill="#f4820b"/>
-<path d="M40 22.5h8a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3H32v6" stroke="#f4820b" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="27" y="38" width="10" height="14" rx="2.5" fill="#fff"/>
+<rect width="64" height="64" rx="14" fill="#3c290f"/>
+<rect x="34" y="13" width="20" height="8" rx="4" fill="#f4820b"/>
+<path d="M44 21v5a3 3 0 0 1-3 3h-6" stroke="#f4820b" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+<rect x="31" y="27" width="7" height="9" rx="2" fill="#f4820b"/>
+<circle cx="23" cy="24" r="9" fill="#fff"/>
+<path d="M13 24a10 10 0 0 1 20 0z" fill="#fff"/>
+<path d="M15 38h16l4 14H11z" fill="#fff"/>
 </svg>'''
