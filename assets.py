@@ -106,7 +106,7 @@ small{font-size:.85rem}
 /* ---------- Hero ---------- */
 .hero{background:linear-gradient(165deg,var(--navy) 0%,#241906 60%,#5c431a 100%);color:#c7d6e5;position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;inset:auto -10% -60% 40%;height:520px;background:radial-gradient(closest-side,rgba(244,130,11,.20),transparent);pointer-events:none}
-.hero-in{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center;padding:74px 0 84px;position:relative;z-index:2}
+.hero-in{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center;padding-top:74px;padding-bottom:84px;position:relative;z-index:2}
 .hero h1{color:#fff;margin-bottom:.4em}
 .hero p.lead{color:#b8cadd;font-size:1.16rem;max-width:52ch}
 .hero-usps{list-style:none;padding:0;margin:26px 0 30px}
@@ -116,7 +116,7 @@ small{font-size:.85rem}
 .stars{color:#ffc043;letter-spacing:2px}
 
 @media(max-width:920px){
-  .hero-in{grid-template-columns:1fr;gap:34px;padding:48px 0 56px}
+  .hero-in{grid-template-columns:1fr;gap:34px;padding-top:48px;padding-bottom:56px}
 }
 
 /* ---------- Formulier-kaart ---------- */
@@ -139,10 +139,10 @@ input[type=text],input[type=email],input[type=tel],input[type=number],select,tex
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(244,130,11,.14)}
 textarea{min-height:110px;resize:vertical}
 .field{margin-bottom:16px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 @media(max-width:560px){.row2{grid-template-columns:1fr}}
 
-.choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:4px}
 @media(max-width:560px){.choice{grid-template-columns:1fr}}
 .choice label{
   display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:10px;
@@ -163,11 +163,12 @@ textarea{min-height:110px;resize:vertical}
 
 /* ---------- Cards & grids ---------- */
 .grid{display:grid;gap:20px}
-.g2{grid-template-columns:repeat(2,1fr)}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .g3{grid-template-columns:repeat(3,1fr)}
 .g4{grid-template-columns:repeat(4,1fr)}
 @media(max-width:900px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+@media(max-width:980px){.g2:has(> div > .formcard){grid-template-columns:minmax(0,1fr)}}
 
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px;transition:box-shadow .15s, transform .15s}
 a.card:hover{text-decoration:none;box-shadow:var(--shadow);transform:translateY(-2px);border-color:#cfd9e4}
@@ -243,7 +244,7 @@ td.num{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:650;colo
 @media(max-width:600px){.cta{padding:30px 22px}}
 
 /* ---------- Breadcrumbs ---------- */
-.crumbs{font-size:.85rem;color:var(--muted);padding:16px 0 0}
+.crumbs{font-size:.85rem;color:var(--muted);padding-top:16px}
 .crumbs a{color:var(--muted)}
 .crumbs span{margin:0 7px;opacity:.5}
 
