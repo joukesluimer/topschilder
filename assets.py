@@ -293,6 +293,12 @@ td.num{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:650;colo
 
 /* ---------- Illustraties ---------- */
 .illu{width:100%;height:auto;display:block;border-radius:var(--radius-lg)}
+.foto{margin:24px 0 0}
+.foto img{width:100%;border-radius:var(--radius-lg)}
+.hero .foto{margin:0}
+.hero .foto img{box-shadow:var(--shadow-lg)}
+.card .foto{margin:-4px 0 14px}
+.card .foto img{border-radius:10px}
 .illu-card{background:var(--bg-soft);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--line)}
 .card .illu{border-radius:10px;margin:-4px 0 14px}
 .hero .illu{border-radius:var(--radius-lg);box-shadow:var(--shadow-lg)}

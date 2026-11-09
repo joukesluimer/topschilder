@@ -4,6 +4,7 @@
 import json
 from data import SITE, DIENSTEN
 from illustraties import illustratie, voor_na
+from foto_data import FOTOS
 
 # Zet op True zodra je ECHTE reviews hebt verzameld. Verzonnen reviews op een
 # live site zijn in Nederland een misleidende handelspraktijk (ACM) en Google
@@ -23,6 +24,16 @@ ICONS = {
     "euro": '<path d="M17 6.5A6.5 6.5 0 0 0 7.2 10M17 17.5A6.5 6.5 0 0 1 7.2 14"/><path d="M4 10h8M4 14h8"/>',
     "users": '<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16.5 5.5a3.2 3.2 0 0 1 0 5.6M17 14.6A6 6 0 0 1 21 20"/>',
 }
+
+
+def foto(f, sizes, boven_vouw=False):
+    """Responsieve <img> voor een foto uit foto_data.py."""
+    n = f["naam"]
+    laden = 'loading="eager" fetchpriority="high"' if boven_vouw else 'loading="lazy"'
+    alt = f["alt"].replace("&", "&amp;").replace('"', "&quot;")
+    return (f'<figure class="foto"><img src="/assets/fotos/{n}-800.webp" '
+            f'srcset="/assets/fotos/{n}-800.webp 800w, /assets/fotos/{n}-1600.webp 1600w" '
+            f'sizes="{sizes}" width="{f["w"]}" height="{f["h"]}" alt="{alt}" {laden} decoding="async"></figure>')
 
 
 def icon(name, size=23):
@@ -125,7 +136,7 @@ def footer():
   </div>
   <div class="footer-bot">
     <div>© {SITE['oprichting']}–2026 {SITE['naam']} · KvK {SITE['kvk']}</div>
-    <div><a href="/privacy/">Privacy</a> · <a href="/voorwaarden/">Algemene voorwaarden</a> · <a href="/cookies/">Cookies</a></div>
+    <div><a href="/privacy/">Privacy</a> · <a href="/voorwaarden/">Algemene voorwaarden</a> · <a href="/cookies/">Cookies</a> · <a href="/fotoverantwoording/">Fotoverantwoording</a></div>
   </div>
 </div>
 </footer>"""
@@ -377,7 +388,7 @@ def dienst_cards(plaats_slug=None, plaats_naam=None, exclude=None):
         titel = f"{d['naam']}{' in ' + plaats_naam if plaats_naam else ''}"
         out.append(
             f'<a class="card reveal" href="{url}">'
-            f'{illustratie(d["slug"])}'
+            f'{foto(FOTOS[d["slug"]]["hero"], "(max-width:600px) calc(100vw - 40px), (max-width:900px) 45vw, 340px") if d["slug"] in FOTOS else illustratie(d["slug"])}'
             f"<h3>{titel}</h3><p>{d['kort']}</p>"
             f'<div class="price">Vanaf {eur(d["prijs_van"])} {d["prijs_eenheid"]}</div>'
             f'<p style="margin:10px 0 0"><span class="go">Bekijk &amp; vraag offertes aan →</span></p></a>'

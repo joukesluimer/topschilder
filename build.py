@@ -10,13 +10,15 @@ import os
 import re
 import shutil
 import datetime
+import html as htmllib
 
 from data import (SITE, DIENSTEN, PLAATSEN, buurplaatsen,
                   PRIJSINDEX, INDEX_TOELICHTING, lokale_prijs)
 from illustraties import illustratie, voor_na
+from foto_data import FOTOS, FOTO_HOME
 from components import (
     page, crumbs, offerte_form, hoe_werkt_het, waarom_blok, dienst_cards,
-    faq_blok, cta_blok, prijstabel, icon, eur, title, desc, calculator,
+    faq_blok, cta_blok, prijstabel, icon, eur, title, desc, calculator, foto,
 )
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -63,7 +65,7 @@ def build_home():
       <span>Houtrot &amp; spuitwerk</span><span>·</span>
       <span>Particulier en zakelijk</span>
     </div>
-    <div style="margin-top:30px;max-width:460px">{illustratie('hero')}</div>
+    <div style="margin-top:30px;max-width:460px">{foto(FOTO_HOME, "(max-width:500px) calc(100vw - 40px), 460px", boven_vouw=True)}</div>
   </div>
   <div>{offerte_form()}</div>
 </div>
@@ -238,6 +240,10 @@ def dienst_body(d, plaats=None):
         f"<h3 style='margin-bottom:.2em'>{t}</h3><p style='margin:0;font-size:.97rem'>{p}</p></li>"
         for t, p in d["werkwijze"]
     ) + "</ol>"
+    fotos = FOTOS.get(d["slug"], {})
+    beeld = (foto(fotos["hero"], "(max-width:980px) calc(100vw - 40px), 536px", boven_vouw=True) if fotos else
+             f'<div class="reveal" style="margin-top:24px">{illustratie(d["slug"])}</div>')
+    sectiefoto = foto(fotos["sectie"], "(max-width:760px) calc(100vw - 40px), 720px") if fotos else ""
     fact = "".join(f"<li>{x}</li>" for x in d["prijsfactoren"])
     tips = "".join(f"<li>{x}</li>" for x in d["tips"])
 
@@ -253,7 +259,7 @@ def dienst_body(d, plaats=None):
         <p><strong>Richtprijs{inplaats}:</strong> {eur(p_van)} – {eur(p_tot)} {d['prijs_eenheid']}, inclusief materiaal en 9% btw op arbeid.{prijsnoot}</p>
         <p style="font-size:.93rem;margin-top:8px">{d['prijs_extra']}</p>
       </div>
-      <div class="reveal" style="margin-top:24px">{illustratie(d['slug'])}</div>
+      {beeld}
     </div>
     <div>{offerte_form(f"Offertes voor {d['naam_kort'].lower()}{inplaats}", "Vier korte vragen · gratis en vrijblijvend")}</div>
   </div>
@@ -266,6 +272,7 @@ def dienst_body(d, plaats=None):
 
   <h2>Zo gaat een schilder te werk</h2>
   {werk}
+  {sectiefoto}
 
   {vn_blok}
 
@@ -1071,6 +1078,30 @@ def build_static_pages():
                             "Hoe Topschilder omgaat met je persoonsgegevens: wat we verzamelen, met wie we het delen, hoelang we het bewaren en welke rechten je hebt.",
                             "/privacy/", body, [cr_ld]), prio=0.3)
 
+    # --- Fotoverantwoording ---
+    cr, cr_ld = crumbs([("Home", "/"), ("Fotoverantwoording", None)])
+    e = htmllib.escape
+    blokken = ""
+    groepen = [("Homepage", [FOTO_HOME])] + [(d["naam"], list(FOTOS[d["slug"]].values())) for d in DIENSTEN if d["slug"] in FOTOS]
+    for naam, lijst in groepen:
+        blokken += f"<h2>{naam}</h2>"
+        for f in lijst:
+            sa = " De bewerkte foto valt onder dezelfde licentie." if "SA" in f["licentie"] else ""
+            blokken += (f'<p><strong>{e(f["alt"])}</strong><br>'
+                        f'Titel: <a href="{e(f["bron"])}" rel="nofollow noopener">{e(f["titel"])}</a> (Wikimedia Commons)<br>'
+                        f'Maker: {e(f["maker"])}<br>'
+                        f'Licentie: <a href="{e(f["licentie_url"])}" rel="nofollow noopener license">{e(f["licentie"])}</a><br>'
+                        f'Bewerking: {e(f["bewerking"])}{sa}</p>')
+    body = f"""{cr}
+<section class="section-sm"><div class="wrap narrow prose">
+  <h1>Fotoverantwoording</h1>
+  <p class="lead">De foto's op onze website komen van Wikimedia Commons en zijn niet door ons of door aangesloten schilders gemaakt. Hieronder staat per foto wie hem maakte, onder welke licentie en wat wij eraan veranderden.</p>
+  {blokken}
+</div></section>"""
+    write("/fotoverantwoording/", page("Fotoverantwoording | Topschilder",
+                            "Per foto op Topschilder: de maker, de licentie, de bron op Wikimedia Commons en welke bewerkingen wij hebben uitgevoerd.",
+                            "/fotoverantwoording/", body, [cr_ld]), prio=0.2)
+
     # --- Voorwaarden ---
     cr, cr_ld = crumbs([("Home", "/"), ("Algemene voorwaarden", None)])
     body = f"""{cr}
@@ -1173,6 +1204,8 @@ def build_assets():
         os.makedirs(os.path.dirname(full), exist_ok=True)
         with open(full, "w", encoding="utf-8") as f:
             f.write(inhoud)
+
+    shutil.copytree(os.path.join(ROOT, "fotos"), os.path.join(OUT, "assets", "fotos"))
 
     # logo en witte variant (base64 in merk_data.py)
     from merk_data import BESTANDEN as MERK
