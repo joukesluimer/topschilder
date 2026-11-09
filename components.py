@@ -5,6 +5,9 @@ import json
 from data import SITE, DIENSTEN
 from illustraties import illustratie, voor_na
 from foto_data import FOTOS
+from data import PLAATSEN
+from kaart_data import BREEDTE, HOOGTE, PADEN, PUNTEN
+import html as _html
 
 # Zet op True zodra je ECHTE reviews hebt verzameld. Verzonnen reviews op een
 # live site zijn in Nederland een misleidende handelspraktijk (ACM) en Google
@@ -358,7 +361,7 @@ def waarom_blok():
         ("shield", "Voorgeselecteerde bedrijven",
          "We werken alleen met schildersbedrijven met een geldige KvK-inschrijving en aansprakelijkheidsverzekering. Klachten betekenen dat we de samenwerking stopzetten."),
         ("euro", "Prijsverschillen zijn groot",
-         "Tussen de goedkoopste en duurste offerte voor hetzelfde werk zit in de praktijk vaak 30 tot 50%. Vergelijken is letterlijk het best betaalde uur van je klus."),
+         "De ene schilder rekent voor hetzelfde werk meer dan de andere, en uit één offerte zie je dat niet. Vergelijken is letterlijk het best betaalde uur van je klus."),
         ("clock", "Snel duidelijkheid",
          "Je aanvraag gaat dezelfde dag door naar schilders in jouw regio. Meestal heb je binnen één werkdag de eerste reactie."),
         ("users", "Maximaal 3 schilders",
@@ -465,7 +468,7 @@ def calculator():
     <div class="sub" data-sub></div>
   </div>
   <p style="margin:18px 0 0;font-size:.88rem;color:var(--muted)">
-    Indicatie inclusief materiaal en 9% btw op arbeid. De echte prijs hangt af van de staat
+    Indicatie inclusief materiaal en btw. De echte prijs hangt af van de staat
     van de ondergrond en de bereikbaarheid. <a href="/offerte-aanvragen/">Vraag gratis drie offertes aan</a>
     voor een prijs die op jouw situatie klopt, of <a data-cta href="/schilderwerk/binnenschilderwerk/">lees waar de prijs door bepaald wordt</a>.
   </p>
@@ -489,4 +492,43 @@ def prijstabel(diensten=None, plaats=None):
 <tbody>{rows}</tbody>
 </table>
 </div>
-<p><small>Indicatieve prijzen inclusief materiaal en 9% btw op arbeid (woningen ouder dan twee jaar). De werkelijke prijs hangt af van de staat van de ondergrond, bereikbaarheid en het seizoen. Vraag altijd meerdere offertes aan.</small></p>"""
+<p><small>Indicatieve prijzen inclusief materiaal en btw, tenzij er excl. btw staat. De werkelijke prijs hangt af van de staat van de ondergrond, bereikbaarheid en het seizoen. Vraag altijd meerdere offertes aan.</small></p>"""
+
+
+# ---------------------------------------------------------------------------
+# Werkgebiedkaart
+# ---------------------------------------------------------------------------
+
+def werkgebied_kaart():
+    """Eigen SVG-kaart: elke plaats is een gewone link, dus zonder JavaScript werkt hij ook."""
+    e = _html.escape
+    links_van = {"naarden", "weesp", "bussum", "hilversum", "ermelo", "nijkerk", "amersfoort", "almere", "urk", "espel", "creil", "nagele"}
+    boven = {"emmeloord"}
+    provs = sorted({p["provincie"] for p in PLAATSEN})
+    land = "".join(f'<path class="kl{" ka" if n in provs else ""}" d="{d}"/>' for n, d in PADEN.items())
+    pts = ""
+    for p in sorted(PLAATSEN, key=lambda x: x["prio"], reverse=True):
+        x, y = PUNTEN[p["slug"]]
+        lk = p["slug"] in links_van
+        kant = "b" if p["slug"] == "kraggenburg" else "t" if p["slug"] in boven else ("l" if lk else "r")
+        pts += (f'<a class="kp{" kg" if p["prio"] == 1 else ""}" href="/schilder/{p["slug"]}/" aria-label="Schilder {e(p["naam"])}, {e(p["provincie"])}" '
+                f'data-naam="{e(p["naam"])}" data-prov="{e(p["provincie"])}" data-hook="{e(p["hook"])}" data-x="{x}" data-y="{y}" data-l="{kant}">'
+                f'<circle class="kh" cx="{x}" cy="{y}" r="20"/><circle class="kd" cx="{x}" cy="{y}" r="9"/>'
+                f'<text x="{x + (-16 if lk else 16)}" y="{y + 6}" text-anchor="{"middle" if kant in "tb" else "end" if lk else "start"}" font-size="24">{e(p["naam"])}</text></a>')
+    knoppen = '<button type="button" class="chip-k" data-prov="" aria-pressed="true">Alle plaatsen</button>' + "".join(
+        f'<button type="button" class="chip-k" data-prov="{e(n)}" aria-pressed="false">{e(n)}</button>' for n in provs)
+    return f"""<div class="kaart" data-kaart data-b="{BREEDTE}" data-h="{HOOGTE}">
+  <div class="kaart-knoppen" role="group" aria-label="Kaart inzoomen op provincie">{knoppen}</div>
+  <div class="kaart-grid">
+    <svg viewBox="0 0 {BREEDTE} {HOOGTE}" role="group" aria-label="Kaart met de {len(PLAATSEN)} plaatsen in ons werkgebied. Elke plaats is een link." preserveAspectRatio="xMidYMid slice">
+      <rect class="kw" x="-500" y="-500" width="{BREEDTE + 1000}" height="{HOOGTE + 1000}"/>{land}{pts}
+    </svg>
+    <aside class="kaart-info" aria-live="polite">
+      <p class="kaart-prov">Werkgebied</p>
+      <h2 class="kaart-naam">Kies een plaats</h2>
+      <p class="kaart-hook">Beweeg over de kaart of ga er met de Tab-toets doorheen. Klik op een plaats voor lokale richtprijzen en schilders in de buurt.</p>
+      <a class="btn btn-primary kaart-link" href="/offerte-aanvragen/">Offertes aanvragen</a>
+    </aside>
+  </div>
+  <p class="kaart-bron">Kaart: provinciegrenzen en woonplaatsen van <a href="https://www.pdok.nl/" rel="nofollow noopener">PDOK</a> (CBS en Kadaster), <a href="https://creativecommons.org/licenses/by/4.0/deed.nl" rel="nofollow noopener license">CC BY 4.0</a>, vereenvoudigd. Liever een lijst? Alle plaatsen staan hieronder.</p>
+</div>"""

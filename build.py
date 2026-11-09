@@ -15,10 +15,10 @@ import html as htmllib
 from data import (SITE, DIENSTEN, PLAATSEN, buurplaatsen,
                   PRIJSINDEX, INDEX_TOELICHTING, lokale_prijs)
 from illustraties import illustratie, voor_na
-from foto_data import FOTOS, FOTO_HOME
+from foto_data import FOTOS, FOTO_HOME, FOTOS_PAGINA
 from components import (
     page, crumbs, offerte_form, hoe_werkt_het, waarom_blok, dienst_cards,
-    faq_blok, cta_blok, prijstabel, icon, eur, title, desc, calculator, foto,
+    faq_blok, cta_blok, prijstabel, icon, eur, title, desc, calculator, foto, werkgebied_kaart,
 )
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -121,7 +121,7 @@ def build_home():
           <details><summary>Steigerkosten niet benoemd</summary><div class="a"><p>Staat er niets over steiger of hoogwerker, dan komt die post er vrijwel zeker later bij. Reken op €300 tot €900.</p></div></details>
           <details><summary>Houtrot als losse post</summary><div class="a"><p>&quot;Houtrot in regie&quot; betekent: onbekend bedrag. Vraag om een stelpost met een maximum.</p></div></details>
           <details><summary>Aantal lagen niet vermeld</summary><div class="a"><p>Twee lagen of drie scheelt zomaar 25% in arbeidsuren én jaren in levensduur.</p></div></details>
-          <details><summary>Btw-splitsing ontbreekt</summary><div class="a"><p>Arbeid mag tegen 9% bij woningen ouder dan twee jaar. Staat alles op 21%, dan betaal je te veel.</p></div></details>
+          <details><summary>Btw-tarief klopt niet</summary><div class="a"><p>Schilderwerk aan een woning ouder dan twee jaar valt onder 9%, inclusief de gebruikte materialen. Staat alles op 21%, vraag dan waarom.</p></div></details>
         </div>
       </div>
     </div>
@@ -196,6 +196,26 @@ def build_diensten_index():
   <p class="lead">Van een enkele deur laten spuiten tot het complete buitenschilderwerk van een vrijstaande woning. Kies hieronder je klus en zie meteen de richtprijzen, waar de prijs door bepaald wordt en waar je in een offerte op moet letten.</p>
 </div></section>
 <section class="section-sm"><div class="wrap">{dienst_cards()}</div></section>
+<section class="section soft"><div class="wrap narrow prose">
+  <h2>Welke dienst past bij jouw klus?</h2>
+  <p>Niet elke klus heeft een duidelijke naam. Herken je je situatie hieronder, dan weet je waar je moet zijn.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Wat je ziet of wilt</th><th>Kijk bij</th></tr></thead>
+    <tbody>
+      <tr><td>Muren en plafonds zijn vlekkerig, of je wilt een andere kleur</td><td><a href="/schilderwerk/binnenschilderwerk/">Binnenschilderwerk</a></td></tr>
+      <tr><td>De verf op kozijnen, deuren of boeiboorden bladdert of wordt dof</td><td><a href="/schilderwerk/buitenschilderwerk/">Buitenschilderwerk</a></td></tr>
+      <tr><td>Hout voelt zacht aan, vooral in de onderhoek van een kozijn</td><td><a href="/schilderwerk/houtrot-reparatie/">Houtrot reparatie</a></td></tr>
+      <tr><td>Deuren of keukenfronten moeten strak en zonder strepen worden</td><td><a href="/schilderwerk/spuitwerk/">Spuitwerk</a></td></tr>
+      <tr><td>Oud behang moet eraf, of je wilt glasvlies of een statementwand</td><td><a href="/schilderwerk/behangen/">Behangen</a></td></tr>
+      <tr><td>Het gaat om een kantoor, winkel of bedrijfspand</td><td><a href="/schilderwerk/zakelijk-schilderwerk/">Zakelijk schilderwerk</a></td></tr>
+    </tbody>
+  </table></div>
+  {foto(FOTOS_PAGINA["diensten"], "(max-width:760px) calc(100vw - 40px), 720px")}
+  <h2>Eerst repareren, dan schilderen</h2>
+  <p>Verf is geen reparatie. Zit er houtrot in een kozijn, dan moet dat eerst hersteld zijn, anders werkt het vocht onder de nieuwe laag gewoon door. Twijfel je of het om schilderwerk of om reparatie gaat? Beschrijf in je aanvraag wat je ziet. De schilder kan dat dan ter plekke beoordelen.</p>
+  <h2>Klussen combineren</h2>
+  <p>Staat er zowel binnen als buiten iets op de planning, noem dat dan meteen. Eén planning scheelt de schilder opstarttijd, en jij ziet in één offerte wat alles samen kost. Vraag wel om een aparte regel per onderdeel, zodat je kunt vergelijken en eventueel iets kunt schrappen.</p>
+</div></section>
 {hoe_werkt_het()}
 {cta_blok()}"""
     write("/schilderwerk/", page(
@@ -244,6 +264,10 @@ def dienst_body(d, plaats=None):
     beeld = (foto(fotos["hero"], "(max-width:980px) calc(100vw - 40px), 536px", boven_vouw=True) if fotos else
              f'<div class="reveal" style="margin-top:24px">{illustratie(d["slug"])}</div>')
     sectiefoto = foto(fotos["sectie"], "(max-width:760px) calc(100vw - 40px), 720px") if fotos else ""
+    btw_extra = {
+        "houtrot-reparatie": "<li>Houtwerk apart benoemd: inzetstukken en nieuwe onderdorpels vallen onder 21% btw, het schilderwerk eromheen onder 9%</li>",
+        "behangen": "<li>Het behang apart benoemd: de levering van behang valt onder 21% btw, het behangen zelf en de lijm onder 9%</li>",
+    }.get(d["slug"], "")
     fact = "".join(f"<li>{x}</li>" for x in d["prijsfactoren"])
     tips = "".join(f"<li>{x}</li>" for x in d["tips"])
 
@@ -256,7 +280,7 @@ def dienst_body(d, plaats=None):
       <p class="lead">{d['intro']}</p>
       {intro_extra}
       <div class="callout">
-        <p><strong>Richtprijs{inplaats}:</strong> {eur(p_van)} – {eur(p_tot)} {d['prijs_eenheid']}, inclusief materiaal en 9% btw op arbeid.{prijsnoot}</p>
+        <p><strong>Richtprijs{inplaats}:</strong> {eur(p_van)} – {eur(p_tot)} {d['prijs_eenheid']}{'' if 'excl' in d['prijs_eenheid'] else ', inclusief materiaal en btw'}.{prijsnoot}</p>
         <p style="font-size:.93rem;margin-top:8px">{d['prijs_extra']}</p>
       </div>
       {beeld}
@@ -289,7 +313,7 @@ def dienst_body(d, plaats=None):
     <li>Welk verfmerk, welk type en welke glansgraad er gebruikt wordt</li>
     <li>Het aantal lagen — grondlaag plus twee dekkende lagen is de norm</li>
     <li>Wat er precies onder de voorbereiding valt (schuren, ontvetten, plamuren)</li>
-    <li>Een aparte regel voor arbeid tegen 9% btw en materiaal tegen 21%</li>
+    <li>Het btw-tarief per post: 9% voor schilderwerk en gebruikte materialen aan een woning ouder dan twee jaar, 21% voor wat daarbuiten valt</li>{btw_extra}
     <li>Een concrete start- en opleverdatum, geen &quot;in overleg&quot;</li>
     <li>De garantietermijn en wat daar wel en niet onder valt</li>
   </ul>
@@ -352,6 +376,15 @@ def build_dienst_pages():
 # PLAATSEN
 # ===========================================================================
 
+REGIO_TEKST = {
+    "Flevoland": "De steden en dorpen hier zijn gebouwd nadat de polders waren drooggelegd. Daardoor zijn hele wijken even oud en komt het houtwerk van een buurt vaak rond dezelfde tijd aan onderhoud toe.",
+    "Gelderland": "Langs de randmeren en de Veluwe staan historische kernen zoals Elburg en Harderwijk naast naoorlogse wijken en nieuwbouw. Dat vraagt per woning om een andere aanpak.",
+    "Noord-Holland": "In het Gooi en rond Weesp vind je veel oudere vrijstaande woningen met flink wat houtwerk, en met Naarden en Weesp ook vestingsteden. Zet in je aanvraag wat voor woning je hebt.",
+    "Overijssel": "Kampen en Zwolle hebben historische binnensteden met oude gevels. Woon je in een monument of beschermd stadsgezicht, vraag dan bij je gemeente na of je voor een andere kleur een vergunning nodig hebt.",
+    "Utrecht": "In Amersfoort en Bunschoten-Spakenburg staan oude stadskernen en dorpsgezichten naast grote uitbreidingswijken. Bij die laatste komt het onderhoud vaak per straat tegelijk.",
+}
+
+
 def build_werkgebied():
     per_prov = {}
     for p in sorted(PLAATSEN, key=lambda x: x["naam"]):
@@ -360,7 +393,7 @@ def build_werkgebied():
     secs = ""
     for prov in sorted(per_prov):
         lis = "".join(f'<li><a href="/schilder/{p["slug"]}/">Schilder {p["naam"]}</a></li>' for p in per_prov[prov])
-        secs += f"<h2>{prov}</h2><ul class='places' style='margin-bottom:34px'>{lis}</ul>"
+        secs += f"<h2>{prov}</h2><p style='max-width:68ch'>{REGIO_TEKST[prov]}</p><ul class='places' style='margin-bottom:34px'>{lis}</ul>"
 
     cr, cr_ld = crumbs([("Home", "/"), ("Werkgebied", None)])
     body = f"""{cr}
@@ -369,7 +402,17 @@ def build_werkgebied():
   <p class="lead">Topschilder is begonnen in Flevoland en werkt inmiddels ook in de randmeren-regio, de Veluwe, de IJsseldelta en het Gooi. Kies je plaats voor lokale richtprijzen en schilders uit de buurt.</p>
   <p>Staat jouw plaats er niet tussen? Vraag toch offertes aan. Veel schildersbedrijven rijden zonder problemen 20 tot 30 kilometer, zeker bij een meerdaagse klus.</p>
 </div></section>
-<section class="section-sm"><div class="wrap">{secs}</div></section>
+<section class="section-sm" id="kaart"><div class="wrap">{werkgebied_kaart()}</div></section>
+<section class="section-sm"><div class="wrap">
+  <h2 style="margin-bottom:6px">Alle plaatsen per provincie</h2>
+  <p style="margin-bottom:30px">Elke plaats heeft een eigen pagina met lokale richtprijzen en de diensten die je daar kunt aanvragen.</p>
+  {secs}
+</div></section>
+<section class="section soft"><div class="wrap narrow prose">
+  {foto(FOTOS_PAGINA["werkgebied"], "(max-width:760px) calc(100vw - 40px), 720px")}
+  <h2>Hoe we bepalen wie er bij jou langskomt</h2>
+  <p>Je vult je plaats en de klus in. Wij zoeken daarna maximaal drie schilders die in jouw regio werken en dit type werk doen. Staat jouw plaats niet op de kaart, dan kun je alsnog een aanvraag doen. We laten je weten of er een schilder beschikbaar is.</p>
+</div></section>
 {cta_blok()}"""
     write("/werkgebied/", page(
         title(f"Werkgebied: schilders in {len(PLAATSEN)} plaatsen"),
@@ -430,7 +473,7 @@ def build_plaats_pages():
   <p>Van maart tot en met september draaien schilders overuren aan buitenwerk. Wil je scherp zitten, plan buitenschilderwerk dan in september of oktober en binnenschilderwerk tussen november en februari. Je hebt dan meer keuze én meer onderhandelingsruimte. Dat geldt in {p['naam']} net zo hard als in de rest van {p['provincie']}.</p>"""
         elif v == 1:
             blok_b = f"""<h3>Het btw-voordeel dat veel mensen missen</h3>
-  <p>Is je woning in {p['naam']} ouder dan twee jaar, dan geldt op het arbeidsloon het lage btw-tarief van 9%. Over de materialen betaal je gewoon 21%. Bij een offerte van vierduizend euro waarvan tweeduizend achthonderd arbeid is, scheelt dat je ruim driehonderd euro. Staat er op de offerte één bedrag met 21% over het geheel, vraag dan om een splitsing — een bedrijf dat dit niet uit zichzelf doet, is ofwel slordig ofwel rekent te veel.</p>"""
+  <p>Is je woning in {p['naam']} ouder dan twee jaar, dan valt schilderwerk onder het btw-tarief van 9%, en dat geldt ook voor de gebruikte materialen. Staat er 21% over het hele bedrag, vraag dan waarom. Voor werk dat verder gaat dan schilderen, zoals het inzetten van nieuw hout in een kozijn, geldt wel 21%.</p>"""
         else:
             blok_b = f"""<h3>Wachttijden in {p['gemeente']}</h3>
   <p>Buiten het hoogseizoen kun je in {p['naam']} meestal binnen twee tot vier weken terecht. Tussen april en september loopt dat op tot zes weken of meer, zeker voor buitenwerk. Ben je flexibel in je planning, zeg dat er dan bij: schilders vullen graag gaten tussen twee grote klussen en zijn daar vaak scherper voor geprijsd dan voor een klus die op een vaste datum moet vallen.</p>"""
@@ -463,7 +506,7 @@ def build_plaats_pages():
             (f"Wat is de gemiddelde wachttijd voor een schilder in {p['gemeente']}?",
              "Buiten het hoogseizoen kun je meestal binnen twee tot vier weken terecht. Tussen april en september loopt dat op tot zes weken of meer, zeker voor buitenwerk. Ben je flexibel in je planning, meld dat dan — je krijgt vaak een betere prijs."),
             ("Geldt het lage btw-tarief van 9%?",
-             "Op het arbeidsloon wel, mits je woning ouder is dan twee jaar. Over de materialen betaal je 21%. Controleer of de offerte dit netjes gesplitst weergeeft; doet een bedrijf dat niet, vraag er dan expliciet naar."),
+             "Ja, voor schilderwerk aan een woning ouder dan twee jaar, inclusief de gebruikte materialen. Voor werk dat verder gaat dan schilderen geldt 21%. Staat er 21% over het geheel, vraag dan waarom."),
             ("Kan ik ook zakelijk schilderwerk aanvragen?",
              f"Zeker. Kantoren, winkels, VvE's en bedrijfspanden in {p['naam']} kunnen dezelfde route volgen. Kies bij de eerste vraag voor zakelijk schilderwerk, dan komt je aanvraag bij bedrijven terecht die dit type werk aankunnen."),
         ]
@@ -640,7 +683,7 @@ def build_offerte_vergelijken():
         <li>Is de prijs marktconform voor dit type werk in jouw regio?</li>
         <li>Staat het aantal lagen en het verfmerk erin?</li>
         <li>Zijn steiger-, houtrot- en voorbereidingskosten meegenomen of komen die later?</li>
-        <li>Is de btw correct gesplitst tussen 9% arbeid en 21% materiaal?</li>
+        <li>Klopt het btw-tarief per post: 9% voor schilderwerk aan een woning ouder dan twee jaar, 21% voor de rest?</li>
         <li>Wat stelt de garantie precies voor?</li>
       </ul>
       <div class="callout">
@@ -703,6 +746,24 @@ def build_offerte_vergelijken():
       </div>
     </div>
   </div>
+</div></section>
+<section class="section soft"><div class="wrap narrow prose">
+  <h2>Zo lees je zelf een schildersofferte</h2>
+  <p>Voordat je 'm opstuurt, kun je al veel zien. Vaag taalgebruik is het belangrijkste waarschuwingssignaal: wat niet is omschreven, kan later meerwerk worden.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Vaag</th><th>Duidelijk</th></tr></thead>
+    <tbody>
+      <tr><td>Kozijnen schilderen</td><td>Welke kozijnen, aan welke kant, en hoeveel stuks</td></tr>
+      <tr><td>Goede kwaliteit verf</td><td>Merk, type en glansgraad</td></tr>
+      <tr><td>Voorbereiding inbegrepen</td><td>Schuren, ontvetten, plamuren, en waar dat gebeurt</td></tr>
+      <tr><td>Houtrot in overleg</td><td>Hoe houtrot wordt vastgesteld en wat het per plek of per uur kost</td></tr>
+      <tr><td>Steiger indien nodig</td><td>Steiger of hoogwerker inbegrepen, of met een apart bedrag</td></tr>
+      <tr><td>Garantie volgens afspraak</td><td>De termijn, en waar die wel en niet voor geldt</td></tr>
+    </tbody>
+  </table></div>
+  {foto(FOTOS_PAGINA["checken"], "(max-width:760px) calc(100vw - 40px), 720px")}
+  <h2>Twee offertes naast elkaar leggen</h2>
+  <p>Vergelijk niet alleen het eindbedrag. Zet per offerte op een rij hoeveel lagen er worden gezet, wat er voorbereid wordt en wat er buiten de prijs valt. Is de ene offerte veel goedkoper, zoek dan eerst uit wat er ontbreekt. Pas als de inhoud gelijk is, zegt de prijs iets.</p>
 </div></section>
 {faq_html}
 {cta_blok("Toch liever direct vergelijken?", "Vraag gratis offertes aan bij maximaal drie schilders en zie zelf hoe de prijzen uiteenlopen.")}"""
@@ -818,6 +879,17 @@ def build_voor_schilders():
   </div>
 </div></section>
 
+<section class="section"><div class="wrap narrow prose">
+  <h2>Zo werkt het als je je aanmeldt</h2>
+  <ol>
+    <li><strong>Je meldt je aan</strong> met je bedrijfsgegevens, je werkgebied en het werk dat je doet.</li>
+    <li><strong>We bellen je</strong> om je werkgebied en je maximum aantal aanvragen door te nemen.</li>
+    <li><strong>Je ontvangt aanvragen</strong> uit jouw gebied, met de omschrijving en de contactgegevens van de aanvrager.</li>
+    <li><strong>Jij neemt contact op</strong> en maakt je eigen offerte. De opdracht sluit je rechtstreeks met de klant.</li>
+  </ol>
+  {foto(FOTOS_PAGINA["schilders"], "(max-width:760px) calc(100vw - 40px), 720px")}
+</div></section>
+
 <section class="section soft" id="tarieven"><div class="wrap narrow prose">
   <h2>Wat kost een lead?</h2>
   <p>Je betaalt per aanvraag, en de prijs hangt af van het type werk. Grotere klussen zijn meer waard, dus daar betaal je meer voor. Alle bedragen zijn exclusief btw.</p>
@@ -835,14 +907,14 @@ def build_voor_schilders():
   </div>
 
   <h3 id="exclusief">Exclusieve leads</h3>
-  <p>Bij een exclusieve lead krijg jij de aanvraag als enige. Geen concurrentie, geen race om als eerste te bellen. Je betaalt het dubbele, maar je scoringspercentage gaat in de praktijk van ongeveer een op vier naar meer dan de helft. Reken zelf even mee: bij een gedeelde buitenschilderlead van €38 en een scoringskans van 25% kost een opdracht je €152 aan leadkosten. Exclusief, tegen €76 en 55% scoringskans, kom je uit op €138. En je bent een stuk minder tijd kwijt aan offertes die je toch niet krijgt.</p>
+  <p>Bij een exclusieve lead krijg jij de aanvraag als enige. Geen concurrentie, geen race om als eerste te bellen. Je betaalt het dubbele, dus reken het voor je eigen bedrijf uit: is je kans op de opdracht bij een exclusieve lead meer dan twee keer zo groot als bij een gedeelde, dan ben je per gewonnen opdracht goedkoper uit. Houd daarom een paar maanden bij hoeveel offertes je wint.</p>
 
   <div class="callout">
     <p><strong>Eerste drie leads gratis.</strong> We snappen dat je eerst wilt zien wat de kwaliteit is. Meld je aan en de eerste drie aanvragen in je werkgebied kosten je niets. Bevalt het niet, dan stopt het daar.</p>
   </div>
 
   <h2>Hoe wij aanvragen binnenhalen</h2>
-  <p>Via Google. Mensen die zoeken op &quot;schilder Almere&quot; of &quot;kosten buitenschilderwerk&quot; komen op onze pagina's terecht en vragen daar offertes aan. Dat is warme vraag: iemand die actief zoekt, is meestal binnen enkele weken klaar om een opdracht te geven.</p>
+  <p>Via Google. Mensen die zoeken op &quot;schilder Almere&quot; of &quot;kosten buitenschilderwerk&quot; komen op onze pagina's terecht en vragen daar offertes aan. Dat is warme vraag: iemand die actief zoekt, heeft al een klus in gedachten.</p>
 
   <h2>Wat we van jou verwachten</h2>
   <ul class="checklist">
@@ -880,7 +952,7 @@ def build_prijzen():
         ("Hoeveel rekent een schilder per uur?",
          "In 2026 ligt het gangbare uurtarief tussen €45 en €65 exclusief btw. Een eenmanszaak zit doorgaans aan de onderkant, een bedrijf met personeel en een bedrijfsauto aan de bovenkant. Op offertes zie je dit tarief overigens zelden terug, omdat de meeste schilders per m² of per stuk offreren."),
         ("Klopt het dat ik maar 9% btw betaal?",
-         "Over het arbeidsloon wel, als je woning ouder is dan twee jaar. Over de materialen geldt gewoon 21%. Een correcte offerte splitst dit uit. Bij bedrijfspanden geldt het lage tarief niet."),
+         "Voor schilderwerk en de gebruikte materialen wel, als je woning ouder is dan twee jaar. Voor bedrijfspanden en voor werk dat verder gaat dan schilderen geldt 21%."),
         ("Waarom lopen offertes zo ver uiteen?",
          "Meestal door drie dingen: het aantal lagen dat wordt gerekend, hoeveel voorbereiding er is ingecalculeerd, en of houtrot en steiger zijn meegenomen. Een offerte die €1.500 lager is, is vaak niet goedkoper maar minder compleet."),
         ("Is de goedkoopste offerte een slechte keuze?",
@@ -914,18 +986,35 @@ def build_prijzen():
   <h2>Per klus toegelicht</h2>
   {blokken}
 
-  <h2>Het btw-voordeel dat veel mensen missen</h2>
-  <p>Voor woningen die ouder zijn dan twee jaar geldt op schilder-, stukadoors- en behangwerk het <strong>lage btw-tarief van 9% op het arbeidsloon</strong>. Op de materialen betaal je 21%. Bij een offerte van €4.000 waarvan €2.800 arbeid scheelt dat je ruim €330 ten opzichte van het volledige tarief.</p>
+  <h2>Welke btw betaal je?</h2>
+  <p>Voor schilderwerk aan een woning die ouder is dan twee jaar geldt <strong>9% btw</strong>, ook over de gebruikte materialen. De twee jaar tellen vanaf het moment dat de woning voor het eerst is gebruikt.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Onderdeel</th><th>Btw</th></tr></thead>
+    <tbody>
+      <tr><td>Schilderen van een woning ouder dan twee jaar, met voorbereiding en gebruikte materialen</td><td class="num">9%</td></tr>
+      <tr><td>Behangen, voorbereiding en lijm</td><td class="num">9%</td></tr>
+      <tr><td>De levering van het behang zelf</td><td class="num">21%</td></tr>
+      <tr><td>Houten inzetstukken in kozijnen en het vervangen van onderdorpels</td><td class="num">21%</td></tr>
+      <tr><td>Vervangen van ramen, deuren en kozijnen</td><td class="num">21%</td></tr>
+      <tr><td>Bedrijfsruimtes en woningen van twee jaar of jonger</td><td class="num">21%</td></tr>
+    </tbody>
+  </table></div>
+  <p><small>Bron: <a href="https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/tarieven_en_vrijstellingen/diensten_9_btw/werkzaamheden_aan_woningen/werkzaamheden_aan_woningen" rel="nofollow noopener">Belastingdienst, btw-tarief werkzaamheden aan woningen</a>, geraadpleegd in november 2026. Is een pand deels woning, dan geldt 9% alleen voor het woongedeelte.</small></p>
   <div class="callout">
-    <p><strong>Check dit altijd.</strong> Staat er op de offerte één bedrag met 21% btw over het geheel, vraag dan om een splitsing tussen arbeid en materiaal. Een schildersbedrijf dat dit niet uit zichzelf doet, is ofwel slordig ofwel rekent je te veel.</p>
+    <p><strong>Check dit altijd.</strong> Staat er 21% over schilderwerk aan je woning, vraag dan waarom. Combineert de offerte schilderwerk met ander werk, dan hoort het bedrijf de posten met 9% en 21% te splitsen.</p>
   </div>
+
+  {foto(FOTOS_PAGINA["prijzen"], "(max-width:760px) calc(100vw - 40px), 720px")}
+
+  <h2>Wat een richtprijs niet vertelt</h2>
+  <p>Een richtprijs gaat uit van een gewone klus. Je prijs komt hoger uit als de ondergrond slecht is, als er houtrot zit, als het werk moeilijk bereikbaar is of als je een sterke kleurwissel wilt. Hij komt lager uit als de verflaag nog goed is en de schilder makkelijk bij het werk kan. Gebruik een richtprijs dus om te zien of een offerte in de buurt zit, niet als bedrag dat je mag verwachten.</p>
 
   <h2>Zo bespaar je zonder in te leveren op kwaliteit</h2>
   <ul class="checklist">
     <li><strong>Plan in het laagseizoen.</strong> Buitenwerk in september of oktober, binnenwerk in de winter. Schilders hebben dan ruimte in de agenda en zijn scherper.</li>
     <li><strong>Doe het voorwerk zelf.</strong> Meubels weghalen, vloeren afdekken en plinten aftapen scheelt makkelijk een dagdeel arbeid.</li>
     <li><strong>Combineer klussen.</strong> Binnen- en buitenwerk tegelijk laten doen scheelt opstartkosten en voorrijkosten.</li>
-    <li><strong>Vraag drie offertes.</strong> Het verschil tussen de laagste en hoogste prijs voor hetzelfde werk is in de praktijk vaak 30 tot 50%.</li>
+    <li><strong>Vraag drie offertes.</strong> Pas als je prijzen naast elkaar legt, zie je wat redelijk is en wat ontbreekt.</li>
     <li><strong>Wacht niet te lang met buitenwerk.</strong> Een beurt uitstellen tot het hout rot is, verdubbelt de rekening.</li>
   </ul>
 
@@ -1082,7 +1171,7 @@ def build_static_pages():
     cr, cr_ld = crumbs([("Home", "/"), ("Fotoverantwoording", None)])
     e = htmllib.escape
     blokken = ""
-    groepen = [("Homepage", [FOTO_HOME])] + [(d["naam"], list(FOTOS[d["slug"]].values())) for d in DIENSTEN if d["slug"] in FOTOS]
+    groepen = [("Homepage", [FOTO_HOME]), ("Diensten-overzicht", [FOTOS_PAGINA["diensten"]]), ("Werkgebied", [FOTOS_PAGINA["werkgebied"]]), ("Wat kost het?", [FOTOS_PAGINA["prijzen"]]), ("Offerte laten checken", [FOTOS_PAGINA["checken"]]), ("Voor schilders", [FOTOS_PAGINA["schilders"]])] + [(d["naam"], list(FOTOS[d["slug"]].values())) for d in DIENSTEN if d["slug"] in FOTOS]
     for naam, lijst in groepen:
         blokken += f"<h2>{naam}</h2>"
         for f in lijst:

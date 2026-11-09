@@ -772,3 +772,107 @@ FAVICON_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
 <path d="M13 24a10 10 0 0 1 20 0z" fill="#fff"/>
 <path d="M15 38h16l4 14H11z" fill="#fff"/>
 </svg>'''
+
+
+
+STYLE_CSS += r'''
+/* Werkgebiedkaart */
+.kaart-knoppen{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip-k{font:inherit;font-size:.92rem;font-weight:600;padding:8px 14px;border-radius:999px;border:1px solid #d9c8a8;background:#fff;color:#3c290f;cursor:pointer}
+.chip-k:hover{border-color:#f4820b}
+.chip-k[aria-pressed="true"]{background:#3c290f;border-color:#3c290f;color:#fff}
+.chip-k:focus-visible,.kaart-link:focus-visible{outline:3px solid #f4820b;outline-offset:2px}
+.kaart-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:stretch}
+.kaart svg{width:100%;height:auto;aspect-ratio:1000/944;display:block;border-radius:var(--radius-lg);border:1px solid #e6d9c2;background:#dfe9e8}
+.kw{fill:#dfe9e8}.kl{fill:#f7f1e6;stroke:#ddcfb6;stroke-width:1.5}.ka{fill:#fbe9cf}
+.kp{cursor:pointer;outline:none}.kh{fill:transparent}
+.kd{fill:#f4820b;stroke:#3c290f;stroke-width:2.5;transition:fill .15s}
+.kp text{fill:#3c290f;font-weight:700;paint-order:stroke;stroke:#fffaf2;stroke-width:5px;stroke-linejoin:round;pointer-events:none;display:none}
+.kp.kg text,.kaart svg.zoom .kp text,.kp:hover text,.kp:focus text,.kp.aan text{display:block}
+.kp:hover .kd,.kp:focus .kd,.kp.aan .kd{fill:#3c290f;stroke:#f4820b;stroke-width:4}
+.kp[hidden]{display:none}
+.kaart-info{background:#3c290f;color:#f7f1e6;border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.kaart-prov{margin:0;color:#ffc98a;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.kaart-naam{color:#fff;margin:0}.kaart-hook{color:#f7f1e6;margin:0 0 auto;font-size:.97rem}
+.kaart-link{margin-top:14px}
+.kaart-bron{font-size:.8rem;margin-top:10px}
+@media(max-width:860px){.kaart-grid{grid-template-columns:minmax(0,1fr)}.kaart-hook{margin-bottom:0}}
+'''
+
+APP_JS += r'''
+/* Werkgebiedkaart: inzoomen per provincie en plaatsinfo. Zonder JavaScript blijven alle links werken. */
+(function () {
+  var kaart = document.querySelector("[data-kaart]");
+  if (!kaart) return;
+  var svg = kaart.querySelector("svg");
+  var B = +kaart.dataset.b, H = +kaart.dataset.h;
+  var punten = [].slice.call(svg.querySelectorAll(".kp"));
+  var knoppen = [].slice.call(kaart.querySelectorAll(".chip-k"));
+  var naam = kaart.querySelector(".kaart-naam"), prov = kaart.querySelector(".kaart-prov");
+  var hook = kaart.querySelector(".kaart-hook"), link = kaart.querySelector(".kaart-link");
+  var vb = [0, 0, B, H], anim = 0;
+  var rust = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function maten() {
+    var u = vb[2] / (svg.clientWidth || B);
+    var groot = svg.clientWidth >= 500;
+    punten.forEach(function (p) {
+      p.querySelector(".kd").setAttribute("r", (groot ? 7 : 6) * u);
+      p.querySelector(".kd").style.strokeWidth = 1.6 * u;
+      p.querySelector(".kh").setAttribute("r", (groot ? 13 : 15) * u);
+      var t = p.querySelector("text"), x = +p.dataset.x, y = +p.dataset.y;
+      var kant = p.dataset.l;
+      t.setAttribute("font-size", (groot ? 14 : 12) * u);
+      t.style.strokeWidth = 3.2 * u + "px";
+      t.setAttribute("x", kant === "t" || kant === "b" ? x : x + (kant === "l" ? -11 : 11) * u);
+      t.setAttribute("y", kant === "b" ? y + 20 * u : kant === "t" ? y - 11 * u : y + 4.5 * u);
+    });
+  }
+  function zet(v) { vb = v; svg.setAttribute("viewBox", v.join(" ")); maten(); }
+  function naar(doel) {
+    cancelAnimationFrame(anim);
+    if (rust) return zet(doel);
+    var van = vb.slice(), t0 = performance.now();
+    (function stap(t) {
+      var f = Math.min(1, (t - t0) / 420), e = 1 - Math.pow(1 - f, 3);
+      zet(van.map(function (a, i) { return a + (doel[i] - a) * e; }));
+      if (f < 1) anim = requestAnimationFrame(stap);
+    })(t0);
+  }
+  function kader(lijst) {
+    var xs = lijst.map(function (p) { return +p.dataset.x; }), ys = lijst.map(function (p) { return +p.dataset.y; });
+    var x0 = Math.min.apply(0, xs), x1 = Math.max.apply(0, xs), y0 = Math.min.apply(0, ys), y1 = Math.max.apply(0, ys);
+    var marge = svg.clientWidth < 500 ? 400 : 190;
+    var w = Math.max(x1 - x0 + marge, 300), h = Math.max(y1 - y0 + 130, 300 * H / B);
+    if (w / h > B / H) h = w * H / B; else w = h * B / H;
+    return [(x0 + x1 - w) / 2, (y0 + y1 - h) / 2, w, h];
+  }
+  function toon(p) {
+    punten.forEach(function (q) { q.classList.toggle("aan", q === p); });
+    prov.textContent = p.dataset.prov;
+    naam.textContent = "Schilder " + p.dataset.naam;
+    hook.textContent = p.dataset.hook;
+    link.textContent = "Bekijk " + p.dataset.naam + " →";
+    link.href = p.getAttribute("href");
+  }
+  punten.forEach(function (p) {
+    p.addEventListener("mouseenter", function () { toon(p); });
+    p.addEventListener("focus", function () { toon(p); });
+  });
+  knoppen.forEach(function (k) {
+    k.addEventListener("click", function () {
+      var pv = k.dataset.prov;
+      knoppen.forEach(function (x) { x.setAttribute("aria-pressed", x === k ? "true" : "false"); });
+      var zicht = punten.filter(function (p) {
+        var ja = !pv || p.dataset.prov === pv;
+        if (ja) p.removeAttribute("hidden"); else p.setAttribute("hidden", "");
+        return ja;
+      });
+      svg.classList.toggle("zoom", !!pv);
+      naar(pv ? kader(zicht) : [0, 0, B, H]);
+    });
+  });
+  window.addEventListener("resize", maten);
+  maten();
+})();
+'''

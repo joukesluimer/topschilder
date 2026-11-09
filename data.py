@@ -73,7 +73,7 @@ DIENSTEN = [
             ("Hoelang duurt binnenschilderwerk?", "Een gemiddelde woonkamer van 30 m² kost een schilder ongeveer twee tot drie dagen inclusief voorbereiding. Een hele benedenverdieping ligt eerder rond een week."),
             ("Kan ik in huis blijven wonen tijdens het schilderen?", "Meestal wel. Moderne watergedragen latex is vrijwel reukloos en droogt binnen enkele uren. Bij spuitwerk of oplosmiddelhoudende lak is het prettiger om de ruimte een dag te mijden."),
             ("Moet ik zelf verf kopen?", "Dat mag, maar het is zelden goedkoper. Schilders kopen met korting in en zijn alleen verantwoordelijk voor het eindresultaat als zij de verf leveren."),
-            ("Geldt het lage btw-tarief van 9%?", "Ja, voor het arbeidsloon bij woningen die ouder zijn dan twee jaar. Over de materialen betaal je 21%. Een goede offerte splitst dit netjes uit."),
+            ("Geldt het lage btw-tarief van 9%?", "Ja, bij woningen die ouder zijn dan twee jaar, voor het werk én de gebruikte materialen."),
         ],
     },
     {
@@ -124,7 +124,7 @@ DIENSTEN = [
             ("Hoe vaak moet buitenschilderwerk gebeuren?", "Voor houten kozijnen is vier tot zes jaar gebruikelijk. Zuid- en westgevels krijgen de meeste zon en regen en zijn meestal als eerste aan de beurt."),
             ("Kan er in de winter buiten geschilderd worden?", "Beperkt. De meeste verven vragen minimaal 5 tot 8 graden en een droge ondergrond. Tussen november en maart plannen schilders daarom vooral binnenwerk."),
             ("Wat kost een steiger?", "Reken op €300 tot €900 voor een gemiddelde woning, afhankelijk van hoogte en huurduur. Vraag of dit in de offerte zit of apart wordt gerekend."),
-            ("Geldt 9% btw ook buiten?", "Ja. Voor woningen ouder dan twee jaar geldt het lage tarief op het arbeidsloon, binnen én buiten."),
+            ("Geldt 9% btw ook buiten?", "Ja. Voor woningen ouder dan twee jaar geldt het 9%-tarief op schilderwerk binnen én buiten, inclusief de gebruikte materialen."),
         ],
     },
     {
@@ -326,7 +326,7 @@ DIENSTEN = [
         ],
         "faq": [
             ("Kan er buiten kantooruren gewerkt worden?", "Ja, veel schildersbedrijven werken 's avonds of in het weekend bij zakelijke opdrachten. Reken op een toeslag van 25 tot 50% op het uurtarief."),
-            ("Geldt het lage btw-tarief ook zakelijk?", "Nee. Het 9%-tarief geldt alleen voor woningen ouder dan twee jaar. Bij bedrijfspanden betaal je 21% — maar die kun je als ondernemer meestal terugvorderen."),
+            ("Geldt het lage btw-tarief ook zakelijk?", "Nee. Het 9%-tarief geldt alleen voor woningen ouder dan twee jaar. Bedrijfsruimtes vallen onder 21%. Is een pand deels woning, dan geldt 9% alleen voor het woongedeelte."),
             ("Hoe werkt dit voor een VvE?", "Meestal via een meerjarenonderhoudsplan. De schilder maakt een inspectierapport en een fasering over meerdere jaren, waarna de vergadering het budget vaststelt."),
             ("Wat is een aanneemsom?", "Een vaste totaalprijs voor het hele werk, in plaats van afrekenen per gewerkt uur. Voor grotere projecten geeft dat jou zekerheid over het budget."),
         ],
