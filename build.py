@@ -1037,7 +1037,6 @@ def build_static_pages():
 <section class="section-sm"><div class="wrap narrow prose">
   <h1>Privacyverklaring</h1>
   <p><small>Laatst bijgewerkt: {TODAY}</small></p>
-  <div class="callout"><p><strong>Let op:</strong> dit is een werkversie. Laat de definitieve tekst controleren voordat de site live gaat, en vul de bedrijfsgegevens en KvK-nummer in.</p></div>
 
   <h2>Wie zijn wij</h2>
   <p>{SITE['naam']}, gevestigd te {SITE['adres']}, KvK {SITE['kvk']}, is verwerkingsverantwoordelijke voor de gegevens die via {SITE['domein']} worden verzameld. Contact: <a href="mailto:{SITE['email']}">{SITE['email']}</a>.</p>
@@ -1078,7 +1077,6 @@ def build_static_pages():
 <section class="section-sm"><div class="wrap narrow prose">
   <h1>Algemene voorwaarden</h1>
   <p><small>Laatst bijgewerkt: {TODAY}</small></p>
-  <div class="callout"><p><strong>Let op:</strong> dit is een werkversie die als basis dient. Laat deze voorwaarden juridisch controleren voordat de site live gaat.</p></div>
 
   <h2>1. Definities</h2>
   <p><strong>Topschilder:</strong> {SITE['naam']}, KvK {SITE['kvk']}. <strong>Aanvrager:</strong> de particulier of onderneming die via de website een aanvraag indient. <strong>Vakman:</strong> het schildersbedrijf dat via Topschilder aanvragen ontvangt.</p>
