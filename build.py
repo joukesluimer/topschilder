@@ -148,7 +148,7 @@ def build_home():
         ("Hoe worden schilders geselecteerd?",
          "We controleren KvK-inschrijving en aansprakelijkheidsverzekering, en we kijken of het bedrijf het gevraagde type werk daadwerkelijk uitvoert. Bij herhaalde klachten stoppen we de samenwerking."),
         ("Wat gebeurt er met mijn gegevens?",
-         "Je gegevens gaan alleen naar de schilders die op jouw aanvraag reageren. We verkopen ze niet door aan andere partijen en gebruiken ze niet voor ongevraagde reclame. Zie onze privacyverklaring."),
+         "Je gegevens gaan alleen naar maximaal 3 schilders uit jouw regio. Zij betalen ons een vergoeding om je aanvraag te ontvangen. Andere partijen krijgen je gegevens niet en we gebruiken ze niet voor ongevraagde reclame. Zie onze privacyverklaring."),
     ]
     faq_html, faq_ld = faq_blok(faqs)
 
@@ -590,7 +590,7 @@ def build_offerte_aanvragen():
         <li><strong>Kost je niets.</strong> Aanvragen en vergelijken is volledig gratis. Wij worden betaald door de schilders.</li>
         <li><strong>Maximaal drie bedrijven.</strong> Je nummer gaat nooit naar meer partijen.</li>
         <li><strong>Geen verplichting.</strong> Alle drie afwijzen mag, zonder uitleg.</li>
-        <li><strong>Geen doorverkoop.</strong> Je gegevens gaan alleen naar de schilders die op jouw aanvraag reageren.</li>
+        <li><strong>Alleen naar jouw schilders.</strong> Je gegevens gaan naar maximaal 3 schilders uit jouw regio en naar niemand anders.</li>
       </ul>
       <div class="callout">
         <p><strong>Tip:</strong> hoe concreter je omschrijving, hoe scherper de offertes. Noem het aantal ramen of vierkante meters, wanneer er voor het laatst geschilderd is en of je ergens houtrot of schade ziet. Een foto meesturen kan altijd na het eerste contact.</p>
@@ -603,7 +603,7 @@ def build_offerte_aanvragen():
 {cta_blok("Liever eerst weten wat het kost?", "Bekijk het complete prijzenoverzicht met richtprijzen per type schilderwerk.", "Naar het prijzenoverzicht")}"""
     write("/offerte-aanvragen/", page(
         title("Gratis 3 offertes van schilders aanvragen"),
-        "Vraag in een minuut gratis offertes aan bij maximaal 3 schilders uit jouw regio. Vrijblijvend, geen kosten en je gegevens worden niet doorverkocht.",
+        "Vraag in een minuut gratis offertes aan bij maximaal 3 schilders uit jouw regio. Vrijblijvend en zonder kosten voor jou.",
         "/offerte-aanvragen/", body, [cr_ld]), prio=0.9, freq="weekly")
 
 
@@ -1052,7 +1052,7 @@ def build_static_pages():
   <p>We verwerken je gegevens om je aanvraag door te sturen naar maximaal drie schildersbedrijven. De grondslag is de uitvoering van de overeenkomst die ontstaat op het moment dat je het formulier verstuurt. Voor het meten van websitegebruik en advertentie-effectiviteit is de grondslag ons gerechtvaardigd belang, dan wel je toestemming waar de wet die vereist.</p>
 
   <h2>Met wie delen we gegevens</h2>
-  <p>Je aanvraaggegevens gaan naar maximaal drie schildersbedrijven die in jouw regio werken. Zij zijn zelfstandig verwerkingsverantwoordelijke voor wat zij daarna met je gegevens doen. <strong>We verkopen je gegevens niet aan andere partijen</strong> en gebruiken ze niet voor ongevraagde reclame van derden.</p>
+  <p>Je aanvraaggegevens gaan naar maximaal drie schildersbedrijven die in jouw regio werken. Deze bedrijven betalen ons een vergoeding om je aanvraag te ontvangen. Zij zijn zelfstandig verwerkingsverantwoordelijke voor wat zij daarna met je gegevens doen. <strong>Aan andere partijen geven of verkopen we je gegevens niet</strong> en we gebruiken ze niet voor ongevraagde reclame van derden.</p>
   <p>Daarnaast maken we gebruik van verwerkers voor hosting en dataopslag. Met deze partijen zijn verwerkersovereenkomsten gesloten.</p>
 
   <h2>Hoelang bewaren we gegevens</h2>
