@@ -298,7 +298,7 @@ def offerte_form(title="Ontvang gratis 3 offertes", sub="Gemiddeld binnen 24 uur
         <button type="button" class="btn btn-ghost" data-prev>Terug</button>
         <button type="submit" class="btn btn-primary" data-submit>Verstuur aanvraag</button>
       </div>
-      <p class="formfoot">Door te versturen ga je akkoord met onze <a href="/voorwaarden/">voorwaarden</a> en <a href="/privacy/">privacyverklaring</a>. Maximaal 3 schilders nemen contact met je op. We verkopen je gegevens nooit door aan andere partijen.</p>
+      <p class="formfoot">Door te versturen ga je akkoord met onze <a href="/voorwaarden/">voorwaarden</a> en <a href="/privacy/">privacyverklaring</a>. Je gegevens gaan naar maximaal 3 schilders uit jouw regio, die ons betalen om je aanvraag te ontvangen. Andere partijen krijgen ze niet.</p>
     </div>
   </form>
 
