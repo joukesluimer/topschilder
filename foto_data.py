@@ -185,3 +185,29 @@ FOTOS_PAGINA = {'diensten': {'naam': 'kwasten-van-natuurhaar',
                'bron': 'https://commons.wikimedia.org/wiki/File:Homes_pintant_una_casa_(Puigcerd%C3%A0).jpg',
                'bewerking': 'Bijgesneden tot 3:2 (uit 4096 × 2304 px), verkleind naar 1600 en 800 px breed '
                             'en omgezet naar WebP.'}}
+
+FOTOS["spuitwerk"] = {'hero': {'naam': 'hout-spuiten-met-verfpistool-werkplaats',
+          'alt': 'Vakman in geruit overhemd houdt een verfpistool bij een wit paneel in een werkplaats',
+          'w': 1600,
+          'h': 1067,
+          'titel': 'Young man painting a wood board in his workshop using a spray gun.jpg',
+          'maker': 'Shixart1985',
+          'licentie': 'CC BY 2.0',
+          'licentie_url': 'https://creativecommons.org/licenses/by/2.0/',
+          'bron': 'https://commons.wikimedia.org/wiki/File:Young_man_painting_a_wood_board_in_his_workshop_using_a_spray_gun.jpg',
+          'bewerking': 'Bijgesneden tot 3:2 (uit 6016 × 4016 px), verkleind naar 1600 en 800 px breed en '
+                       'omgezet naar WebP.'},
+ 'sectie': {'naam': 'paneel-spuiten-in-spuitcabine',
+            'alt': 'Spuiter met gelaatsmasker spuit een grijs paneel in een spuitcabine',
+            'w': 1600,
+            'h': 1067,
+            'titel': 'U.S. Air Force Staff Sgt. Chris Call, assigned to the structural maintenance shop of '
+                     'the 173rd Fighter Wing, Oregon Air National Guard, sprays a coat of gray paint on an '
+                     'aerospace ground equipment inside a paint 101028-F-ZW427-009.jpg',
+            'maker': 'Senior Airman Bryan Nealy',
+            'licentie': 'Public domain',
+            'licentie_url': 'https://creativecommons.org/publicdomain/mark/1.0/deed.nl',
+            'bron': 'https://commons.wikimedia.org/wiki/File:U.S._Air_Force_Staff_Sgt._Chris_Call,_assigned_to_the_structural_maintenance_shop_of_the_173rd_Fighter_Wing,_Oregon_Air_National_Guard,_sprays_a_coat_of_gray_paint_on_an_aerospace_ground_equipment_inside_a_paint_101028-F-ZW427-009.jpg',
+            'bewerking': 'Bijgesneden tot 3:2 (uit 4288 × 2848 px), verkleind naar 1600 en 800 px breed en '
+                         'omgezet naar WebP. Foto van de Amerikaanse overheid; dat betekent niet dat die '
+                         'overheid deze site of onze diensten goedkeurt.'}}

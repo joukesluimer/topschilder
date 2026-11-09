@@ -388,7 +388,7 @@ def dienst_cards(plaats_slug=None, plaats_naam=None, exclude=None):
         if exclude and d["slug"] == exclude:
             continue
         url = f"/schilder/{plaats_slug}/{d['slug']}/" if plaats_slug else f"/schilderwerk/{d['slug']}/"
-        titel = f"{d['naam']}{' in ' + plaats_naam if plaats_naam else ''}"
+        titel = f"{d.get('naam_lang', d['naam'])}{' in ' + plaats_naam if plaats_naam else ''}"
         out.append(
             f'<a class="card reveal" href="{url}">'
             f'{foto(FOTOS[d["slug"]]["hero"], "(max-width:600px) calc(100vw - 40px), (max-width:900px) 45vw, 340px") if d["slug"] in FOTOS else illustratie(d["slug"])}'

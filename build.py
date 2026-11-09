@@ -205,7 +205,7 @@ def build_diensten_index():
       <tr><td>Muren en plafonds zijn vlekkerig, of je wilt een andere kleur</td><td><a href="/schilderwerk/binnenschilderwerk/">Binnenschilderwerk</a></td></tr>
       <tr><td>De verf op kozijnen, deuren of boeiboorden bladdert of wordt dof</td><td><a href="/schilderwerk/buitenschilderwerk/">Buitenschilderwerk</a></td></tr>
       <tr><td>Hout voelt zacht aan, vooral in de onderhoek van een kozijn</td><td><a href="/schilderwerk/houtrot-reparatie/">Houtrot reparatie</a></td></tr>
-      <tr><td>Deuren of keukenfronten moeten strak en zonder strepen worden</td><td><a href="/schilderwerk/spuitwerk/">Spuitwerk</a></td></tr>
+      <tr><td>Muren of plafonds moeten egaal gespoten worden, of deuren en keukenfronten moeten strak worden</td><td><a href="/schilderwerk/spuitwerk/">Latex spuiten en spuitwerk</a></td></tr>
       <tr><td>Oud behang moet eraf, of je wilt glasvlies of een statementwand</td><td><a href="/schilderwerk/behangen/">Behangen</a></td></tr>
       <tr><td>Het gaat om een kantoor, winkel of bedrijfspand</td><td><a href="/schilderwerk/zakelijk-schilderwerk/">Zakelijk schilderwerk</a></td></tr>
     </tbody>
@@ -242,7 +242,7 @@ def dienst_body(d, plaats=None):
         intro_extra = f"<p>{plaats['hook']}</p>"
     else:
         cr, cr_ld = crumbs([("Home", "/"), ("Diensten", "/schilderwerk/"), (d["naam"], None)])
-        h1 = f"{d['naam']}: kosten, werkwijze en offertes"
+        h1 = f"{d.get('naam_lang', d['naam'])}: kosten, werkwijze en offertes"
         intro_extra = ""
 
     vn_blok = ("" if d["slug"] not in ("buitenschilderwerk", "houtrot-reparatie") else
@@ -264,6 +264,23 @@ def dienst_body(d, plaats=None):
     beeld = (foto(fotos["hero"], "(max-width:980px) calc(100vw - 40px), 536px", boven_vouw=True) if fotos else
              f'<div class="reveal" style="margin-top:24px">{illustratie(d["slug"])}</div>')
     sectiefoto = foto(fotos["sectie"], "(max-width:760px) calc(100vw - 40px), 720px") if fotos else ""
+    latex_blok = ("" if d["slug"] != "spuitwerk" else """
+  <h2>Latex spuiten of spuitwerk: wat is het verschil?</h2>
+  <p>Latex spuiten is de naam die je tegenkomt bij muren en plafonds. De schilder brengt de muurverf dan aan met een verfspuit, meestal airless. Het is een vorm van spuitwerk. Spuitwerk is de bredere term: ook deuren, kozijnen, keukenfronten en metaal kunnen worden gespoten.</p>
+  <h3>Wanneer past latex spuiten?</h3>
+  <ul class="checklist">
+    <li><strong>Egale muren en plafonds.</strong> De verf komt verneveld op het oppervlak, zonder rolbanen of strepen. Dat zie je vooral op plafonds en bij strijklicht.</li>
+    <li><strong>Veel oppervlak in een lege ruimte.</strong> Dan weegt het afdekken op tegen de tijd die spuiten scheelt.</li>
+  </ul>
+  <h3>Waar je rekening mee houdt</h3>
+  <ul>
+    <li>Verfnevel verspreidt zich. Alles wat niet geverfd wordt moet worden afgedekt, en dat is een flink deel van het werk.</li>
+    <li>Spuiten maskeert niets. Gaten, scheuren en andere oneffenheden moeten eerst worden gerepareerd.</li>
+  </ul>
+  <h3>Wat kost latex spuiten?</h3>
+  <p>De richtprijs bovenaan deze pagina gaat over het spuiten van deuren. Voor latex spuiten noemen andere Nederlandse sites deze indicaties per m²: <a href="https://www.homedeal.nl/schilderwerk/latex-spuiten/" rel="nofollow noopener">Homedeal</a> gemiddeld €6 tot €12, <a href="https://trustoo.nl/kennisbank/schilder/latex-spuiten/" rel="nofollow noopener">Trustoo</a> gemiddeld €5 tot €15 en <a href="https://slimster.nl/schilder/schilderwerk-prijzen/kosten-latex-spuiten/" rel="nofollow noopener">Slimster</a> €5 tot €20. Dit zijn indicaties van die sites (geraadpleegd in november 2026), geen prijzen van Topschilder. Je echte prijs hangt af van de ruimte, de ondergrond en het afdekwerk.</p>
+  <p>De Belastingdienst noemt schilderen van woningen ouder dan twee jaar onder het 9%-tarief, maar noemt spuiten niet apart. Kijk daarom op de offerte welk tarief er staat en vraag ernaar als het je niet duidelijk is.</p>
+""")
     btw_extra = {
         "houtrot-reparatie": "<li>Houtwerk apart benoemd: inzetstukken en nieuwe onderdorpels vallen onder 21% btw, het schilderwerk eromheen onder 9%</li>",
         "behangen": "<li>Het behang apart benoemd: de levering van behang valt onder 21% btw, het behangen zelf en de lijm onder 9%</li>",
@@ -293,6 +310,7 @@ def dienst_body(d, plaats=None):
     content = f"""<section class="section soft"><div class="wrap narrow prose reveal">
   <h2>Wat valt er onder {d['naam'].lower()}?</h2>
   <ul class="checklist">{wat}</ul>
+  {latex_blok}
 
   <h2>Zo gaat een schilder te werk</h2>
   {werk}
@@ -364,8 +382,8 @@ def build_dienst_pages():
             "Vertel in een minuut wat je nodig hebt. Wij zoeken maximaal drie schilders die dit werk doen en beschikbaar zijn.")
 
         write(f"/schilderwerk/{d['slug']}/", page(
-            title(f"{d['naam']} kosten {eur(d['prijs_van'])}–{eur(d['prijs_tot'])} {d['prijs_eenheid']}"),
-            desc(f"Wat kost {d['naam'].lower()}?",
+            title(d.get("seo_titel") or f"{d['naam']} kosten {eur(d['prijs_van'])}–{eur(d['prijs_tot'])} {d['prijs_eenheid']}"),
+            desc(f"Wat kost {d.get('naam_lang', d['naam']).lower()}?",
                  f"Richtprijzen {d['prijs_eenheid']}, werkwijze en prijsfactoren.",
                  "Plus waar je op let in een offerte.",
                  "Vergelijk gratis 3 schilders bij jou in de buurt."),

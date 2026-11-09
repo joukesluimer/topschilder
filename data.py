@@ -182,6 +182,8 @@ DIENSTEN = [
         "slug": "spuitwerk",
         "naam": "Spuitwerk",
         "naam_kort": "Spuiten",
+        "naam_lang": "Latex spuiten en spuitwerk",
+        "seo_titel": "Latex spuiten en spuitwerk: kosten en offertes",
         "kort": "Deuren, kozijnen, keukenkastjes en meubels strak spuiten",
         "icon": "spray",
         "prijs_van": 95,
@@ -190,12 +192,13 @@ DIENSTEN = [
         "prijs_extra": "Een complete keuken laten spuiten ligt meestal tussen €900 en €2.500, afhankelijk van het aantal fronten en of het in de werkplaats of op locatie gebeurt.",
         "meta_title": "Spuitwerk kosten: deuren, kozijnen en keuken | {plaats}",
         "intro": (
-            "Spuitwerk geeft een egaal, fabrieksachtig resultaat dat je met een kwast of roller "
-            "niet haalt. Geen kwaststrepen, geen rollerstructuur. Het verschil zit vooral in de "
-            "voorbereiding: alles moet perfect glad en stofvrij zijn, want de spuitlaag verbergt "
-            "niets."
+            "Latex spuiten is spuitwerk voor muren en plafonds. Spuitwerk is de bredere term, en "
+            "daar vallen ook deuren, kozijnen en keukenfronten onder. Spuiten geeft een egale laag "
+            "zonder kwaststrepen of rolbanen. Het verschil zit in de voorbereiding: de spuitlaag "
+            "verbergt niets, dus de ondergrond moet goed zijn."
         ),
         "wat": [
+            "Muren en plafonds latex spuiten",
             "Binnendeuren en kozijnen in de werkplaats of op locatie spuiten",
             "Keukenfronten en kastdeurtjes een nieuwe kleur geven",
             "Trappen en lambrisering strak afwerken",
@@ -218,13 +221,14 @@ DIENSTEN = [
             "Hoogglans is duurder dan zijdeglans, want elke oneffenheid wordt zichtbaar",
         ],
         "tips": [
-            "Laat deuren meenemen naar de werkplaats als je kunt. Het resultaat is aantoonbaar strakker en je hebt geen spuitnevel in huis.",
+            "Laat deuren meenemen naar de werkplaats als je kunt. Daar is de ruimte ingericht om te spuiten en je hebt geen spuitnevel in huis.",
             "Bestel meteen nieuw beslag. Oud beslag terugzetten op vers spuitwerk is zonde van het effect.",
             "Vraag om een proefstukje in jouw kleur voordat de hele keuken de deur uitgaat.",
         ],
         "faq": [
-            ("Is spuitwerk duurder dan kwasten?", "Per deur ongeveer 20 tot 40% duurder, maar het resultaat is aanzienlijk strakker en gaat langer mee. Bij grotere aantallen loopt het prijsverschil snel terug."),
-            ("Hoelang kan ik mijn deuren niet gebruiken?", "Bij werkplaatsspuitwerk zijn deuren doorgaans na drie tot vijf werkdagen terug. De lak is dan hanteerbaar maar pas na enkele weken volledig uitgehard."),
+            ("Wat is het verschil tussen latex spuiten en spuitwerk?", "Latex spuiten gaat over muren en plafonds, die met muurverf worden gespoten. Spuitwerk is de bredere term en omvat ook deuren, kozijnen, keukenfronten en metaal."),
+            ("Is spuitwerk duurder dan kwasten?", "Bij deuren meestal wel, omdat demonteren en voorbereiden meer tijd kosten. Bij grote lege muren en plafonds kan latex spuiten juist voordelig zijn. Vraag voor jouw klus om beide prijzen."),
+            ("Hoelang kan ik mijn deuren niet gebruiken?", "Dat verschilt per schilder en per lak. Vraag vooraf hoeveel dagen de deuren weg zijn en wanneer de lak volledig is uitgehard."),
             ("Kan mijn keuken echt gespoten worden?", "Vrijwel alle keukenfronten kunnen: gelakt hout, MDF, folie en zelfs kunststof. Alleen bij losliggende of opbollende folie is vervangen verstandiger."),
             ("Zit er spuitnevel in mijn huis?", "Bij professioneel werk met goede afscherming en afzuiging niet. Vraag altijd hoe de ruimte wordt afgeschermd voordat er op locatie gespoten wordt."),
         ],
