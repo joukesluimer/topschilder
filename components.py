@@ -25,6 +25,16 @@ ICONS = {
 }
 
 
+def foto(f, sizes, boven_vouw=False):
+    """Responsieve <img> voor een foto uit foto_data.py."""
+    n = f["naam"]
+    laden = 'loading="eager" fetchpriority="high"' if boven_vouw else 'loading="lazy"'
+    alt = f["alt"].replace("&", "&amp;").replace('"', "&quot;")
+    return (f'<figure class="foto"><img src="/assets/fotos/{n}-800.webp" '
+            f'srcset="/assets/fotos/{n}-800.webp 800w, /assets/fotos/{n}-1600.webp 1600w" '
+            f'sizes="{sizes}" width="{f["w"]}" height="{f["h"]}" alt="{alt}" {laden} decoding="async"></figure>')
+
+
 def icon(name, size=23):
     p = ICONS.get(name, ICONS["check"])
     return (
@@ -125,7 +135,7 @@ def footer():
   </div>
   <div class="footer-bot">
     <div>© {SITE['oprichting']}–2026 {SITE['naam']} · KvK {SITE['kvk']}</div>
-    <div><a href="/privacy/">Privacy</a> · <a href="/voorwaarden/">Algemene voorwaarden</a> · <a href="/cookies/">Cookies</a></div>
+    <div><a href="/privacy/">Privacy</a> · <a href="/voorwaarden/">Algemene voorwaarden</a> · <a href="/cookies/">Cookies</a> · <a href="/fotoverantwoording/">Fotoverantwoording</a></div>
   </div>
 </div>
 </footer>"""
