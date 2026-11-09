@@ -4,6 +4,7 @@
 import json
 from data import SITE, DIENSTEN
 from illustraties import illustratie, voor_na
+from foto_data import FOTOS
 
 # Zet op True zodra je ECHTE reviews hebt verzameld. Verzonnen reviews op een
 # live site zijn in Nederland een misleidende handelspraktijk (ACM) en Google
@@ -387,7 +388,7 @@ def dienst_cards(plaats_slug=None, plaats_naam=None, exclude=None):
         titel = f"{d['naam']}{' in ' + plaats_naam if plaats_naam else ''}"
         out.append(
             f'<a class="card reveal" href="{url}">'
-            f'{illustratie(d["slug"])}'
+            f'{foto(FOTOS[d["slug"]]["hero"], "(max-width:600px) calc(100vw - 40px), (max-width:900px) 45vw, 340px") if d["slug"] in FOTOS else illustratie(d["slug"])}'
             f"<h3>{titel}</h3><p>{d['kort']}</p>"
             f'<div class="price">Vanaf {eur(d["prijs_van"])} {d["prijs_eenheid"]}</div>'
             f'<p style="margin:10px 0 0"><span class="go">Bekijk &amp; vraag offertes aan →</span></p></a>'

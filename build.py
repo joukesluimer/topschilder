@@ -15,7 +15,7 @@ import html as htmllib
 from data import (SITE, DIENSTEN, PLAATSEN, buurplaatsen,
                   PRIJSINDEX, INDEX_TOELICHTING, lokale_prijs)
 from illustraties import illustratie, voor_na
-from foto_data import FOTOS
+from foto_data import FOTOS, FOTO_HOME
 from components import (
     page, crumbs, offerte_form, hoe_werkt_het, waarom_blok, dienst_cards,
     faq_blok, cta_blok, prijstabel, icon, eur, title, desc, calculator, foto,
@@ -65,7 +65,7 @@ def build_home():
       <span>Houtrot &amp; spuitwerk</span><span>·</span>
       <span>Particulier en zakelijk</span>
     </div>
-    <div style="margin-top:30px;max-width:460px">{illustratie('hero')}</div>
+    <div style="margin-top:30px;max-width:460px">{foto(FOTO_HOME, "(max-width:500px) calc(100vw - 40px), 460px", boven_vouw=True)}</div>
   </div>
   <div>{offerte_form()}</div>
 </div>
@@ -1082,11 +1082,10 @@ def build_static_pages():
     cr, cr_ld = crumbs([("Home", "/"), ("Fotoverantwoording", None)])
     e = htmllib.escape
     blokken = ""
-    for d in DIENSTEN:
-        if d["slug"] not in FOTOS:
-            continue
-        blokken += f"<h2>{d['naam']}</h2>"
-        for f in FOTOS[d["slug"]].values():
+    groepen = [("Homepage", [FOTO_HOME])] + [(d["naam"], list(FOTOS[d["slug"]].values())) for d in DIENSTEN if d["slug"] in FOTOS]
+    for naam, lijst in groepen:
+        blokken += f"<h2>{naam}</h2>"
+        for f in lijst:
             sa = " De bewerkte foto valt onder dezelfde licentie." if "SA" in f["licentie"] else ""
             blokken += (f'<p><strong>{e(f["alt"])}</strong><br>'
                         f'Titel: <a href="{e(f["bron"])}" rel="nofollow noopener">{e(f["titel"])}</a> (Wikimedia Commons)<br>'
@@ -1096,7 +1095,7 @@ def build_static_pages():
     body = f"""{cr}
 <section class="section-sm"><div class="wrap narrow prose">
   <h1>Fotoverantwoording</h1>
-  <p class="lead">De foto's op onze dienstpagina's komen van Wikimedia Commons en zijn niet door ons of door aangesloten schilders gemaakt. Hieronder staat per foto wie hem maakte, onder welke licentie en wat wij eraan veranderden.</p>
+  <p class="lead">De foto's op onze website komen van Wikimedia Commons en zijn niet door ons of door aangesloten schilders gemaakt. Hieronder staat per foto wie hem maakte, onder welke licentie en wat wij eraan veranderden.</p>
   {blokken}
 </div></section>"""
     write("/fotoverantwoording/", page("Fotoverantwoording | Topschilder",

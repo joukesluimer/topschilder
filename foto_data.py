@@ -97,3 +97,33 @@ FOTOS = {'binnenschilderwerk': {'hero': {'naam': 'muur-afplakken-en-verven-gele-
                          'bron': 'https://commons.wikimedia.org/wiki/File:Wallpaper_2.jpg',
                          'bewerking': 'Bijgesneden tot 3:2 (uit 4160 × 3120 px), verkleind naar 1600 en 800 '
                                       'px breed en omgezet naar WebP.'}}}
+
+_BEWERKING = "Bijgesneden tot 3:2, verkleind naar 1600 en 800 px breed en omgezet naar WebP."
+
+FOTOS["zakelijk-schilderwerk"] = {
+    "hero": {"naam": "pand-in-steiger-met-rood-doek-amsterdam",
+             "alt": "Bedrijfspand in Amsterdam in de steigers met rood steigerdoek tijdens een renovatie",
+             "w": 1600, "h": 1067,
+             "titel": "Renovatie van een oud gebouwencomplex aan de Conradstraat, Amsterdam (2016)",
+             "maker": "Fons Heijnsbroek", "licentie": "CC0 1.0",
+             "licentie_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+             "bron": "https://commons.wikimedia.org/wiki/File:2016.04_-_Amsterdam_photo_of_the_renovation_of_an_old_building_complex_at_the_street_Conradstraat_in_Amsterdam_-_geotagged_free_urban_picture,_in_public_domain_Commons;_Dutch_photography,_Fons_Heijnsbroek,_The_Netherlands_(26232098676).jpg",
+             "bewerking": _BEWERKING},
+    "sectie": {"naam": "kantoorruimte-met-botanisch-behang",
+               "alt": "Lounge van een kantoor met botanisch behang op de wand en een grijze bank",
+               "w": 1600, "h": 1067,
+               "titel": "Communal Coworking interior (Unsplash).jpg",
+               "maker": "Dan Gold", "licentie": "CC0 1.0",
+               "licentie_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+               "bron": "https://commons.wikimedia.org/wiki/File:Communal_Coworking_interior_(Unsplash).jpg",
+               "bewerking": _BEWERKING},
+}
+
+FOTO_HOME = {"naam": "kwast-tegen-lichte-muur",
+             "alt": "Gebruikte kwast met witte verf tegen een lichte muur",
+             "w": 1600, "h": 1067,
+             "titel": "Art-wall-brush-painting (23698214684).jpg",
+             "maker": "www.Pixel.la Free Stock Photos", "licentie": "CC0 1.0",
+             "licentie_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+             "bron": "https://commons.wikimedia.org/wiki/File:Art-wall-brush-painting_(23698214684).jpg",
+             "bewerking": _BEWERKING}
