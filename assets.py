@@ -158,21 +158,31 @@ textarea{min-height:110px;resize:vertical}
 .err.show{display:block}
 .formfoot{font-size:.8rem;color:var(--muted);text-align:center;margin:14px 0 0;line-height:1.5}
 .success{display:none;text-align:center;padding:24px 6px}
-.oc-plak{margin:-4px 0 16px;font-size:.93rem}
+.oc-stap{font-size:1rem;margin:20px 0 8px}
+.oc-stap:first-of-type{margin-top:4px}
+.oc-plak{margin:0 0 12px;font-size:.93rem}
 .oc-plak summary{cursor:pointer;color:var(--navy);font-weight:600;margin-bottom:10px}
-input[type=file]{width:100%;padding:12px;border:1.5px dashed var(--line);border-radius:10px;background:var(--soft,#faf8f5);font-size:.93rem}
-.oc-akkoord{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:.85rem;color:var(--muted);line-height:1.5}
-.oc-akkoord input{accent-color:var(--accent);width:17px;height:17px;margin-top:2px;flex:0 0 auto}
-.oc-bezig{text-align:center;padding:28px 6px}
-.oc-spinner{display:inline-block;width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:ocdraai 1s linear infinite}
-@keyframes ocdraai{to{transform:rotate(360deg)}}
-.oc-uitslag h3{font-size:1.1rem;margin:18px 0 8px}
+input[type=file]{width:100%;padding:12px;border:1.5px dashed var(--line);border-radius:10px;background:#faf8f5;font-size:.93rem}
+.oc-melding{font-size:.85rem;color:var(--muted);margin:6px 0 0}
+.oc-rij{display:grid;grid-template-columns:minmax(0,1fr) 72px 104px 34px;gap:6px;align-items:center;margin-bottom:8px}
+.oc-rij select,.oc-rij input{padding:9px 8px;font-size:.9rem}
+.oc-rij .oc-weg{border:0;background:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1}
+.oc-kop{display:grid;grid-template-columns:minmax(0,1fr) 72px 104px 34px;gap:6px;font-size:.78rem;color:var(--muted);font-weight:600;margin-bottom:4px}
+@media(max-width:560px){.oc-kop{display:none}.oc-rij{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 28px;padding-bottom:10px;border-bottom:1px solid var(--line)}.oc-rij select{grid-column:1/-1}}
+.oc-btw{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;margin:8px 0 4px}
+.oc-btw label{white-space:nowrap}
+.oc-btw label,.oc-lijst label{display:flex;gap:8px;align-items:center;font-weight:400;margin:0}
+.oc-lijst{display:grid;gap:7px;font-size:.88rem}
+.oc-lijst input,.oc-btw input{accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto}
+.oc-uitslag{margin-top:22px;border-top:2px solid var(--line);padding-top:6px}
+.oc-uitslag h3{font-size:1.05rem;margin:18px 0 8px}
 .oc-posten{list-style:none;padding:0;margin:0}
 .oc-posten li{border-top:1px solid var(--line);padding:10px 0}
 .oc-posten small{color:var(--muted);font-size:.84rem}
 .oc-post{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:.93rem;margin-bottom:2px}
 .oc-oordeel{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.78rem;font-weight:700;white-space:nowrap}
 .oc-laag{background:#e8f1fb;color:#1d4f86}.oc-binnen{background:#e7f5ec;color:#1e6b3a}.oc-hoog{background:#fdecea;color:#a3271b}.oc-geen{background:var(--line);color:var(--muted)}
+.btn-link{border:0;background:none;color:var(--navy);font-weight:600;cursor:pointer;padding:4px 0;font-size:.9rem}
 .success.show{display:block}
 .success .big{width:58px;height:58px;border-radius:50%;background:#e7f7ef;color:var(--green);display:grid;place-items:center;font-size:1.6rem;margin:0 auto 16px}
 
@@ -774,12 +784,7 @@ window.TS_CONFIG = {
   // Google Ads conversietracking. Vul in zodra je een conversieactie hebt
   // aangemaakt, dan telt elke ingestuurde offerteaanvraag als conversie.
   GOOGLE_ADS_ID: "",           // bv. "AW-123456789"
-  GOOGLE_ADS_LABEL: "",        // bv. "AbC-D_efG-h12_34-567"
-
-  // Automatische offertecheck op /offerte-vergelijken/. Leeg = uit, dan zie
-  // je alleen het gewone formulier. Vullen met de URL van de Supabase-functie,
-  // zie supabase/functions/offertecheck/LEESMIJ.md.
-  OFFERTECHECK_URL: ""         // bv. "https://<project>.supabase.co/functions/v1/offertecheck"
+  GOOGLE_ADS_LABEL: ""         // bv. "AbC-D_efG-h12_34-567"
 };
 '''
 
@@ -897,154 +902,263 @@ APP_JS += r'''
 })();
 '''
 
+
 APP_JS += r"""
-/* ------------------------------------------------- automatische offertecheck */
+/* ------------------------------------------------- offertecheck in de browser */
+// Alles gebeurt hier in de browser: de offerte wordt nergens naartoe gestuurd.
 (function () {
   var box = document.querySelector("[data-offertecheck]");
-  var CFG = window.TS_CONFIG || {};
-  if (!box || !CFG.OFFERTECHECK_URL) return;
+  if (!box) return;
   var BANDEN = window.TS_PRIJSBANDEN || {};
-
-  document.querySelectorAll("[data-ai-uit]").forEach(function (e) { e.hidden = true; });
-  document.querySelectorAll("[data-ai-aan]").forEach(function (e) { e.hidden = false; });
   var hand = document.querySelector("[data-handcheck]");
-  if (hand) hand.hidden = true;
+  document.querySelectorAll("[data-check-uit]").forEach(function (e) { e.hidden = true; });
+  document.querySelectorAll("[data-check-aan]").forEach(function (e) { e.hidden = false; });
   box.hidden = false;
+  if (hand) hand.hidden = true;
+  box.querySelector("[data-oc-hand]").addEventListener("click", function () { if (hand) hand.hidden = false; });
 
-  var form = box.querySelector("[data-oc-form]");
+  var rijen = box.querySelector("[data-oc-rijen]");
+  var melding = box.querySelector("[data-oc-melding]");
   var fout = box.querySelector("[data-oc-fout]");
-  var bezig = box.querySelector("[data-oc-bezig]");
   var uitslag = box.querySelector("[data-oc-uitslag]");
-  var MAX = 6 * 1024 * 1024;
-  var TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+  var plaats = box.querySelector("[name=plaats]");
+  var opties = Object.keys(BANDEN).map(function (k) {
+    return "<option value='" + k + "'>" + BANDEN[k].naam + " (" + BANDEN[k].eenheid + ")</option>";
+  }).join("") + "<option value='anders'>Iets anders</option>";
 
-  box.querySelector("[data-oc-hand]").addEventListener("click", function () {
-    if (hand) { hand.hidden = false; }
-  });
-
-  function toonFout(t) { fout.textContent = t; fout.classList.add("show"); }
   function esc(t) {
     return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
   function euro(n) { return "€" + Math.round(n).toLocaleString("nl-NL"); }
-
-  function leesBestand(f) {
-    return new Promise(function (ok, nee) {
-      var r = new FileReader();
-      r.onload = function () { ok(String(r.result).split(",")[1]); };
-      r.onerror = nee;
-      r.readAsDataURL(f);
-    });
+  function getal(t) {
+    // Nederlandse notatie: 1.250,50 -> 1250.5
+    t = String(t || "").replace(/[€\s]/g, "").replace(/,-$/, "");
+    if (!t) return null;
+    if (/,\d{1,2}$/.test(t)) t = t.replace(/\./g, "").replace(",", ".");
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");
+    else t = t.replace(",", ".");
+    var n = parseFloat(t);
+    return isNaN(n) ? null : n;
   }
 
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    fout.classList.remove("show");
-    var bestand = form.bestand.files[0];
-    var tekst = form.tekst.value.trim();
-    if (!bestand && tekst.length < 20) return toonFout("Upload je offerte of plak de tekst.");
-    if (bestand && TYPES.indexOf(bestand.type) < 0) return toonFout("Upload een pdf, jpg, png of webp.");
-    if (bestand && bestand.size > MAX) return toonFout("Het bestand is te groot. Maximaal 6 MB.");
-    if (!form.plaats.value) return toonFout("Kies je plaats.");
-    if (!form.akkoord.checked) return toonFout("Vink aan dat je akkoord gaat.");
-    var index = parseFloat(form.plaats.value) || 1;
+  function voegRijToe(p) {
+    p = p || {};
+    var r = document.createElement("div");
+    r.className = "oc-rij";
+    r.innerHTML = "<select aria-label='Soort werk'>" + opties + "</select>" +
+      "<input type='text' inputmode='decimal' aria-label='Aantal' placeholder='Aantal'>" +
+      "<input type='text' inputmode='decimal' aria-label='Bedrag' placeholder='€'>" +
+      "<button type='button' class='oc-weg' aria-label='Post verwijderen'>×</button>";
+    var v = r.querySelectorAll("select,input");
+    v[0].value = p.categorie || "buitenkozijn";
+    if (p.hoeveelheid != null) v[1].value = String(p.hoeveelheid).replace(".", ",");
+    if (p.bedrag != null) v[2].value = String(p.bedrag).replace(".", ",");
+    r.querySelector(".oc-weg").addEventListener("click", function () { r.remove(); });
+    rijen.appendChild(r);
+  }
+  box.querySelector("[data-oc-plus]").addEventListener("click", function () { voegRijToe(); });
+  voegRijToe();
 
-    var invoer = bestand
-      ? leesBestand(bestand).then(function (d) { return { bestand: { type: bestand.type, data: d } }; })
-      : Promise.resolve({ tekst: tekst });
+  /* --------------------------- tekst uitlezen */
+  var WOORDEN = [
+    ["keukenfront", /keuken|front|kastdeur|\blade|\bladen/],
+    ["trap", /\btrap/],
+    ["houtrot_plek", /houtrot|inzetstuk|rotte|epoxy/],
+    ["behang_m2", /behang/],
+    ["steiger", /steiger|hoogwerker/],
+    ["binnenkozijn", /binnenkozijn|deurkozijn|kozijnen? binnen|binnen.*kozijn/],
+    ["buitenkozijn", /kozijn|raam|ramen|dakkapel|boeiboord/],
+    ["deur", /\bdeur/],
+    ["uurloon", /\bper uur|uurloon|uurtarief|regie|\buren\b/],
+    ["muren_plafonds_m2", /muur|muren|wand|plafond|latex|m2|m²/]
+  ];
+  var EENHEID = /(\d+(?:[.,]\d+)?)\s*(?:x\s*)?(m2|m²|stuks?|st\.?|kozijnen|kozijn|deuren|deur|fronten|front|trappen|trap|uren|uur|plekken|plek|keer)\b/i;
+  var BEDRAG = /(?:€|\beur\b)\s*(\d{1,3}(?:\.\d{3})*(?:,(?:\d{1,2}|-))?|\d+(?:,(?:\d{1,2}|-))?)|(\d{1,3}(?:\.\d{3})*,(?:\d{2}|-))(?!\s*%)/gi;
+  var MERKEN = /sikkens|sigma|flexa|histor|wijzonol|trimetal|boss|drost|rambo|herbol|caparol|alpina|koopmans|osmo|ralston|jotun|tikkurila|levis|copagro/i;
 
-    form.hidden = true; bezig.hidden = false; uitslag.hidden = true;
-    invoer.then(function (body) {
-      return fetch(CFG.OFFERTECHECK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY || "" },
-        body: JSON.stringify(body)
-      });
-    }).then(function (r) {
-      return r.json().catch(function () { return {}; });
-    }).then(function (res) {
-      bezig.hidden = true;
-      if (!res.ok) { form.hidden = false; return toonFout(res.fout || "Er ging iets mis. Probeer het opnieuw."); }
-      toonUitslag(res.offerte, index);
-    }).catch(function () {
-      bezig.hidden = true; form.hidden = false;
-      toonFout("We konden de check niet bereiken. Probeer het later opnieuw.");
+  function leesTekst(tekst) {
+    var t = tekst.toLowerCase();
+    var posten = [], totaal = null;
+    tekst.split(/\r?\n/).forEach(function (regel) {
+      var r = regel.toLowerCase();
+      var bedragen = [], m;
+      BEDRAG.lastIndex = 0;
+      while ((m = BEDRAG.exec(regel))) bedragen.push(getal(m[1] || m[2]));
+      bedragen = bedragen.filter(function (b) { return b != null && b > 0; });
+      if (!bedragen.length) return;
+      var bedrag = bedragen[bedragen.length - 1];
+      if (/totaal|te betalen|eindbedrag/.test(r) && !/sub/.test(r)) { totaal = bedrag; return; }
+      if (/subtotaal|\bbtw\b|korting/.test(r)) return;
+      var cat = "anders";
+      for (var i = 0; i < WOORDEN.length; i++) { if (WOORDEN[i][1].test(r)) { cat = WOORDEN[i][0]; break; } }
+      var q = null, e = r.match(EENHEID);
+      if (e && !/keer/.test(e[2])) q = getal(e[1]);
+      if (cat === "steiger" || cat === "trap") q = q || 1;
+      posten.push({ categorie: cat, hoeveelheid: q, bedrag: bedrag });
     });
+    var btw = /\b21\s*%/.test(t) ? 21 : /\b9\s*%/.test(t) ? 9 : null;
+    var excl = /excl\.?\w*\s*(btw|b\.t\.w)/.test(t) ? true : /incl\.?\w*\s*(btw|b\.t\.w)/.test(t) ? false
+      : /excl/.test(t) ? true : null;
+    var lijst = {
+      lagen: /\d\s*(x|keer|lagen|laags)\b|grondlaag|aflak|grondverf|voorlak/.test(t),
+      merk: MERKEN.test(t),
+      voorbereiding: /schuren|ontvet|plamu|kitten|reinig|afplak/.test(t),
+      steiger: /steiger|hoogwerker|ladder/.test(t),
+      houtrot: /houtrot/.test(t),
+      garantie: /garantie/.test(t),
+      btw: btw != null,
+      planning: /planning|uitvoering|week|startdatum|oplever/.test(t)
+    };
+    return { posten: posten, totaal: totaal, btw: btw, excl: excl, lijst: lijst };
+  }
+
+  function vulIn(res) {
+    rijen.innerHTML = "";
+    res.posten.forEach(voegRijToe);
+    if (!res.posten.length) voegRijToe();
+    if (res.excl != null) box.querySelector("[name=btwsoort][value=" + (res.excl ? "excl" : "incl") + "]").checked = true;
+    Object.keys(res.lijst).forEach(function (k) {
+      var c = box.querySelector("[name=lijst][value=" + k + "]");
+      if (c) c.checked = res.lijst[k];
+    });
+    box.dataset.totaal = res.totaal || "";
+    box.dataset.btw = res.btw || "";
+    melding.textContent = res.posten.length
+      ? res.posten.length + " post(en) gevonden. Controleer ze hieronder: het uitlezen is automatisch en kan zich vergissen."
+      : "We vonden geen posten met een bedrag. Vul ze hieronder zelf in.";
+  }
+
+  var pdfjs = null;
+  function laadPdfjs() {
+    if (pdfjs) return pdfjs;
+    pdfjs = new Promise(function (ok, nee) {
+      var s = document.createElement("script");
+      s.src = "/assets/vendor/pdfjs/pdf.min.js";
+      s.onload = function () {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "/assets/vendor/pdfjs/pdf.worker.min.js";
+        ok(window.pdfjsLib);
+      };
+      s.onerror = nee;
+      document.head.appendChild(s);
+    });
+    return pdfjs;
+  }
+  function pdfNaarTekst(bestand) {
+    return Promise.all([laadPdfjs(), bestand.arrayBuffer()]).then(function (x) {
+      return x[0].getDocument({ data: x[1] }).promise;
+    }).then(function (doc) {
+      var paginas = [];
+      for (var i = 1; i <= Math.min(doc.numPages, 10); i++) paginas.push(doc.getPage(i));
+      return Promise.all(paginas.map(function (p) {
+        return p.then(function (pg) { return pg.getTextContent(); }).then(function (c) {
+          // Groepeer tekst per regel op basis van de hoogte op de pagina.
+          var regels = {};
+          c.items.forEach(function (it) {
+            var y = Math.round(it.transform[5] / 3);
+            (regels[y] = regels[y] || []).push(it);
+          });
+          return Object.keys(regels).sort(function (a, b) { return b - a; }).map(function (y) {
+            return regels[y].sort(function (a, b) { return a.transform[4] - b.transform[4]; })
+              .map(function (it) { return it.str; }).join(" ");
+          }).join("\n");
+        });
+      }));
+    }).then(function (p) { return p.join("\n"); });
+  }
+
+  box.querySelector("[data-oc-lees]").addEventListener("click", function () {
+    var bestand = box.querySelector("[name=bestand]").files[0];
+    var tekst = box.querySelector("[name=tekst]").value;
+    melding.textContent = "";
+    if (bestand) {
+      if (bestand.type !== "application/pdf") { melding.textContent = "Alleen pdf-bestanden kunnen we uitlezen. Heb je een foto, vul de posten dan zelf in."; return; }
+      melding.textContent = "Bezig met uitlezen…";
+      pdfNaarTekst(bestand).then(function (t) {
+        if (t.replace(/\s/g, "").length < 30) {
+          melding.textContent = "Deze pdf bevat geen leesbare tekst, waarschijnlijk een scan. Vul de posten zelf in.";
+          return;
+        }
+        vulIn(leesTekst(t));
+      }).catch(function () { melding.textContent = "Deze pdf konden we niet openen. Vul de posten zelf in."; });
+    } else if (tekst.trim().length > 10) {
+      vulIn(leesTekst(tekst));
+    } else {
+      melding.textContent = "Kies een pdf of plak eerst de tekst van de offerte.";
+    }
   });
 
-  function vergelijk(p, index, btw) {
-    var b = BANDEN[p.categorie];
-    if (!b || !p.hoeveelheid || p.hoeveelheid <= 0) return null;
-    var bedrag;
-    if (b.excl_btw) {
-      bedrag = p.bedrag_excl_btw != null ? p.bedrag_excl_btw
-        : p.bedrag_incl_btw != null ? p.bedrag_incl_btw / (1 + btw) : null;
-    } else {
-      bedrag = p.bedrag_incl_btw != null ? p.bedrag_incl_btw
-        : p.bedrag_excl_btw != null ? p.bedrag_excl_btw * (1 + btw) : null;
-    }
-    if (bedrag == null) return null;
-    var van = b.van * index * p.hoeveelheid, tot = b.tot * index * p.hoeveelheid;
-    var oordeel = bedrag < van * 0.9 ? "laag" : bedrag > tot * 1.1 ? "hoog" : "binnen";
-    return { bedrag: bedrag, van: van, tot: tot, oordeel: oordeel, band: b };
-  }
+  /* --------------------------- vergelijken */
+  var CHECKS = {
+    lagen: "Het aantal lagen (bijvoorbeeld een grondlaag en twee aflakken)",
+    merk: "Het verfmerk en type verf",
+    voorbereiding: "Wat er aan voorbereiding gebeurt (schuren, ontvetten, kitten)",
+    steiger: "Of steiger of hoogwerker in de prijs zit",
+    houtrot: "Hoe houtrot wordt afgerekend",
+    garantie: "De garantie: hoe lang en waarop",
+    btw: "Het btw-tarief per post",
+    planning: "Wanneer het werk wordt uitgevoerd"
+  };
 
-  function toonUitslag(o, index) {
-    if (!o || !o.leesbaar) {
-      form.hidden = false;
-      return toonFout("We herkennen hier geen schildersofferte in. Probeer een scherpere foto, of plak de tekst.");
-    }
-    var btw = (o.btw_percentage != null ? o.btw_percentage : 9) / 100;
+  box.querySelector("[data-oc-check]").addEventListener("click", function () {
+    fout.classList.remove("show");
+    if (!plaats.value) { fout.textContent = "Kies je plaats."; fout.classList.add("show"); return; }
+    var index = parseFloat(plaats.value) || 1;
+    var excl = box.querySelector("[name=btwsoort]:checked").value === "excl";
+    var btw = (parseFloat(box.dataset.btw) || 9) / 100;
     var LABEL = { laag: "Onder de richtprijs", binnen: "Binnen de richtprijs", hoog: "Boven de richtprijs" };
-    var tel = { laag: 0, binnen: 0, hoog: 0 };
-    var rijen = o.posten.map(function (p) {
-      var v = vergelijk(p, index, btw);
-      if (!v) {
-        var excl = p.bedrag_incl_btw == null && p.bedrag_excl_btw != null;
-        var bedrag = excl ? p.bedrag_excl_btw : p.bedrag_incl_btw;
-        return "<li><div class='oc-post'><strong>" + esc(p.omschrijving) + "</strong><span class='oc-oordeel oc-geen'>Niet te vergelijken</span></div>" +
-          "<small>Offerte: " + (bedrag != null ? euro(bedrag) + (excl ? " excl. btw" : "") : "geen bedrag") + "</small></li>";
-      }
-      tel[v.oordeel]++;
-      return "<li><div class='oc-post'><strong>" + esc(p.omschrijving) + "</strong><span class='oc-oordeel oc-" + v.oordeel + "'>" + LABEL[v.oordeel] + "</span></div>" +
-        "<small>" + esc(p.hoeveelheid) + " × " + esc(v.band.eenheid.replace("per ", "")) + " · offerte " + euro(v.bedrag) +
-        " · richtprijs " + euro(v.van) + " – " + euro(v.tot) + (v.band.excl_btw ? " (excl. btw)" : "") + "</small></li>";
-    }).join("");
+    var tel = { laag: 0, binnen: 0, hoog: 0 }, som = 0, html = "";
 
-    var kop = tel.hoog > 0
-      ? "Een deel van je offerte ligt boven de richtprijs"
+    [].slice.call(rijen.children).forEach(function (r) {
+      var v = r.querySelectorAll("select,input");
+      var cat = v[0].value, q = getal(v[1].value), bedrag = getal(v[2].value);
+      if (bedrag == null) return;
+      som += bedrag;
+      var b = BANDEN[cat];
+      var naam = b ? b.naam : "Overig";
+      if (!b || !q || q <= 0) {
+        html += "<li><div class='oc-post'><strong>" + esc(naam) + "</strong><span class='oc-oordeel oc-geen'>Niet te vergelijken</span></div><small>" +
+          euro(bedrag) + (excl ? " excl. btw" : "") + (b ? " · vul het aantal in om te vergelijken" : "") + "</small></li>";
+        return;
+      }
+      // Banden zijn incl. btw, behalve uurloon. Reken het bedrag om naar dezelfde basis.
+      var vgl = b.excl_btw ? (excl ? bedrag : bedrag / (1 + btw)) : (excl ? bedrag * (1 + btw) : bedrag);
+      var van = b.van * index * q, tot = b.tot * index * q;
+      var o = vgl < van * 0.9 ? "laag" : vgl > tot * 1.1 ? "hoog" : "binnen";
+      tel[o]++;
+      html += "<li><div class='oc-post'><strong>" + esc(naam) + "</strong><span class='oc-oordeel oc-" + o + "'>" + LABEL[o] + "</span></div><small>" +
+        esc(String(q).replace(".", ",")) + " × " + esc(b.eenheid.replace("per ", "")) + " · offerte " + euro(vgl) + (b.excl_btw ? " excl." : " incl.") + " btw" +
+        " · richtprijs " + euro(van) + " – " + euro(tot) + "</small></li>";
+    });
+    if (!html) { fout.textContent = "Vul minstens één post met een bedrag in."; fout.classList.add("show"); return; }
+
+    var buiten = [].slice.call(rijen.querySelectorAll("select")).some(function (sel) {
+      return ["buitenkozijn", "houtrot_plek", "steiger"].indexOf(sel.value) >= 0;
+    });
+    var mist = [].slice.call(box.querySelectorAll("[name=lijst]")).filter(function (c) {
+      return !c.checked && (buiten || (c.value !== "steiger" && c.value !== "houtrot"));
+    })
+      .map(function (c) { return CHECKS[c.value]; });
+    var kop = tel.hoog > 0 ? "Een deel van je offerte ligt boven de richtprijs"
       : tel.laag > 0 ? "Je offerte ligt deels onder de richtprijs"
-      : tel.binnen > 0 ? "Je offerte ligt binnen de richtprijzen"
-      : "We konden de posten niet vergelijken";
-    var uitleg = tel.hoog > 0
-      ? "Dat kan kloppen, bijvoorbeeld bij slecht hout of veel voorwerk. Vraag de schilder waar het verschil in zit, of leg er een tweede offerte naast."
+      : tel.binnen > 0 ? "Je offerte ligt binnen de richtprijzen" : "We konden de posten niet vergelijken";
+    var uitleg = tel.hoog > 0 ? "Dat kan kloppen, bijvoorbeeld bij slecht hout of veel voorwerk. Vraag de schilder waar het verschil in zit, of leg er een tweede offerte naast."
       : tel.laag > 0 ? "Een lage prijs is niet altijd slecht. Check wel of alles erin zit, zoals het aantal lagen, de steiger en houtrot."
       : tel.binnen > 0 ? "Check hieronder of er niets ontbreekt. Dan weet je zeker dat je appels met appels vergelijkt."
-      : "De offerte noemt geen aantallen of bedragen per post. Vraag de schilder om een gespecificeerde offerte.";
+      : "Vul bij de posten het aantal in, dan kunnen we ze naast de richtprijs leggen.";
+    var totaal = parseFloat(box.dataset.totaal);
 
-    function lijst(items) {
-      return items && items.length ? "<ul>" + items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : "<p>Niets bijzonders gevonden.</p>";
-    }
-    var totaal = o.totaal_incl_btw != null ? euro(o.totaal_incl_btw) + " incl. btw"
-      : o.totaal_excl_btw != null ? euro(o.totaal_excl_btw) + " excl. btw" : null;
-
-    uitslag.innerHTML =
-      "<h2>" + kop + "</h2><p>" + esc(uitleg) + "</p>" +
-      (totaal ? "<p><strong>Totaal op de offerte:</strong> " + totaal + (o.btw_percentage != null ? " (" + esc(o.btw_percentage) + "% btw)" : "") + "</p>" : "") +
-      "<h3>Per post</h3><ul class='oc-posten'>" + (rijen || "<li>Geen losse posten gevonden.</li>") + "</ul>" +
-      "<h3>Wat er niet in staat</h3>" + lijst(o.ontbrekend) +
-      "<h3>Let hierop</h3>" + lijst(o.aandachtspunten) +
-      "<h3>Samenvatting</h3><p>" + esc(o.samenvatting) + "</p>" +
-      "<p class='formfoot'>Automatisch uitgelezen en vergeleken met onze richtprijzen voor jouw regio. Dit is een indicatie, geen oordeel over het bedrijf. Klopt een post niet, check dan de offerte zelf.</p>" +
-      "<div class='formnav'><a class='btn btn-primary' href='/offerte-aanvragen/'>Vraag vergelijkende offertes aan</a></div>" +
-      "<div class='formnav'><button type='button' class='btn btn-ghost' data-oc-opnieuw>Nog een offerte checken</button></div>";
+    uitslag.innerHTML = "<h2>" + kop + "</h2><p>" + uitleg + "</p>" +
+      "<p><strong>Opgeteld:</strong> " + euro(som) + (excl ? " excl. btw" : " incl. btw") +
+      (totaal && Math.abs(totaal - som) > 1 && Math.abs(totaal - som * (1 + btw)) > 1 && Math.abs(totaal * (1 + btw) - som) > 1 ? " <small>(het totaal op de offerte is " + euro(totaal) + ")</small>" : "") + "</p>" +
+      "<h3>Per post</h3><ul class='oc-posten'>" + html + "</ul>" +
+      "<h3>" + (mist.length ? "Vraag de schilder hiernaar" : "Alles staat erin") + "</h3>" +
+      (mist.length ? "<ul>" + mist.map(function (m) { return "<li>" + m + "</li>"; }).join("") + "</ul>" : "<p>De belangrijkste punten staan in de offerte. Goed teken.</p>") +
+      "<p class='formfoot'>Vergeleken met onze richtprijzen voor jouw regio. Dit is een indicatie, geen oordeel over het bedrijf.</p>" +
+      "<div class='formnav'><a class='btn btn-primary' href='/offerte-aanvragen/'>Vraag vergelijkende offertes aan</a></div>";
     uitslag.hidden = false;
-    uitslag.querySelector("[data-oc-opnieuw]").addEventListener("click", function () {
-      uitslag.hidden = true; form.reset(); form.hidden = false;
-    });
-    box.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+    uitslag.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 })();
 """

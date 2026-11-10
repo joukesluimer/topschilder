@@ -683,6 +683,8 @@ def build_offerte_vergelijken():
     faqs = [
         ("Wat kost het om mijn offerte te laten checken?",
          "Niets. We doen dit omdat het ons helpt de markt scherp te houden en omdat mensen die hun offerte laten checken vaak alsnog een tweede prijs willen opvragen."),
+        ("Wordt mijn offerte verstuurd bij de directe check?",
+         "Nee. De directe check werkt helemaal in je browser. Ook als je een pdf kiest, wordt die alleen op je eigen apparaat uitgelezen. Alleen als je het formulier gebruikt om je offerte door ons te laten bekijken, ontvangen wij hem."),
         ("Hoe snel krijg ik een reactie?",
          "Doorgaans binnen twee werkdagen. Bij grote of complexe offertes, bijvoorbeeld VvE-onderhoud, kan het iets langer duren."),
         ("Wordt mijn offerte naar de concurrent gestuurd?",
@@ -698,8 +700,8 @@ def build_offerte_vergelijken():
     <div>
       <span class="badge">Gratis check</span>
       <h1>Offerte ontvangen? Laat 'm gratis beoordelen</h1>
-      <p class="lead" data-ai-uit>Je hebt een prijs van een schilder maar geen idee of het klopt. Stuur de offerte naar ons en je krijgt binnen twee werkdagen een eerlijk oordeel.</p>
-      <p class="lead" data-ai-aan hidden>Je hebt een prijs van een schilder maar geen idee of het klopt. Upload je offerte en zie binnen een minuut hoe de posten zich verhouden tot de richtprijzen in jouw regio.</p>
+      <p class="lead" data-check-uit>Je hebt een prijs van een schilder maar geen idee of het klopt. Stuur de offerte naar ons en je krijgt binnen twee werkdagen een eerlijk oordeel.</p>
+      <p class="lead" data-check-aan hidden>Je hebt een prijs van een schilder maar geen idee of het klopt. Zet de posten erin, of laat ze uit je pdf halen, en zie direct hoe ze zich verhouden tot de richtprijzen in jouw regio. Je offerte blijft op je eigen computer.</p>
       <h3>Waar we naar kijken</h3>
       <ul class="checklist">
         <li>Is de prijs marktconform voor dit type werk in jouw regio?</li>
@@ -715,30 +717,43 @@ def build_offerte_vergelijken():
     <div>
       <div class="formcard" data-offertecheck hidden>
         <h2>Check je offerte direct</h2>
-        <p class="sub">Gratis · resultaat binnen een minuut</p>
-        <form data-oc-form novalidate>
-          <div class="field">
-            <label for="oc-bestand">Je offerte <span class="hint">— pdf of foto, maximaal 6 MB</span></label>
-            <input type="file" id="oc-bestand" name="bestand" accept="application/pdf,image/jpeg,image/png,image/webp">
-          </div>
-          <details class="oc-plak">
-            <summary>Of plak de tekst van de offerte</summary>
-            <div class="field"><textarea id="oc-tekst" name="tekst" rows="6" placeholder="Plak hier de regels uit de offerte"></textarea></div>
-          </details>
-          <div class="field">
-            <label for="oc-plaats">Waar woon je?</label>
-            <select id="oc-plaats" name="plaats" required>
-              <option value="">Kies je plaats</option>
-              {"".join(f'<option value="{PRIJSINDEX.get(p["provincie"], 1.0)}">{p["naam"]}</option>' for p in sorted(PLAATSEN, key=lambda p: p["naam"]))}
-              <option value="1">Andere plaats</option>
-            </select>
-          </div>
-          <label class="oc-akkoord"><input type="checkbox" name="akkoord" required> <span>Ik ga akkoord dat mijn offerte voor deze check wordt uitgelezen door Claude van Anthropic. Topschilder bewaart de offerte niet. Tip: maak je naam en adres onleesbaar voordat je uploadt.</span></label>
-          <div class="err" data-oc-fout></div>
-          <div class="formnav"><button type="submit" class="btn btn-primary" data-oc-knop>Check mijn offerte</button></div>
-          <p class="formfoot">Een automatische check geeft een indicatie, geen oordeel over het bedrijf. Liever een mens laten kijken? <a href="#handcheck" data-oc-hand>Stuur je offerte in</a>.</p>
-        </form>
-        <div class="oc-bezig" data-oc-bezig hidden><span class="oc-spinner"></span><p>We lezen je offerte. Dit duurt meestal 20 tot 60 seconden.</p></div>
+        <p class="sub">Gratis · je offerte blijft op je eigen computer</p>
+        <h3 class="oc-stap">1. Laat de posten uitlezen <span class="hint">— mag ook overslaan</span></h3>
+        <div class="field" style="margin-bottom:10px">
+          <label for="oc-bestand">Offerte als pdf</label>
+          <input type="file" id="oc-bestand" name="bestand" accept="application/pdf">
+        </div>
+        <details class="oc-plak">
+          <summary>Of plak de tekst van de offerte</summary>
+          <textarea name="tekst" rows="6" aria-label="Tekst van de offerte" placeholder="Bijvoorbeeld:&#10;12 kozijnen schuren en 2x aflakken € 1.680,00&#10;Steiger achtergevel € 450,00&#10;Totaal excl. btw € 2.130,00"></textarea>
+        </details>
+        <button type="button" class="btn btn-ghost" data-oc-lees>Lees de offerte uit</button>
+        <p class="oc-melding" data-oc-melding aria-live="polite"></p>
+
+        <h3 class="oc-stap">2. Controleer de posten</h3>
+        <div class="oc-kop"><span>Soort werk</span><span>Aantal</span><span>Bedrag</span><span></span></div>
+        <div data-oc-rijen></div>
+        <button type="button" class="btn-link" data-oc-plus>+ Post toevoegen</button>
+        <div class="oc-btw">
+          <span>Bedragen zijn</span>
+          <label><input type="radio" name="btwsoort" value="excl" checked> excl. btw</label>
+          <label><input type="radio" name="btwsoort" value="incl"> incl. btw</label>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label for="oc-plaats">Waar woon je?</label>
+          <select id="oc-plaats" name="plaats">
+            <option value="">Kies je plaats</option>
+            {"".join(f'<option value="{PRIJSINDEX.get(p["provincie"], 1.0)}">{p["naam"]}</option>' for p in sorted(PLAATSEN, key=lambda p: p["naam"]))}
+            <option value="1">Andere plaats</option>
+          </select>
+        </div>
+
+        <h3 class="oc-stap">3. Wat staat er in de offerte?</h3>
+        <div class="oc-lijst">{"".join(f'<label><input type="checkbox" name="lijst" value="{k}"> {t}</label>' for k, t in [("lagen", "Aantal lagen"), ("merk", "Verfmerk en type"), ("voorbereiding", "Voorbereiding (schuren, ontvetten, kitten)"), ("steiger", "Steiger of hoogwerker"), ("houtrot", "Afrekening van houtrot"), ("garantie", "Garantie"), ("btw", "Btw-tarief"), ("planning", "Planning")])}</div>
+
+        <div class="err" data-oc-fout></div>
+        <div class="formnav"><button type="button" class="btn btn-primary" data-oc-check>Bekijk de uitslag</button></div>
+        <p class="formfoot">Liever dat een mens meekijkt? <a href="#handcheck" data-oc-hand>Stuur je offerte in</a>.</p>
         <div class="oc-uitslag" data-oc-uitslag hidden></div>
       </div>
       <div class="formcard" id="handcheck" data-handcheck>
@@ -1326,8 +1341,8 @@ def build_static_pages():
   <h2>Met wie delen we gegevens</h2>
   <p>Je aanvraaggegevens gaan naar maximaal drie schildersbedrijven die in jouw regio werken. Deze bedrijven betalen ons een vergoeding om je aanvraag te ontvangen. Zij zijn zelfstandig verwerkingsverantwoordelijke voor wat zij daarna met je gegevens doen. <strong>Aan andere partijen geven of verkopen we je gegevens niet</strong> en we gebruiken ze niet voor ongevraagde reclame van derden.</p>
   <p>Daarnaast maken we gebruik van verwerkers voor hosting en dataopslag. Met deze partijen zijn verwerkersovereenkomsten gesloten.</p>
-  <h2>Automatische offertecheck</h2>
-  <p>Gebruik je de automatische offertecheck, dan sturen we de offerte die je uploadt naar Anthropic, de maker van Claude, om de posten en bedragen uit te lezen. Wij slaan de offerte en de uitkomst niet op. Anthropic verwerkt de offerte volgens zijn eigen voorwaarden voor zakelijke API-gebruikers. Wil je dat liever niet, maak dan je naam en adres onleesbaar of gebruik het gewone formulier.</p>
+  <h2>Offertecheck</h2>
+  <p>De directe offertecheck op onze site werkt helemaal in je browser. De offerte die je kiest of plakt, wordt niet naar ons of naar anderen verstuurd. Alleen als je je offerte via het formulier naar ons stuurt om hem door een mens te laten bekijken, ontvangen wij hem.</p>
 
   <h2>Hoelang bewaren we gegevens</h2>
   <p>Aanvraaggegevens bewaren we maximaal 24 maanden na je aanvraag, tenzij een langere bewaartermijn wettelijk verplicht is. Gegevens van schildersbedrijven bewaren we zolang de samenwerking loopt en daarna zeven jaar in verband met de fiscale bewaarplicht.</p>
@@ -1473,6 +1488,7 @@ def build_assets():
             f.write(inhoud)
 
     shutil.copytree(os.path.join(ROOT, "fotos"), os.path.join(OUT, "assets", "fotos"))
+    shutil.copytree(os.path.join(ROOT, "vendor"), os.path.join(OUT, "assets", "vendor"))
 
     # logo en witte variant (base64 in merk_data.py)
     from merk_data import BESTANDEN as MERK
