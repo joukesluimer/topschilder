@@ -115,14 +115,15 @@ def footer():
       <p><a href="/offerte-aanvragen/" style="color:#ffd9ab;font-weight:700">Offertes aanvragen →</a></p>
     </div>
     <div>
-      <h4>Diensten</h4>
+      <h2 class="fh">Diensten</h2>
       <ul>{dl}</ul>
     </div>
     <div>
-      <h4>Handig</h4>
+      <h2 class="fh">Handig</h2>
       <ul>
         <li><a href="/prijzen/">Prijzen &amp; tarieven</a></li>
         <li><a href="/kosten/">Kosten per klus</a></li>
+        <li><a href="/gids/">Gids</a></li>
         <li><a href="/offerte-vergelijken/">Offerte laten checken</a></li>
         <li><a href="/werkgebied/">Alle plaatsen</a></li>
         <li><a href="/over-ons/">Over Topschilder</a></li>
@@ -130,7 +131,7 @@ def footer():
       </ul>
     </div>
     <div>
-      <h4>Schilders</h4>
+      <h2 class="fh">Schilders</h2>
       <ul>
         <li><a href="/voor-schilders/">Aanmelden als schilder</a></li>
         <li><a href="/voor-schilders/#tarieven">Wat kost een lead?</a></li>

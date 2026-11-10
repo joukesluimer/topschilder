@@ -22,7 +22,7 @@ STYLE_CSS = r'''/* Topschilder.nl — eigen CSS, geen frameworks. ~14kb, geen re
   --green:#0f8a5f;
   --ink:#241906;
   --body:#57492f;
-  --muted:#8a7a5e;
+  --muted:#6f6047;
   --line:#e9e2d6;
   --bg:#ffffff;
   --bg-soft:#faf7f1;
@@ -44,6 +44,8 @@ body{
 img{max-width:100%;height:auto;display:block}
 a{color:var(--navy-500);text-decoration:none}
 a:hover{text-decoration:underline}
+p a,li a,td a{text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
+.btn,.chips a,.places a,nav a,.footer a,.crumbs a{text-decoration:none}
 h1,h2,h3,h4{color:var(--ink);line-height:1.2;margin:0 0 .5em;font-weight:750;letter-spacing:-.02em}
 h1{font-size:clamp(1.85rem,4.2vw,3rem)}
 h2{font-size:clamp(1.4rem,2.7vw,2.1rem);margin-top:0}
@@ -269,13 +271,13 @@ td.num{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:650;colo
 @media(max-width:600px){.cta{padding:30px 22px}}
 
 /* ---------- Breadcrumbs ---------- */
-.crumbs{font-size:.85rem;color:var(--muted);padding-top:16px}
+.crumbs{font-size:.85rem;color:var(--muted);padding-top:16px;display:flex;flex-wrap:wrap;align-items:baseline;row-gap:2px}
 .crumbs a{color:var(--muted)}
 .crumbs span{margin:0 7px;opacity:.5}
 
 /* ---------- Footer ---------- */
 .footer{background:var(--navy);color:#93a9c0;padding:56px 0 26px;font-size:.93rem;margin-top:0}
-.footer h4{color:#fff;font-size:.95rem;margin-bottom:14px;letter-spacing:.02em}
+.footer h4,.footer .fh{color:#fff;font-size:.95rem;font-family:inherit;line-height:1.3;margin-bottom:14px;letter-spacing:.02em}
 .footer a{color:#93a9c0}
 .footer a:hover{color:#fff}
 .footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:34px}
@@ -296,7 +298,7 @@ td.num{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:650;colo
   body{padding-bottom:76px}
 }
 
-.badge{display:inline-block;background:var(--accent-soft);color:var(--accent-dark);font-size:.78rem;font-weight:750;padding:5px 11px;border-radius:99px;letter-spacing:.03em;text-transform:uppercase;margin-bottom:14px}
+.badge{display:inline-block;background:var(--accent-soft);color:#a35200;font-size:.78rem;font-weight:750;padding:5px 11px;border-radius:99px;letter-spacing:.03em;text-transform:uppercase;margin-bottom:14px}
 .badge-dark{background:rgba(255,255,255,.12);color:#ffd9ab}
 
 .stat{text-align:center}
@@ -1160,5 +1162,42 @@ APP_JS += r"""
     uitslag.hidden = false;
     uitslag.scrollIntoView({ behavior: "smooth", block: "start" });
   });
+})();
+"""
+
+APP_JS += r"""
+/* ------------------------------------------------- verfcalculator */
+(function () {
+  var box = document.querySelector("[data-verfcalc]");
+  if (!box) return;
+  var uit = box.querySelector("[data-vc-uitkomst]");
+  function n(id) { var v = parseFloat(String(box.querySelector(id).value).replace(",", ".")); return isNaN(v) || v < 0 ? 0 : v; }
+  function blikken(l) {
+    // Kleinste combinatie van gangbare blikmaten die genoeg is.
+    var maten = [10, 5, 2.5, 1], rest = l, out = [];
+    maten.forEach(function (m) { while (rest >= m * 0.9 && m >= 2.5) { out.push(m); rest -= m; } });
+    while (rest > 0.05) { out.push(rest > 1 ? 2.5 : 1); rest -= rest > 1 ? 2.5 : 1; }
+    var tel = {};
+    out.forEach(function (m) { tel[m] = (tel[m] || 0) + 1; });
+    return Object.keys(tel).sort(function (a, b) { return b - a; }).map(function (m) {
+      return tel[m] + " × " + String(m).replace(".", ",") + " liter";
+    }).join(" + ");
+  }
+  function reken() {
+    var l = n("#vc-l"), b = n("#vc-b"), h = n("#vc-h"), r = n("#vc-r");
+    var wat = box.querySelector("#vc-wat").value, lagen = n("#vc-lagen"), ond = n("#vc-ond") || 1;
+    var muur = Math.max(0, 2 * (l + b) * h - r * 1.8), plafond = l * b;
+    var m2 = 0, liters = 0;
+    if (wat !== "plafond") { m2 += muur; liters += muur / 9 * lagen * ond; }
+    if (wat !== "muren") { m2 += plafond; liters += plafond / 8 * lagen * ond; }
+    if (!m2) { uit.innerHTML = "<p>Vul de maten in.</p>"; return; }
+    var afgerond = Math.ceil(liters * 2) / 2;
+    uit.innerHTML = "<p><strong>Je hebt ongeveer " + String(afgerond).replace(".", ",") + " liter nodig</strong> voor " +
+      Math.round(m2) + " m² en " + lagen + (lagen === 1 ? " laag" : " lagen") + ".</p>" +
+      "<p style='margin-top:6px;font-size:.9rem'>Bijvoorbeeld: " + blikken(afgerond) + ". Gerekend met 9 m² per liter voor muren en 8 m² voor plafonds; kijk op het blik voor het precieze rendement.</p>";
+  }
+  box.addEventListener("input", reken);
+  box.addEventListener("change", reken);
+  reken();
 })();
 """

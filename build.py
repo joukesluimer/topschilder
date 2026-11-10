@@ -17,6 +17,7 @@ from data import (SITE, DIENSTEN, PLAATSEN, buurplaatsen,
 from illustraties import illustratie, voor_na
 from foto_data import FOTOS, FOTO_HOME, FOTOS_PAGINA
 from kosten_data import KOSTEN, PRIJSBANDEN
+from wijk_data import WIJKEN
 import json
 from components import (
     page, crumbs, offerte_form, hoe_werkt_het, waarom_blok, dienst_cards,
@@ -90,6 +91,7 @@ def build_home():
   <p class="lead">Een schilder rekent gemiddeld €45 tot €65 per uur exclusief btw. Maar bijna niemand koopt uren — je koopt een afgewerkte muur of een kozijn dat weer tien jaar meekan. Daarom rekenen de meeste bedrijven per vierkante meter of per stuk.</p>
   {prijstabel()}
   <p style="margin-top:22px"><a class="btn btn-ghost" href="/prijzen/">Volledig prijzenoverzicht bekijken</a></p>
+  <p style="margin-top:14px;font-size:.95rem">Prijzen per klus: {" · ".join(f'<a href="/kosten/{k["slug"]}/">{k["klus"]}</a>' for k in KOSTEN)}.</p>
 </div>
 </section>"""
 
@@ -182,7 +184,7 @@ def build_home():
 
     write("/", page(
         "Schilder nodig? Vergelijk gratis 3 offertes | Topschilder.nl",
-        "Vergelijk vrijblijvend offertes van schilders bij jou in de buurt. Binnen- en buitenschilderwerk, houtrot en spuitwerk. Gratis, max. 3 schilders, geen verplichtingen.",
+        "Vergelijk vrijblijvend offertes van schilders bij jou in de buurt. Binnen- en buitenschilderwerk, houtrot en spuitwerk. Gratis, maximaal 3 schilders.",
         "/", body, [org_ld, web_ld, faq_ld]), prio=1.0, freq="weekly")
 
 
@@ -222,7 +224,7 @@ def build_diensten_index():
 {cta_blok()}"""
     write("/schilderwerk/", page(
         title("Schilderwerk: diensten en richtprijzen"),
-        "Overzicht van al het schilderwerk dat je via Topschilder kunt aanvragen: binnen, buiten, houtrot, spuitwerk, behangen en zakelijk. Met actuele richtprijzen per dienst.",
+        "Overzicht van al het schilderwerk dat je via Topschilder kunt aanvragen: binnen, buiten, houtrot, spuitwerk, behangen en zakelijk. Met richtprijzen per dienst.",
         "/schilderwerk/", body, [cr_ld]), prio=0.8)
 
 
@@ -310,6 +312,15 @@ def dienst_body(d, plaats=None):
 </div>
 </section>"""
 
+    if plaats:
+        content = f"""<section class="section soft"><div class="wrap narrow prose reveal">
+  <h2>Wat valt er onder {d['naam'].lower()}?</h2>
+  <ul class="checklist">{wat}</ul>
+  <p>Hoe een schilder te werk gaat, wat de prijs bepaalt en waar je op let in de offerte, lees je uitgebreid op onze pagina over <a href="/schilderwerk/{d['slug']}/">{d['naam'].lower()}</a>. Hieronder staat wat specifiek voor {pn} geldt.</p>
+  {vn_blok}
+</div></section>"""
+        return cr, cr_ld, hero + content
+
     content = f"""<section class="section soft"><div class="wrap narrow prose reveal">
   <h2>Wat valt er onder {d['naam'].lower()}?</h2>
   <ul class="checklist">{wat}</ul>
@@ -334,7 +345,7 @@ def dienst_body(d, plaats=None):
     <li>Welk verfmerk, welk type en welke glansgraad er gebruikt wordt</li>
     <li>Het aantal lagen — grondlaag plus twee dekkende lagen is de norm</li>
     <li>Wat er precies onder de voorbereiding valt (schuren, ontvetten, plamuren)</li>
-    <li>Het btw-tarief per post: 9% voor schilderwerk en gebruikte materialen aan een woning ouder dan twee jaar, 21% voor wat daarbuiten valt</li>{btw_extra}
+    <li>Het btw-tarief per post: 9% voor schilderwerk en gebruikte materialen aan een woning ouder dan twee jaar, 21% voor wat daarbuiten valt (<a href="/gids/btw-schilderwerk/">zo zit het met de btw</a>)</li>{btw_extra}
     <li>Een concrete start- en opleverdatum, geen &quot;in overleg&quot;</li>
     <li>De garantietermijn en wat daar wel en niet onder valt</li>
   </ul>
@@ -546,7 +557,18 @@ def build_plaats_pages():
             "description": f"Vergelijk gratis offertes van schildersbedrijven in {p['naam']} ({p['provincie']}).",
         }
 
-        body = (cr + hero + diensten_sec + hoe_werkt_het(p["naam"]) + prijs_sec
+        wijk_sec = ""
+        if p["slug"] in WIJKEN:
+            rijen = "".join(f"<h3>{w} <span class=\"hint\">· {periode}</span></h3><p>{uitleg}</p>"
+                            for w, periode, uitleg in WIJKEN[p["slug"]])
+            wijk_sec = f"""<section class="section soft"><div class="wrap narrow prose">
+  <h2>Schilderwerk per wijk in {p['naam']}</h2>
+  <p>Wat een schilder in {p['naam']} tegenkomt, hangt sterk af van de wijk. Hieronder de belangrijkste wijken, met hun globale bouwperiode en waar je op let.</p>
+  {rijen}
+  <p><small>Bouwperiodes zijn globaal. Binnen een wijk staan vaak woningen uit verschillende jaren.</small></p>
+</div></section>"""
+
+        body = (cr + hero + diensten_sec + hoe_werkt_het(p["naam"]) + prijs_sec + wijk_sec
                 + faq_html + buren_sec
                 + cta_blok(f"Schilder zoeken in {p['naam']}?",
                            f"Vul het formulier in en ontvang vrijblijvend offertes van maximaal drie schildersbedrijven die in {p['naam']} werken."))
@@ -559,6 +581,70 @@ def build_plaats_pages():
                  "Gratis en zonder verplichtingen."),
             f"/schilder/{p['slug']}/", body, [cr_ld, faq_ld, svc_ld]),
             prio=0.9 if p["prio"] == 1 else 0.7)
+
+
+# Typische klus per dienst, naar woninggrootte: (aantal, omschrijving)
+TYPISCHE_KLUS = {
+    "binnenschilderwerk": {"klein": (55, "de muren en plafonds van woonkamer en hal, zo'n 55 m²"),
+                           "midden": (80, "de muren en plafonds van woonkamer, hal en overloop, zo'n 80 m²"),
+                           "groot": (115, "de muren en plafonds van de hele benedenverdieping, zo'n 115 m²")},
+    "buitenschilderwerk": {"klein": (5, "de kozijnen van een appartement of kleine woning, zo'n 5 stuks"),
+                           "midden": (9, "de kozijnen van voor- en achtergevel, zo'n 9 stuks"),
+                           "groot": (15, "de kozijnen rondom, inclusief dakkapel, zo'n 15 stuks")},
+    "houtrot-reparatie": {"klein": (2, "twee plekken in onderdorpels"),
+                          "midden": (3, "drie plekken in kozijnhoeken en dorpels"),
+                          "groot": (5, "vijf plekken verspreid over kozijnen en boeidelen")},
+    "spuitwerk": {"klein": (5, "vijf binnendeuren"),
+                  "midden": (8, "acht binnendeuren"),
+                  "groot": (11, "elf binnendeuren, inclusief trapkastdeur")},
+    "behangen": {"klein": (25, "één slaapkamer, zo'n 25 m² wand"),
+                 "midden": (35, "een woonkamerwand en een slaapkamer, zo'n 35 m²"),
+                 "groot": (55, "woonkamer en twee slaapkamers, zo'n 55 m²")},
+}
+
+
+def woninggrootte(p):
+    w = p["woningmix"].lower()
+    if "appartement" in w and "eengezins" not in w and "rij" not in w:
+        return "klein", "kleinere woning"
+    if any(x in w for x in ("vrijstaand", "villa", "ruime", "boerderij")):
+        return "groot", "ruime of vrijstaande woning"
+    return "midden", "gemiddelde eengezinswoning"
+
+
+def lokaal_advies(d, p):
+    """Advies dat afhangt van bouwperiode, ligging en woningtype van de plaats."""
+    b, l, slug = p["bouwperiode"].lower(), p["ligging"].lower(), d["slug"]
+    delen = []
+    buiten = slug in ("buitenschilderwerk", "houtrot-reparatie")
+    if any(x in b for x in ("monument", "historisch", "vesting", "middeleeuw", "binnenstad", "grachten")):
+        if buiten:
+            delen.append(f"In de oude kern van {p['naam']} staan monumenten en panden in beschermd stadsgezicht. Daar mag je niet zomaar een andere kleur kiezen; vraag dat vooraf na bij de gemeente {p['gemeente']}. Schilders die vaker aan oude panden werken, rekenen daarnaast met lijnolieverf of een systeem dat bij het oude hout past.")
+        else:
+            delen.append(f"Woon je in een ouder pand in de kern van {p['naam']}, reken dan op scheve muren, oude pleisterlagen en hoge plafonds. Dat kost meer voorwerk en soms een steiger binnen.")
+    if any(x in b for x in ("vijftig", "zestig", "zeventig", "naoorlog")):
+        if buiten:
+            delen.append("Woningen uit deze periode hebben vaak nog originele houten kozijnen met veel oude verflagen. Een goede beurt begint dan met flink schuren of afbranden, en de kans op houtrot in dorpels en hoeken is groter.")
+        elif slug == "binnenschilderwerk":
+            delen.append("In woningen uit de jaren vijftig tot zeventig zit vaak nog behang onder de verf of oude olieverf op houtwerk. Een schilder test eerst of nieuwe verf goed hecht.")
+    if any(x in b for x in ("tachtig", "negentig")):
+        if buiten:
+            delen.append("Veel woningen van na 1980 zijn toe aan hun tweede of derde grote onderhoudsbeurt. Het hout is meestal nog gezond, maar kitnaden en onderdorpels verdienen extra aandacht.")
+        elif slug in ("binnenschilderwerk", "spuitwerk"):
+            delen.append("Woningen uit de jaren tachtig en negentig hebben vaak nog de originele binnendeuren en spachtelputz op de muren. Wie strak wil, laat eerst glad stucen of kiest voor spuiten.")
+    if any(x in b for x in ("nieuwbouw", "recent", "vathorst", "stadshagen", "weespersluis", "doornsteeg", "onderdijks")):
+        if buiten:
+            delen.append("In de nieuwbouwwijken zijn de kozijnen in de fabriek gegrond en afgelakt. De eerste echte schilderbeurt komt daar na zes tot acht jaar.")
+        elif slug == "binnenschilderwerk":
+            delen.append("Bij nieuwbouw is de eerste klus vaak het sauzen van kale wanden en plafonds. Reken dan op een voorstrijklaag extra.")
+    if buiten:
+        if any(x in l for x in ("ijsselmeer", "meer", "water", "ijssel", "vecht", "zout")):
+            delen.append(f"Door de ligging bij het water heeft houtwerk in {p['naam']} het zwaarder: vocht, wind en soms zoutlucht. Vooral west- en zuidgevels hebben eerder een beurt nodig dan het landelijke gemiddelde van zes tot acht jaar.")
+        elif "bos" in l:
+            delen.append(f"Rond {p['naam']} staan veel bomen. Noordgevels en houtwerk in de schaduw krijgen sneller groene aanslag; laat dat vóór het schilderen goed reinigen.")
+        elif any(x in l for x in ("wind", "open", "polder")):
+            delen.append(f"{p['naam']} ligt open en vangt veel wind. Regen slaat dan harder tegen de gevel, wat vooral op de westkant de verflaag sneller slijt.")
+    return "".join(f"<p>{x}</p>" for x in delen[:2])
 
 
 def build_plaats_dienst_pages():
@@ -586,15 +672,32 @@ def build_plaats_dienst_pages():
                 derde = f"""<h3>Vraag hier expliciet naar</h3>
   <p>Of je nu in {p['naam']} zit of ergens anders, dit zijn de vragen die het verschil maken tussen een offerte die klopt en een offerte die later duurder uitvalt: hoeveel lagen worden er gerekend, welk verfmerk gebruikt u, wat valt er precies onder de voorbereiding, en wat gebeurt er als er onderweg iets tegenvalt. Een schilder die daar zonder aarzelen antwoord op geeft, is bijna altijd de juiste keuze — ook als hij niet de goedkoopste is.</p>"""
 
+            grootte, woningtype = woninggrootte(p)
+            klus = TYPISCHE_KLUS.get(d["slug"], {}).get(grootte)
+            voorbeeld = (f"<h3>Rekenvoorbeeld voor een {woningtype}</h3>"
+                         f"<p>Voor {klus[1]}, kom je in {p['naam']} met de richtprijs voor {p['provincie']} uit op "
+                         f"<strong>{eur(klus[0] * p_van)} tot {eur(klus[0] * p_tot)}</strong>, inclusief materiaal en btw. "
+                         f"Een steiger, houtrotherstel of een sterke kleurwissel komt daar nog bij.</p>") if klus else ""
+            advies = lokaal_advies(d, p)
+            advies = f"<h3>Waar je in {p['naam']} op let</h3>{advies}" if advies else ""
+            ks = [k for k in KOSTEN if k["dienst"] == d["slug"]]
+            kostenlink = (f"<p>Specifiek prijzen nodig? Lees ook " + " en ".join(
+                f'<a href="/kosten/{k["slug"]}/">wat {k["klus"]} kost</a>' for k in ks) + ".</p>") if ks else ""
+
             lokaal = f"""<section class="section"><div class="wrap narrow prose">
   <h2>{d['naam']} in {p['naam']}: wat je moet weten</h2>
-  <p>De woningen in {p['naam']} stammen grotendeels uit {p['bouwperiode']}. Het gaat vooral om {p['woningmix']}. Dat bepaalt meer van je offerte dan mensen denken: {'bij dit type woning zit het buitenschilderwerk vooral in kozijnen, boeidelen en dakranden, en dus in bereikbaarheid' if seizoen else 'bij dit type woning gaat het vooral om de hoeveelheid vierkante meters en om hoeveel voorbereiding de ondergrond vraagt'}. {p['hook']}</p>
+  <p>Bouwperiode van de woningen in {p['naam']}: {p['bouwperiode']}. Je vindt er vooral {p['woningmix']}. Dat bepaalt meer van je offerte dan mensen denken: {'bij dit type woning zit het buitenschilderwerk vooral in kozijnen, boeidelen en dakranden, en dus in bereikbaarheid' if seizoen else 'bij dit type woning gaat het vooral om de hoeveelheid vierkante meters en om hoeveel voorbereiding de ondergrond vraagt'}. {p['hook']}</p>
 
   <h3>Richtprijs in {p['provincie']}</h3>
   <p>Voor {d['naam'].lower()} in {p['naam']} zie je prijzen tussen <strong>{eur(p_van)} en {eur(p_tot)}</strong> {d['prijs_eenheid']}. {INDEX_TOELICHTING.get(p['provincie'], '')}</p>
   <p>Ligt een offerte daar duidelijk boven, vraag dan om een specificatie per onderdeel. Ligt hij er ver ónder, wees dan juist alert: dat verschil zit meestal niet in de marge maar in het aantal lagen of in voorbereiding die stilzwijgend wordt overgeslagen.</p>
 
+  {voorbeeld}
+  {advies}
+  {kostenlink}
+
   <h3>Het beste moment om in te plannen</h3>
+  {'<p>Meer over het weer, de temperatuur en de beste maanden lees je in <a href="/gids/wanneer-buiten-schilderen/">wanneer kun je buiten schilderen</a>.</p>' if seizoen else ''}
   <p>{'Buitenwerk kan in ' + p['naam'] + ' van maart tot en met oktober, maar de scherpste prijzen liggen in september en oktober. De piek is dan voorbij en schilders willen hun najaar volmaken. Wacht je tot het voorjaar, dan sta je achter in de rij bij iedereen die de winter heeft afgewacht.' if seizoen else 'Dit werk kan het hele jaar door, en juist daarom loont het om het in de winter te plannen. Tussen november en februari hebben schilders in ' + p['gemeente'] + ' nauwelijks buitenwerk en dus ruimte in de agenda. Je hebt meer keuze én meer onderhandelingsruimte.'}</p>
 
   {derde}
@@ -603,7 +706,13 @@ def build_plaats_dienst_pages():
   <p>Zoek je {d['naam'].lower()} net over de gemeentegrens? Bekijk dan {', '.join(f'<a href="/schilder/{b["slug"]}/{d["slug"]}/">{b["naam"]}</a>' for b in buren)}.</p>
 </div></section>"""
 
-            faqs = list(d["faq"]) + [
+            faqs = list(d["faq"][:2]) + [
+                (f"Wat kost {d['naam'].lower()} in {p['naam']}?",
+                 f"Reken in {p['naam']} op {eur(p_van)} tot {eur(p_tot)} {d['prijs_eenheid']}"
+                 + ("" if "excl" in d["prijs_eenheid"] else ", inclusief materiaal en btw")
+                 + (f". Voor {klus[1]} kom je uit op {eur(klus[0] * p_van)} tot {eur(klus[0] * p_tot)}." if klus else ".")),
+                (f"Komen schilders uit {buren[0]['naam']} of {buren[1]['naam']} ook naar {p['naam']}?",
+                 f"Vaak wel. Veel schildersbedrijven werken in een straal van twintig tot dertig kilometer. We zoeken eerst bedrijven met {p['naam']} in hun werkgebied, en daarna in de buurt, zoals {buren[0]['naam']} en {buren[1]['naam']}."),
                 (f"Werken jullie schilders ook in {p['naam']}?",
                  f"Ja. We koppelen je alleen aan bedrijven die {p['naam']} in hun werkgebied hebben staan, zodat je geen onnodige voorrijkosten betaalt."),
             ]
@@ -633,7 +742,7 @@ def build_plaats_dienst_pages():
 
             write(f"/schilder/{p['slug']}/{d['slug']}/", page(
                 title(f"{d['naam']} {p['naam']}: kosten &amp; 3 offertes")
-                if len(f"{d['naam']} {p['naam']}") <= 40
+                if len(f"{d['naam']} {p['naam']}: kosten & 3 offertes") <= 60
                 else title(f"{d['naam_kort']} {p['naam']}: kosten &amp; offertes"),
                 desc(f"{d['naam']} in {p['naam']} nodig?",
                      f"Richtprijs {eur(p_van)}–{eur(p_tot)} {d['prijs_eenheid']}.",
@@ -1022,7 +1131,7 @@ def build_kosten():
     plaatsen = {p["slug"]: p for p in PLAATSEN}
     for k in KOSTEN:
         d = next(x for x in DIENSTEN if x["slug"] == k["dienst"])
-        cr, cr_ld = crumbs([("Home", "/"), ("Kosten", "/kosten/"), (k["klus"].capitalize(), None)])
+        cr, cr_ld = crumbs([("Home", "/"), ("Kosten", "/kosten/"), (k.get("kruimel") or k["klus"].removeprefix("een ").capitalize(), None)])
 
         if k["voorbeelden"][0][1] is not None:
             vb_rows = "".join(
@@ -1039,7 +1148,8 @@ def build_kosten():
         for slug in KOSTEN_REGIO:
             p = plaatsen[slug]
             i = PRIJSINDEX.get(p["provincie"], 1.0)
-            regio_rows += (f'<tr><td><a href="/schilder/{slug}/{d["slug"]}/">{p["naam"]}</a></td>'
+            link = f"/schilder/{slug}/" if k.get("regio_link") == "plaats" else f"/schilder/{slug}/{d['slug']}/"
+            regio_rows += (f'<tr><td><a href="{link}">{p["naam"]}</a></td>'
                            f'<td>{p["provincie"]}</td>'
                            f'<td class="num">{eur(round(k["van"] * i))} – {eur(round(k["tot"] * i))}</td></tr>')
 
@@ -1058,7 +1168,7 @@ def build_kosten():
   <h1>{k['h1']}</h1>
   <p class="lead">{k['intro']}</p>
   <div class="callout">
-    <p><strong>Richtprijs:</strong> {eur(k['van'])} – {eur(k['tot'])} {k['eenheid']}, inclusief materiaal en btw. Gemiddeld over Nederland; per regio zie je hieronder het verschil.</p>
+    <p><strong>Richtprijs:</strong> {eur(k['van'])} – {eur(k['tot'])} {k['eenheid']}, {'exclusief btw' if k.get('excl_btw') else 'inclusief materiaal en btw'}. Gemiddeld over Nederland; per regio zie je hieronder het verschil.</p>
   </div>
 
   <h2>Rekenvoorbeelden</h2>
@@ -1088,14 +1198,15 @@ def build_kosten():
   <p><small>De regiocorrectie is onze eigen inschatting op basis van prijsverschillen tussen provincies. Gebruik hem als ijkpunt, niet als offerte.</small></p>
 
   <h2>Welke btw betaal je?</h2>
-  <p>{k['btw']}</p>
+  <p>{k['btw']} Alles over de regels lees je in <a href="/gids/btw-schilderwerk/">btw op schilderwerk</a>.</p>
+  {k.get('bronnen', '')}
 
   <h2>Zo bespaar je zonder in te leveren op kwaliteit</h2>
   <ul class="checklist">{tips}</ul>
 
   <h2>Heb je al een offerte?</h2>
   <p>Leg hem naast deze richtprijzen, of <a href="/offerte-vergelijken/">laat je offerte checken</a>. Meer prijzen vind je op <a href="/prijzen/">wat kost een schilder</a> en op de pagina over <a href="/schilderwerk/{d['slug']}/">{d['naam'].lower()}</a>.</p>
-  <p><small>Ook handig: {andere}</small></p>
+  <p><small>Ook handig: {andere} · <a href="/gids/btw-schilderwerk/">btw op schilderwerk</a>{' · <a href="/gids/wanneer-buiten-schilderen/">wanneer buiten schilderen</a>' if d['slug'] in ('buitenschilderwerk', 'houtrot-reparatie') else ''}{' · <a href="/gids/verf-berekenen/">hoeveel verf heb je nodig</a>' if d['slug'] in ('binnenschilderwerk', 'spuitwerk') else ''}</small></p>
 </div></section>
 {faq_html}
 {cta_blok(f"Wat kost {k['klus']} bij jou?", "Een richtprijs is een startpunt. Een echte prijs krijg je pas als een schilder naar jouw situatie kijkt. Vraag gratis en vrijblijvend offertes aan.")}"""
@@ -1105,7 +1216,7 @@ def build_kosten():
     # overzicht
     cr, cr_ld = crumbs([("Home", "/"), ("Kosten", None)])
     kaarten = "".join(f"""<div class="card">
-    <h3><a href="/kosten/{k['slug']}/">Wat kost {k['klus']}?</a></h3>
+    <h2 style="font-size:1.15rem"><a href="/kosten/{k['slug']}/">Wat kost {k['klus']}?</a></h2>
     <p><strong>{k['kort']}</strong></p>
     <p>{k['description'].split('. ')[1] if k['description'].count('. ') > 1 else ''}</p>
     <p><a href="/kosten/{k['slug']}/">Bekijk de prijzen →</a></p>
@@ -1125,6 +1236,262 @@ def build_kosten():
     write("/kosten/", page(title("Wat kost schilderwerk? Prijzen per klus"),
           "Richtprijzen per klus: keuken spuiten, trap schilderen en kozijnen schilderen. Met rekenvoorbeelden, prijs per regio en btw-regels.",
           "/kosten/", body, [cr_ld]), prio=0.8)
+
+
+
+BELASTINGDIENST_9 = "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/tarieven_en_vrijstellingen/diensten_9_btw/werkzaamheden_aan_woningen/werkzaamheden_aan_woningen"
+
+GIDSEN = [
+    ("btw-schilderwerk", "Btw op schilderwerk: wanneer 9% en wanneer 21%?",
+     "Wanneer je 9% btw betaalt op schilderwerk, wanneer 21% en hoe je controleert of je offerte klopt."),
+    ("wanneer-buiten-schilderen", "Wanneer kun je buiten schilderen?",
+     "De beste maanden, de minimale temperatuur, schilderen na regen en hoe vaak je kozijnen moet laten schilderen."),
+    ("verf-berekenen", "Hoeveel verf heb je nodig?",
+     "Reken uit hoeveel liter muurverf, grondverf of lak je nodig hebt per m², met een rekenhulp voor je kamer."),
+]
+
+
+def build_gidsen():
+    """Gidsen met praktische uitleg (/gids/...) plus een overzicht op /gids/."""
+    # --- btw
+    cr, cr_ld = crumbs([("Home", "/"), ("Gids", "/gids/"), ("Btw op schilderwerk", None)])
+    faqs = [
+        ("Hoeveel btw betaal je over schilderwerk?",
+         "Voor schilderwerk aan een woning die ouder is dan twee jaar betaal je 9% btw, ook over de verf die de schilder gebruikt. Voor bedrijfspanden en voor woningen van twee jaar of jonger is het 21%."),
+        ("Geldt 9% btw ook voor de verf?",
+         "Ja, als de schilder de verf levert en verwerkt bij schilderwerk aan een woning ouder dan twee jaar. Koop je zelf verf in de winkel, dan betaal je daar 21%."),
+        ("Geldt 9% btw voor behangen?",
+         "Voor het behangen zelf en de lijm wel. De levering van het behang valt onder 21%. Een nette offerte splitst die twee."),
+        ("Hoe weet ik of mijn woning ouder is dan twee jaar?",
+         "De twee jaar tellen vanaf het moment dat de woning voor het eerst in gebruik is genomen. Bij twijfel kijk je naar de datum van oplevering."),
+        ("Geldt het lage tarief ook voor een huurwoning?",
+         "Ja. Het gaat om het gebruik als woning, niet om wie de eigenaar is. Ook een verhuurder betaalt 9% voor schilderwerk aan een woning ouder dan twee jaar."),
+        ("Kan ik de btw over schilderwerk terugvragen?",
+         "Als particulier niet. Een ondernemer kan de btw over schilderwerk aan zijn bedrijfspand meestal wel terugvragen via zijn btw-aangifte."),
+    ]
+    faq_html, faq_ld = faq_blok(faqs, "Veelgestelde vragen over btw op schilderwerk")
+    body = f"""{cr}
+<section class="section-sm"><div class="wrap narrow prose">
+  <span class="badge">Gids</span>
+  <h1>Btw op schilderwerk: wanneer 9% en wanneer 21%?</h1>
+  <p class="lead">Laat je je woning schilderen, dan betaal je vaak het lage btw-tarief van 9% in plaats van 21%. Dat scheelt bij een klus van €3.000 al snel een paar honderd euro. Maar het geldt niet voor alles. Hier lees je wanneer je 9% betaalt, wanneer 21% en hoe je controleert of je offerte klopt.</p>
+  <div class="callout"><p><strong>Kort gezegd:</strong> schilderwerk aan een woning die ouder is dan twee jaar valt onder 9% btw, inclusief de verf die de schilder gebruikt. Bedrijfspanden, nieuwbouw van twee jaar of jonger en houtwerk dat wordt vervangen vallen onder 21%.</p></div>
+
+  <h2>Wanneer betaal je 9% btw?</h2>
+  <ul class="checklist">
+    <li><strong>Schilderen van een woning ouder dan twee jaar</strong>, binnen en buiten, met de voorbereiding erbij: schuren, plamuren, kitten.</li>
+    <li><strong>De verf en andere materialen</strong> die de schilder levert en verwerkt bij dat schilderwerk.</li>
+    <li><strong>Behangen</strong> en de behanglijm. Het behang zelf valt onder 21%.</li>
+    <li><strong>Stukadoren</strong> van een woning ouder dan twee jaar.</li>
+  </ul>
+
+  <h2>Wanneer betaal je 21% btw?</h2>
+  <ul>
+    <li>Schilderwerk aan een <strong>bedrijfspand</strong>, kantoor of winkel.</li>
+    <li>Schilderwerk aan een <strong>woning van twee jaar of jonger</strong>, gerekend vanaf de eerste ingebruikname.</li>
+    <li><strong>Houtwerk vervangen</strong>: houten inzetstukken bij houtrotherstel, nieuwe onderdorpels, en het vervangen van ramen, deuren en kozijnen.</li>
+    <li>De <strong>levering van behang</strong>.</li>
+    <li>Verf die je <strong>zelf koopt</strong> in de winkel.</li>
+  </ul>
+
+  <h2>Overzicht</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Onderdeel</th><th>Btw</th></tr></thead>
+    <tbody>
+      <tr><td>Schilderen van een woning ouder dan twee jaar, met voorbereiding en verf</td><td class="num">9%</td></tr>
+      <tr><td>Behangen en behanglijm</td><td class="num">9%</td></tr>
+      <tr><td>Levering van behang</td><td class="num">21%</td></tr>
+      <tr><td>Houten inzetstukken en nieuwe onderdorpels</td><td class="num">21%</td></tr>
+      <tr><td>Ramen, deuren en kozijnen vervangen</td><td class="num">21%</td></tr>
+      <tr><td>Bedrijfspanden en woningen van twee jaar of jonger</td><td class="num">21%</td></tr>
+    </tbody>
+  </table></div>
+  <p><small>Bron: <a href="{BELASTINGDIENST_9}" rel="nofollow noopener">Belastingdienst, werkzaamheden aan woningen</a>. Twijfel je over jouw situatie, kijk dan op de site van de Belastingdienst of vraag het na bij je boekhouder.</small></p>
+
+  <h2>Rekenvoorbeeld</h2>
+  <p>Een schilder rekent voor de buitenkant van je tussenwoning €3.000 exclusief btw. Bij 9% betaal je €3.270. Bij 21% zou het €3.630 zijn: €360 meer. Zit er houtrotherstel met inzetstukken in van €400, dan valt dat deel onder 21% en betaal je daarover €84 btw in plaats van €36.</p>
+
+  <h2>Zo controleer je je offerte</h2>
+  <ul class="checklist">
+    <li>Staat er 21% over schilderwerk aan je woning? Vraag waarom. Is je woning ouder dan twee jaar, dan hoort er 9% te staan.</li>
+    <li>Combineert de offerte schilderwerk met ander werk, zoals houtrotherstel of nieuw behang? Dan hoort de schilder de posten met 9% en 21% te splitsen.</li>
+    <li>Staan bedragen inclusief of exclusief btw? Vergelijk offertes altijd op dezelfde basis.</li>
+  </ul>
+  <p>Twijfel je over je offerte? <a href="/offerte-vergelijken/">Check hem gratis met onze offertecheck</a>, of bekijk <a href="/prijzen/">wat een schilder kost</a>.</p>
+</div></section>
+{faq_html}
+{cta_blok("Offertes met de juiste btw?", "Vraag gratis offertes aan bij maximaal drie schilders uit jouw regio en vergelijk ze naast elkaar.")}"""
+    art = {"@context": "https://schema.org", "@type": "Article", "headline": "Btw op schilderwerk: wanneer 9% en wanneer 21%?",
+           "inLanguage": "nl-NL", "dateModified": TODAY, "author": {"@id": SITE["url"] + "/#organization"},
+           "publisher": {"@id": SITE["url"] + "/#organization"}, "mainEntityOfPage": SITE["url"] + "/gids/btw-schilderwerk/"}
+    write("/gids/btw-schilderwerk/", page(title("Btw op schilderwerk: 9% of 21%? Zo zit het"),
+          "Schilderwerk aan een woning ouder dan twee jaar valt onder 9% btw, inclusief verf. Wanneer je 21% betaalt en hoe je je offerte controleert.",
+          "/gids/btw-schilderwerk/", body, [cr_ld, faq_ld, art]), prio=0.8)
+
+    # --- wanneer buiten schilderen
+    cr, cr_ld = crumbs([("Home", "/"), ("Gids", "/gids/"), ("Wanneer buiten schilderen", None)])
+    faqs = [
+        ("Wat is de beste maand om buiten te schilderen?",
+         "Mei, juni en september zijn ideaal: droog, niet te heet en met weinig nachtvorst. In september en oktober zijn schilders bovendien vaak scherper geprijsd."),
+        ("Bij welke temperatuur kun je buiten schilderen?",
+         "Bij de meeste verf minimaal 5 tot 10 graden, ook 's nachts tijdens het drogen. Kijk op het blik: daar staat de minimumtemperatuur voor die verf."),
+        ("Kun je schilderen na regen?",
+         "Niet meteen. Het hout moet droog zijn, anders hecht de verf slecht en gaat hij bladderen. Na een flinke bui wacht een schilder vaak een dag."),
+        ("Kun je in de winter buiten schilderen?",
+         "Meestal niet. Kou, vocht en korte dagen zorgen ervoor dat verf slecht droogt en hecht. Binnenwerk past juist goed in de winter."),
+        ("Hoe vaak moet je kozijnen laten schilderen?",
+         "Met dekkende verf ongeveer elke zes tot acht jaar. Kozijnen op het zuiden en westen, en woningen aan het water, vaak eerder."),
+    ]
+    faq_html, faq_ld = faq_blok(faqs, "Veelgestelde vragen over buiten schilderen")
+    body = f"""{cr}
+<section class="section-sm"><div class="wrap narrow prose">
+  <span class="badge">Gids</span>
+  <h1>Wanneer kun je buiten schilderen?</h1>
+  <p class="lead">Buitenschilderwerk staat of valt met het weer. Te koud, te nat of te heet, en de verf hecht slecht of droogt verkeerd. Hier lees je wanneer je het beste buiten laat schilderen, bij welke temperatuur het kan en hoe vaak je houtwerk een beurt nodig heeft.</p>
+  <div class="callout"><p><strong>Kort gezegd:</strong> schilder buiten van april tot en met oktober, bij droog weer en minimaal 5 tot 10 graden, ook 's nachts. Na regen moet het hout eerst opdrogen. De scherpste prijzen vind je in september en oktober.</p></div>
+
+  <h2>De beste maanden</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Periode</th><th>Geschikt?</th><th>Waarom</th></tr></thead>
+    <tbody>
+      <tr><td>November – februari</td><td>Nee</td><td>Te koud en te vochtig; verf droogt slecht.</td></tr>
+      <tr><td>Maart</td><td>Soms</td><td>Kan op droge, zachte dagen, maar nachtvorst is een risico.</td></tr>
+      <tr><td>April – juni</td><td>Ja</td><td>Goed weer, maar schilders zijn druk. Plan vroeg.</td></tr>
+      <tr><td>Juli – augustus</td><td>Ja, met zorg</td><td>Niet in de volle zon schilderen: verf droogt dan te snel.</td></tr>
+      <tr><td>September – oktober</td><td>Ja</td><td>Vaak droog en mild, en schilders hebben meer ruimte. Ochtenddauw kan de start vertragen.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Temperatuur en vocht</h2>
+  <p>De meeste buitenverf heeft minimaal 5 tot 10 graden nodig, en dat moet zo blijven terwijl de verf droogt, dus ook 's nachts. De luchtvochtigheid mag niet te hoog zijn. Een goede schilder meet het vochtgehalte van het hout voordat hij begint: nat hout laat de verf later loslaten.</p>
+  <ul class="checklist">
+    <li><strong>Niet in de volle zon.</strong> Dan droogt de verf te snel en krijg je aanzetten en blaasjes. Schilders werken daarom met de zon mee om het huis heen.</li>
+    <li><strong>Niet vlak voor regen.</strong> De verf moet een paar uur kunnen drogen.</li>
+    <li><strong>Niet op nat hout.</strong> Na een bui of bij ochtenddauw wacht de schilder tot het hout droog is.</li>
+  </ul>
+
+  <h2>Hoe vaak moet je buiten laten schilderen?</h2>
+  <p>Met dekkende verf gaat een goede beurt zes tot acht jaar mee. Met een transparante beits is dat korter, zo'n drie tot vijf jaar. Wacht je te lang, dan dringt water in het hout en ontstaat houtrot. Dan wordt de rekening snel twee keer zo hoog.</p>
+  <ul>
+    <li>Kozijnen op het <strong>zuiden en westen</strong> slijten sneller door zon en regen.</li>
+    <li>Woningen aan <strong>open water of in de polder</strong> vangen meer wind en vocht.</li>
+    <li><strong>Dakkapellen en boeidelen</strong> zitten hoog en hebben vaak eerder een beurt nodig.</li>
+  </ul>
+  <p>Twijfel je of het tijd is? Krassen met je nagel in de verf, afbladderende hoeken en grijs, kaal hout zijn duidelijke signalen. Lees ook <a href="/kosten/kozijnen-schilderen/">wat kozijnen schilderen kost</a> en <a href="/kosten/huis-schilderen/">wat een huis schilderen kost</a>.</p>
+
+  <h2>Op tijd plannen</h2>
+  <p>Wil je in het voorjaar een schilder, vraag dan in januari of februari al offertes aan. Voor het najaar is juni of juli een goed moment. Wie op het laatste moment belt, staat achteraan in de rij.</p>
+</div></section>
+{faq_html}
+{cta_blok("Buitenschilderwerk inplannen?", "Vraag nu gratis offertes aan bij maximaal drie schilders uit jouw regio, dan sta je op tijd in de planning.")}"""
+    art = dict(art, headline="Wanneer kun je buiten schilderen?", mainEntityOfPage=SITE["url"] + "/gids/wanneer-buiten-schilderen/")
+    write("/gids/wanneer-buiten-schilderen/", page(title("Wanneer buiten schilderen? Maanden en temperatuur"),
+          "Buiten schilderen kan van april tot en met oktober, bij minimaal 5 tot 10 graden en droog weer. De beste maanden, schilderen na regen en hoe vaak.",
+          "/gids/wanneer-buiten-schilderen/", body, [cr_ld, faq_ld, art]), prio=0.7)
+
+    # --- verf berekenen
+    cr, cr_ld = crumbs([("Home", "/"), ("Gids", "/gids/"), ("Verf berekenen", None)])
+    faqs = [
+        ("Hoeveel liter verf heb je nodig per m²?",
+         "Met muurverf doe je per liter ongeveer 8 tot 10 m² per laag. Voor twee lagen op 40 m² muur heb je dus zo'n 8 tot 10 liter nodig. Op het blik staat het precieze rendement."),
+        ("Hoeveel verf heb je nodig voor een kamer?",
+         "Een slaapkamer van 3 bij 4 meter heeft zo'n 33 m² muur. Voor twee lagen muurverf reken je op 7 tot 9 liter, en voor het plafond nog eens 3 liter."),
+        ("Hoeveel lagen verf heb je nodig?",
+         "Meestal twee. Bij een sterke kleurwissel of op kaal stucwerk vaak drie, of een voorstrijklaag plus twee lagen."),
+        ("Hoeveel lak heb je nodig voor een deur?",
+         "Een binnendeur heeft aan beide kanten samen zo'n 4 m². Met lak doe je 12 tot 15 m² per liter per laag, dus voor twee lagen heb je ongeveer een halve liter per deur nodig."),
+    ]
+    faq_html, faq_ld = faq_blok(faqs, "Veelgestelde vragen over verf berekenen")
+    body = f"""{cr}
+<section class="section-sm"><div class="wrap">
+  <div class="grid g2" style="gap:48px;align-items:start">
+    <div class="prose">
+      <span class="badge">Gids · rekenhulp</span>
+      <h1>Hoeveel verf heb je nodig?</h1>
+      <p class="lead">Een liter muurverf is genoeg voor zo'n 8 tot 10 m² per laag. Maar hoeveel heb je nodig voor jouw kamer? Vul de maten in en zie direct hoeveel liter je moet kopen.</p>
+      <h2>De vuistregels</h2>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Soort verf</th><th>Rendement per liter, per laag</th></tr></thead>
+        <tbody>
+          <tr><td>Muurverf (latex) op muren</td><td class="num">8 – 10 m²</td></tr>
+          <tr><td>Plafondverf</td><td class="num">7 – 9 m²</td></tr>
+          <tr><td>Voorstrijk of primer</td><td class="num">8 – 12 m²</td></tr>
+          <tr><td>Grondverf op hout</td><td class="num">10 – 12 m²</td></tr>
+          <tr><td>Lak op hout</td><td class="num">12 – 15 m²</td></tr>
+        </tbody>
+      </table></div>
+      <p><small>Gangbare waarden; het precieze rendement staat op het blik. Op kaal stucwerk, ruw hout of een donkere ondergrond heb je meer nodig.</small></p>
+    </div>
+    <div>
+      <div class="formcard" data-verfcalc>
+        <h2>Rekenhulp</h2>
+        <p class="sub">Vul de maten van je kamer in</p>
+        <div class="row2">
+          <div class="field"><label for="vc-l">Lengte (m)</label><input type="text" inputmode="decimal" id="vc-l" value="4"></div>
+          <div class="field"><label for="vc-b">Breedte (m)</label><input type="text" inputmode="decimal" id="vc-b" value="3"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="vc-h">Hoogte (m)</label><input type="text" inputmode="decimal" id="vc-h" value="2,6"></div>
+          <div class="field"><label for="vc-r">Ramen en deuren</label><input type="text" inputmode="numeric" id="vc-r" value="2"></div>
+        </div>
+        <div class="field"><label for="vc-wat">Wat ga je schilderen?</label>
+          <select id="vc-wat"><option value="muren">Alleen de muren</option><option value="beide">Muren en plafond</option><option value="plafond">Alleen het plafond</option></select></div>
+        <div class="row2">
+          <div class="field"><label for="vc-lagen">Aantal lagen</label><select id="vc-lagen"><option>1</option><option selected>2</option><option>3</option></select></div>
+          <div class="field"><label for="vc-ond">Ondergrond</label><select id="vc-ond"><option value="1">Al geschilderd</option><option value="1.2">Kaal of zuigend</option></select></div>
+        </div>
+        <div class="callout" data-vc-uitkomst aria-live="polite" style="margin-top:6px"><p>Vul de maten in.</p></div>
+        <p class="formfoot">Liever laten doen? Bekijk <a href="/kosten/schilderen-per-m2/">wat schilderen per m² kost</a> of <a href="/offerte-aanvragen/">vraag offertes aan</a>.</p>
+      </div>
+    </div>
+  </div>
+</div></section>
+<section class="section soft"><div class="wrap narrow prose">
+  <h2>Zo reken je het zelf uit</h2>
+  <ol>
+    <li><strong>Muren:</strong> tel de lengte van alle wanden op en vermenigvuldig met de hoogte. Een kamer van 4 bij 3 meter en 2,60 meter hoog heeft (4 + 3 + 4 + 3) × 2,6 = 36,4 m² muur.</li>
+    <li><strong>Ramen en deuren eraf:</strong> reken grofweg 1,5 tot 2 m² per raam of deur.</li>
+    <li><strong>Plafond:</strong> lengte maal breedte, in dit voorbeeld 12 m².</li>
+    <li><strong>Liters:</strong> deel het aantal m² door het rendement per liter en vermenigvuldig met het aantal lagen.</li>
+  </ol>
+  <p>Voor het voorbeeld met twee lagen muurverf: 33 m² ÷ 9 m² per liter × 2 lagen ≈ 7,5 liter. Koop dan een blik van 5 en een van 2,5 liter, of één van 10 liter als je de rest later wilt gebruiken.</p>
+  <h2>Tips om niet te veel of te weinig te kopen</h2>
+  <ul class="checklist">
+    <li>Koop alle verf in één keer. Tussen twee productiebatches kan een klein kleurverschil zitten.</li>
+    <li>Houd een klein beetje over voor bijwerken later.</li>
+    <li>Op kaal stucwerk eerst een voorstrijklaag. Anders zuigt de muur de verf op en heb je veel meer nodig.</li>
+    <li>Van donker naar licht? Reken op een extra laag.</li>
+  </ul>
+  <p>Zie je op tegen het werk? Lees <a href="/kosten/schilderen-per-m2/">wat een schilder per m² rekent</a> of <a href="/kosten/plafond-schilderen/">wat een plafond schilderen kost</a>.</p>
+</div></section>
+{faq_html}
+{cta_blok("Toch liever een schilder?", "Vraag gratis offertes aan bij maximaal drie schilders uit jouw regio en vergelijk de prijzen.")}"""
+    art2 = dict(art, headline="Hoeveel verf heb je nodig?", mainEntityOfPage=SITE["url"] + "/gids/verf-berekenen/")
+    write("/gids/verf-berekenen/", page(title("Verf berekenen: hoeveel liter verf per m²?"),
+          "Met een liter muurverf doe je 8 tot 10 m² per laag. Reken met onze rekenhulp uit hoeveel liter verf je nodig hebt voor je kamer, muren en plafond.",
+          "/gids/verf-berekenen/", body, [cr_ld, faq_ld, art2]), prio=0.6)
+
+    # --- overzicht
+    cr, cr_ld = crumbs([("Home", "/"), ("Gids", None)])
+    kaarten = "".join(f"""<div class="card"><h2 style="font-size:1.15rem"><a href="/gids/{slug}/">{t}</a></h2><p>{oms}</p><p><a href="/gids/{slug}/">Lees de gids →</a></p></div>""" for slug, t, oms in GIDSEN)
+    kosten = "".join(f'<li><a href="/kosten/{k["slug"]}/">Wat kost {k["klus"]}?</a></li>' for k in KOSTEN)
+    body = f"""{cr}
+<section class="section-sm"><div class="wrap">
+  <div class="narrow prose">
+    <h1>Gids voor schilderwerk</h1>
+    <p class="lead">Praktische uitleg voor wie schilderwerk laat doen: over btw, het juiste moment en wat je in een offerte moet terugzien.</p>
+  </div>
+  <div class="grid g3" style="margin-top:26px">{kaarten}</div>
+  <div class="narrow prose" style="margin-top:34px">
+    <h2>Wat kost het?</h2>
+    <ul>{kosten}</ul>
+    <p>Of bekijk <a href="/prijzen/">alle schildersprijzen op een rij</a>.</p>
+  </div>
+</div></section>
+{cta_blok()}"""
+    write("/gids/", page(title("Gids voor schilderwerk: btw, planning en prijzen"),
+          "Praktische uitleg voor wie schilderwerk laat doen: wanneer 9% btw geldt, wanneer je buiten kunt schilderen en wat schilderwerk kost per klus.",
+          "/gids/", body, [cr_ld]), prio=0.6)
 
 
 def build_prijzen():
@@ -1160,7 +1527,7 @@ def build_prijzen():
   <p class="lead">Het eerlijke antwoord: dat hangt ervan af. Maar met de richtprijzen hieronder weet je binnen twee minuten of een offerte in de goede orde van grootte zit, en welke vragen je moet stellen als dat niet zo is.</p>
 
   <h2>Uurtarief of vaste prijs?</h2>
-  <p>Een schilder rekent gemiddeld <strong>€45 tot €65 per uur exclusief btw</strong>. Toch krijg je zelden een offerte op uurbasis. De meeste bedrijven werken met een prijs per vierkante meter of per stuk, omdat je dan vooraf weet waar je aan toe bent en de schilder het risico van tegenvallers zelf draagt.</p>
+  <p>Een schilder rekent gemiddeld <strong>€45 tot €65 per uur exclusief btw</strong>. Toch krijg je zelden een offerte op uurbasis. De meeste bedrijven werken met een prijs per vierkante meter of per stuk, omdat je dan vooraf weet waar je aan toe bent en de schilder het risico van tegenvallers zelf draagt. Meer hierover lees je op <a href="/kosten/schilder-uurtarief/">uurtarief schilder</a>.</p>
   <p>Werken op regie (dus per gewerkt uur) zie je vooral bij klussen waarvan de omvang vooraf onduidelijk is — houtrotherstel is het klassieke voorbeeld. Vraag in dat geval altijd om een maximumbedrag, zodat je niet voor verrassingen komt te staan.</p>
 
   <h2>Reken het snel even uit</h2>
@@ -1178,7 +1545,7 @@ def build_prijzen():
   {blokken}
 
   <h2>Welke btw betaal je?</h2>
-  <p>Voor schilderwerk aan een woning die ouder is dan twee jaar geldt <strong>9% btw</strong>, ook over de gebruikte materialen. De twee jaar tellen vanaf het moment dat de woning voor het eerst is gebruikt.</p>
+  <p>Voor schilderwerk aan een woning die ouder is dan twee jaar geldt <strong>9% btw</strong>, ook over de gebruikte materialen. De twee jaar tellen vanaf het moment dat de woning voor het eerst is gebruikt. Alle regels op een rij: <a href="/gids/btw-schilderwerk/">btw op schilderwerk</a>.</p>
   <div class="tablewrap"><table>
     <thead><tr><th>Onderdeel</th><th>Btw</th></tr></thead>
     <tbody>
@@ -1216,7 +1583,7 @@ def build_prijzen():
 {faq_html}
 {cta_blok("Benieuwd wat het bij jou kost?", "Richtprijzen zijn een startpunt. Een echte prijs krijg je pas als een schilder naar jouw situatie kijkt. Vraag gratis drie offertes aan.")}"""
     write("/prijzen/", page(
-        title("Wat kost een schilder in 2026? Prijzen per m² en uur"),
+        title("Wat kost een schilder in 2026? Alle prijzen op een rij"),
         "Actuele schilderprijzen 2026: uurtarief €45–€65, binnenschilderwerk vanaf €10/m², buitenschilderwerk vanaf €90 per kozijn. Inclusief btw-regels en bespaartips.",
         "/prijzen/", body, [cr_ld, faq_ld]), prio=0.9, freq="weekly")
 
@@ -1313,9 +1680,8 @@ def build_static_pages():
   </div>
 </div></section>"""
     write("/contact/", page(
-        "Contact | Topschilder",
-        "Neem contact op met Topschilder: vragen over je offerteaanvraag, een klacht over een aangesloten "
-        "schilder of je bedrijf aanmelden. We reageren binnen één werkdag.",
+        "Contact met Topschilder: vragen, klachten en aanmelden",
+        "Neem contact op met Topschilder: vragen over je offerteaanvraag, een klacht over een schilder of je bedrijf aanmelden. Reactie binnen één werkdag.",
         "/contact/", body, [cr_ld]), prio=0.4)
 
     # --- Privacy ---
@@ -1416,7 +1782,7 @@ def build_static_pages():
 </div></section>"""
     write("/voorwaarden/", page("Algemene voorwaarden | Topschilder",
                                 "De algemene voorwaarden van Topschilder voor aanvragers en aangesloten schildersbedrijven: "
-                                "onze rol als bemiddelaar, leadtarieven, creditering en aansprakelijkheid.",
+                                "onze rol, leadtarieven, creditering en aansprakelijkheid.",
                                 "/voorwaarden/", body, [cr_ld]), prio=0.3)
 
     # --- Cookies ---
@@ -1585,6 +1951,7 @@ def main():
     build_voor_schilders()
     build_prijzen()
     build_kosten()
+    build_gidsen()
     build_static_pages()
     build_assets()
     build_sitemap()
