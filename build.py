@@ -16,6 +16,8 @@ from data import (SITE, DIENSTEN, PLAATSEN, buurplaatsen,
                   PRIJSINDEX, INDEX_TOELICHTING, lokale_prijs)
 from illustraties import illustratie, voor_na
 from foto_data import FOTOS, FOTO_HOME, FOTOS_PAGINA
+from kosten_data import KOSTEN, PRIJSBANDEN
+import json
 from components import (
     page, crumbs, offerte_form, hoe_werkt_het, waarom_blok, dienst_cards,
     faq_blok, cta_blok, prijstabel, icon, eur, title, desc, calculator, foto, werkgebied_kaart,
@@ -299,6 +301,7 @@ def dienst_body(d, plaats=None):
       <div class="callout">
         <p><strong>Richtprijs{inplaats}:</strong> {eur(p_van)} – {eur(p_tot)} {d['prijs_eenheid']}{'' if 'excl' in d['prijs_eenheid'] else ', inclusief materiaal en btw'}.{prijsnoot}</p>
         <p style="font-size:.93rem;margin-top:8px">{d['prijs_extra']}</p>
+        {kosten_links(d)}
       </div>
       {beeld}
     </div>
@@ -695,7 +698,8 @@ def build_offerte_vergelijken():
     <div>
       <span class="badge">Gratis check</span>
       <h1>Offerte ontvangen? Laat 'm gratis beoordelen</h1>
-      <p class="lead">Je hebt een prijs van een schilder maar geen idee of het klopt. Stuur de offerte naar ons en je krijgt binnen twee werkdagen een eerlijk oordeel.</p>
+      <p class="lead" data-ai-uit>Je hebt een prijs van een schilder maar geen idee of het klopt. Stuur de offerte naar ons en je krijgt binnen twee werkdagen een eerlijk oordeel.</p>
+      <p class="lead" data-ai-aan hidden>Je hebt een prijs van een schilder maar geen idee of het klopt. Upload je offerte en zie binnen een minuut hoe de posten zich verhouden tot de richtprijzen in jouw regio.</p>
       <h3>Waar we naar kijken</h3>
       <ul class="checklist">
         <li>Is de prijs marktconform voor dit type werk in jouw regio?</li>
@@ -709,7 +713,35 @@ def build_offerte_vergelijken():
       </div>
     </div>
     <div>
-      <div class="formcard">
+      <div class="formcard" data-offertecheck hidden>
+        <h2>Check je offerte direct</h2>
+        <p class="sub">Gratis · resultaat binnen een minuut</p>
+        <form data-oc-form novalidate>
+          <div class="field">
+            <label for="oc-bestand">Je offerte <span class="hint">— pdf of foto, maximaal 6 MB</span></label>
+            <input type="file" id="oc-bestand" name="bestand" accept="application/pdf,image/jpeg,image/png,image/webp">
+          </div>
+          <details class="oc-plak">
+            <summary>Of plak de tekst van de offerte</summary>
+            <div class="field"><textarea id="oc-tekst" name="tekst" rows="6" placeholder="Plak hier de regels uit de offerte"></textarea></div>
+          </details>
+          <div class="field">
+            <label for="oc-plaats">Waar woon je?</label>
+            <select id="oc-plaats" name="plaats" required>
+              <option value="">Kies je plaats</option>
+              {"".join(f'<option value="{PRIJSINDEX.get(p["provincie"], 1.0)}">{p["naam"]}</option>' for p in sorted(PLAATSEN, key=lambda p: p["naam"]))}
+              <option value="1">Andere plaats</option>
+            </select>
+          </div>
+          <label class="oc-akkoord"><input type="checkbox" name="akkoord" required> <span>Ik ga akkoord dat mijn offerte voor deze check wordt uitgelezen door Claude van Anthropic. Topschilder bewaart de offerte niet. Tip: maak je naam en adres onleesbaar voordat je uploadt.</span></label>
+          <div class="err" data-oc-fout></div>
+          <div class="formnav"><button type="submit" class="btn btn-primary" data-oc-knop>Check mijn offerte</button></div>
+          <p class="formfoot">Een automatische check geeft een indicatie, geen oordeel over het bedrijf. Liever een mens laten kijken? <a href="#handcheck" data-oc-hand>Stuur je offerte in</a>.</p>
+        </form>
+        <div class="oc-bezig" data-oc-bezig hidden><span class="oc-spinner"></span><p>We lezen je offerte. Dit duurt meestal 20 tot 60 seconden.</p></div>
+        <div class="oc-uitslag" data-oc-uitslag hidden></div>
+      </div>
+      <div class="formcard" id="handcheck" data-handcheck>
         <h2>Stuur je offerte in</h2>
         <p class="sub">Gratis · reactie binnen 2 werkdagen</p>
         <div class="steps"><div class="on"></div><div></div></div>
@@ -783,6 +815,7 @@ def build_offerte_vergelijken():
   <h2>Twee offertes naast elkaar leggen</h2>
   <p>Vergelijk niet alleen het eindbedrag. Zet per offerte op een rij hoeveel lagen er worden gezet, wat er voorbereid wordt en wat er buiten de prijs valt. Is de ene offerte veel goedkoper, zoek dan eerst uit wat er ontbreekt. Pas als de inhoud gelijk is, zegt de prijs iets.</p>
 </div></section>
+<script>window.TS_PRIJSBANDEN = {json.dumps(PRIJSBANDEN, ensure_ascii=False)};</script>
 {faq_html}
 {cta_blok("Toch liever direct vergelijken?", "Vraag gratis offertes aan bij maximaal drie schilders en zie zelf hoe de prijzen uiteenlopen.")}"""
     write("/offerte-vergelijken/", page(
@@ -956,6 +989,129 @@ def build_voor_schilders():
         "/voor-schilders/", body, [cr_ld, faq_ld]), prio=0.8)
 
 
+def kosten_links(d):
+    """Links van een dienstpagina naar de kostenpagina's die erbij horen."""
+    ks = [k for k in KOSTEN if k["dienst"] == d["slug"]]
+    if not ks:
+        return ""
+    links = " · ".join(f'<a href="/kosten/{k["slug"]}/">Wat kost {k["klus"]}?</a>' for k in ks)
+    return f'<p style="font-size:.93rem;margin-top:8px">{links}</p>'
+
+
+# Plaatsen per provincie die we in de regiotabel van een kostenpagina tonen.
+KOSTEN_REGIO = ["almere", "zwolle", "harderwijk", "amersfoort", "hilversum"]
+
+
+def build_kosten():
+    """Kostenpagina's per klus (/kosten/{slug}/) plus een overzicht op /kosten/."""
+    plaatsen = {p["slug"]: p for p in PLAATSEN}
+    for k in KOSTEN:
+        d = next(x for x in DIENSTEN if x["slug"] == k["dienst"])
+        cr, cr_ld = crumbs([("Home", "/"), ("Kosten", "/kosten/"), (k["klus"].capitalize(), None)])
+
+        if k["voorbeelden"][0][1] is not None:
+            vb_rows = "".join(
+                f'<tr><td><strong>{lab}</strong><br><small>{uitleg}</small></td>'
+                f'<td class="num">{eur(n * k["van"])} – {eur(n * k["tot"])}</td></tr>'
+                for lab, n, uitleg in k["voorbeelden"])
+        else:
+            vb_rows = "".join(
+                f'<tr><td><strong>{lab}</strong></td><td>{uitleg}</td></tr>'
+                for lab, n, uitleg in k["voorbeelden"])
+        extra_rows = "".join(f'<tr><td>{a}</td><td class="num">{b}</td></tr>' for a, b in k["extra"])
+
+        regio_rows = ""
+        for slug in KOSTEN_REGIO:
+            p = plaatsen[slug]
+            i = PRIJSINDEX.get(p["provincie"], 1.0)
+            regio_rows += (f'<tr><td><a href="/schilder/{slug}/{d["slug"]}/">{p["naam"]}</a></td>'
+                           f'<td>{p["provincie"]}</td>'
+                           f'<td class="num">{eur(round(k["van"] * i))} – {eur(round(k["tot"] * i))}</td></tr>')
+
+        fact = "".join(f"<li>{x}</li>" for x in k["prijsfactoren"])
+        tips = "".join(f"<li>{x}</li>" for x in k["tips"])
+        uitleg = "".join(f"<h2>{t}</h2><p>{p}</p>" for t, p in k["uitleg"])
+        andere = " · ".join(f'<a href="/kosten/{x["slug"]}/">Wat kost {x["klus"]}?</a>'
+                            for x in KOSTEN if x is not k)
+        fotos = FOTOS.get(d["slug"], {})
+        beeld = foto(fotos["sectie"], "(max-width:760px) calc(100vw - 40px), 720px") if fotos else ""
+        faq_html, faq_ld = faq_blok(k["faq"], f"Veelgestelde vragen over {k['klus']}")
+
+        body = f"""{cr}
+<section class="section-sm"><div class="wrap narrow prose">
+  <span class="badge">Richtprijzen {TODAY[:4]}</span>
+  <h1>{k['h1']}</h1>
+  <p class="lead">{k['intro']}</p>
+  <div class="callout">
+    <p><strong>Richtprijs:</strong> {eur(k['van'])} – {eur(k['tot'])} {k['eenheid']}, inclusief materiaal en btw. Gemiddeld over Nederland; per regio zie je hieronder het verschil.</p>
+  </div>
+
+  <h2>Rekenvoorbeelden</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Situatie</th><th>Indicatie</th></tr></thead>
+    <tbody>{vb_rows}</tbody>
+  </table></div>
+
+  <h2>Wat er vaak bij komt</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Post</th><th>Richtprijs</th></tr></thead>
+    <tbody>{extra_rows}</tbody>
+  </table></div>
+
+  <h2>Wat bepaalt de prijs?</h2>
+  <ul>{fact}</ul>
+
+  {beeld}
+  {uitleg}
+
+  <h2>Prijs per regio</h2>
+  <p>Schilders in de Randstad rekenen meer dan in Flevoland en Overijssel. Dit is dezelfde richtprijs, gecorrigeerd voor de regio.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Plaats</th><th>Provincie</th><th>Richtprijs {k['eenheid']}</th></tr></thead>
+    <tbody>{regio_rows}</tbody>
+  </table></div>
+  <p><small>De regiocorrectie is onze eigen inschatting op basis van prijsverschillen tussen provincies. Gebruik hem als ijkpunt, niet als offerte.</small></p>
+
+  <h2>Welke btw betaal je?</h2>
+  <p>{k['btw']}</p>
+
+  <h2>Zo bespaar je zonder in te leveren op kwaliteit</h2>
+  <ul class="checklist">{tips}</ul>
+
+  <h2>Heb je al een offerte?</h2>
+  <p>Leg hem naast deze richtprijzen, of <a href="/offerte-vergelijken/">laat je offerte checken</a>. Meer prijzen vind je op <a href="/prijzen/">wat kost een schilder</a> en op de pagina over <a href="/schilderwerk/{d['slug']}/">{d['naam'].lower()}</a>.</p>
+  <p><small>Ook handig: {andere}</small></p>
+</div></section>
+{faq_html}
+{cta_blok(f"Wat kost {k['klus']} bij jou?", "Een richtprijs is een startpunt. Een echte prijs krijg je pas als een schilder naar jouw situatie kijkt. Vraag gratis en vrijblijvend offertes aan.")}"""
+        write(f"/kosten/{k['slug']}/", page(title(k["title"]), k["description"],
+              f"/kosten/{k['slug']}/", body, [cr_ld, faq_ld]), prio=0.8)
+
+    # overzicht
+    cr, cr_ld = crumbs([("Home", "/"), ("Kosten", None)])
+    kaarten = "".join(f"""<div class="card">
+    <h3><a href="/kosten/{k['slug']}/">Wat kost {k['klus']}?</a></h3>
+    <p><strong>{k['kort']}</strong></p>
+    <p>{k['description'].split('. ')[1] if k['description'].count('. ') > 1 else ''}</p>
+    <p><a href="/kosten/{k['slug']}/">Bekijk de prijzen →</a></p>
+  </div>""" for k in KOSTEN)
+    body = f"""{cr}
+<section class="section-sm"><div class="wrap">
+  <div class="narrow prose">
+    <h1>Wat kost schilderwerk per klus?</h1>
+    <p class="lead">Richtprijzen voor de klussen waar het meest naar wordt gevraagd, met rekenvoorbeelden, prijs per regio en wat er vaak bij komt. Alle prijzen zijn inclusief materiaal en btw.</p>
+  </div>
+  <div class="grid g3" style="margin-top:28px">{kaarten}</div>
+  <div class="narrow prose" style="margin-top:32px">
+    <p>Zoek je het uurtarief of prijzen per m²? Kijk op <a href="/prijzen/">wat kost een schilder in {TODAY[:4]}</a>. Heb je al een offerte, <a href="/offerte-vergelijken/">laat hem dan checken</a>.</p>
+  </div>
+</div></section>
+{cta_blok()}"""
+    write("/kosten/", page(title("Wat kost schilderwerk? Prijzen per klus"),
+          "Richtprijzen per klus: keuken spuiten, trap schilderen en kozijnen schilderen. Met rekenvoorbeelden, prijs per regio en btw-regels.",
+          "/kosten/", body, [cr_ld]), prio=0.8)
+
+
 def build_prijzen():
     cr, cr_ld = crumbs([("Home", "/"), ("Prijzen", None)])
     blokken = ""
@@ -1000,6 +1156,8 @@ def build_prijzen():
 
   <h2>Richtprijzen per type schilderwerk</h2>
   {prijstabel()}
+
+  <p>Prijzen voor een specifieke klus: {" · ".join(f'<a href="/kosten/{k["slug"]}/">wat kost {k["klus"]}</a>' for k in KOSTEN)}.</p>
 
   <h2>Per klus toegelicht</h2>
   {blokken}
@@ -1168,6 +1326,8 @@ def build_static_pages():
   <h2>Met wie delen we gegevens</h2>
   <p>Je aanvraaggegevens gaan naar maximaal drie schildersbedrijven die in jouw regio werken. Deze bedrijven betalen ons een vergoeding om je aanvraag te ontvangen. Zij zijn zelfstandig verwerkingsverantwoordelijke voor wat zij daarna met je gegevens doen. <strong>Aan andere partijen geven of verkopen we je gegevens niet</strong> en we gebruiken ze niet voor ongevraagde reclame van derden.</p>
   <p>Daarnaast maken we gebruik van verwerkers voor hosting en dataopslag. Met deze partijen zijn verwerkersovereenkomsten gesloten.</p>
+  <h2>Automatische offertecheck</h2>
+  <p>Gebruik je de automatische offertecheck, dan sturen we de offerte die je uploadt naar Anthropic, de maker van Claude, om de posten en bedragen uit te lezen. Wij slaan de offerte en de uitkomst niet op. Anthropic verwerkt de offerte volgens zijn eigen voorwaarden voor zakelijke API-gebruikers. Wil je dat liever niet, maak dan je naam en adres onleesbaar of gebruik het gewone formulier.</p>
 
   <h2>Hoelang bewaren we gegevens</h2>
   <p>Aanvraaggegevens bewaren we maximaal 24 maanden na je aanvraag, tenzij een langere bewaartermijn wettelijk verplicht is. Gegevens van schildersbedrijven bewaren we zolang de samenwerking loopt en daarna zeven jaar in verband met de fiscale bewaarplicht.</p>
@@ -1408,6 +1568,7 @@ def main():
     build_offerte_vergelijken()
     build_voor_schilders()
     build_prijzen()
+    build_kosten()
     build_static_pages()
     build_assets()
     build_sitemap()

@@ -158,6 +158,21 @@ textarea{min-height:110px;resize:vertical}
 .err.show{display:block}
 .formfoot{font-size:.8rem;color:var(--muted);text-align:center;margin:14px 0 0;line-height:1.5}
 .success{display:none;text-align:center;padding:24px 6px}
+.oc-plak{margin:-4px 0 16px;font-size:.93rem}
+.oc-plak summary{cursor:pointer;color:var(--navy);font-weight:600;margin-bottom:10px}
+input[type=file]{width:100%;padding:12px;border:1.5px dashed var(--line);border-radius:10px;background:var(--soft,#faf8f5);font-size:.93rem}
+.oc-akkoord{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:.85rem;color:var(--muted);line-height:1.5}
+.oc-akkoord input{accent-color:var(--accent);width:17px;height:17px;margin-top:2px;flex:0 0 auto}
+.oc-bezig{text-align:center;padding:28px 6px}
+.oc-spinner{display:inline-block;width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:ocdraai 1s linear infinite}
+@keyframes ocdraai{to{transform:rotate(360deg)}}
+.oc-uitslag h3{font-size:1.1rem;margin:18px 0 8px}
+.oc-posten{list-style:none;padding:0;margin:0}
+.oc-posten li{border-top:1px solid var(--line);padding:10px 0}
+.oc-posten small{color:var(--muted);font-size:.84rem}
+.oc-post{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;font-size:.93rem;margin-bottom:2px}
+.oc-oordeel{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.78rem;font-weight:700;white-space:nowrap}
+.oc-laag{background:#e8f1fb;color:#1d4f86}.oc-binnen{background:#e7f5ec;color:#1e6b3a}.oc-hoog{background:#fdecea;color:#a3271b}.oc-geen{background:var(--line);color:var(--muted)}
 .success.show{display:block}
 .success .big{width:58px;height:58px;border-radius:50%;background:#e7f7ef;color:var(--green);display:grid;place-items:center;font-size:1.6rem;margin:0 auto 16px}
 
@@ -759,7 +774,12 @@ window.TS_CONFIG = {
   // Google Ads conversietracking. Vul in zodra je een conversieactie hebt
   // aangemaakt, dan telt elke ingestuurde offerteaanvraag als conversie.
   GOOGLE_ADS_ID: "",           // bv. "AW-123456789"
-  GOOGLE_ADS_LABEL: ""         // bv. "AbC-D_efG-h12_34-567"
+  GOOGLE_ADS_LABEL: "",        // bv. "AbC-D_efG-h12_34-567"
+
+  // Automatische offertecheck op /offerte-vergelijken/. Leeg = uit, dan zie
+  // je alleen het gewone formulier. Vullen met de URL van de Supabase-functie,
+  // zie supabase/functions/offertecheck/LEESMIJ.md.
+  OFFERTECHECK_URL: ""         // bv. "https://<project>.supabase.co/functions/v1/offertecheck"
 };
 '''
 
@@ -876,3 +896,155 @@ APP_JS += r'''
   maten();
 })();
 '''
+
+APP_JS += r"""
+/* ------------------------------------------------- automatische offertecheck */
+(function () {
+  var box = document.querySelector("[data-offertecheck]");
+  var CFG = window.TS_CONFIG || {};
+  if (!box || !CFG.OFFERTECHECK_URL) return;
+  var BANDEN = window.TS_PRIJSBANDEN || {};
+
+  document.querySelectorAll("[data-ai-uit]").forEach(function (e) { e.hidden = true; });
+  document.querySelectorAll("[data-ai-aan]").forEach(function (e) { e.hidden = false; });
+  var hand = document.querySelector("[data-handcheck]");
+  if (hand) hand.hidden = true;
+  box.hidden = false;
+
+  var form = box.querySelector("[data-oc-form]");
+  var fout = box.querySelector("[data-oc-fout]");
+  var bezig = box.querySelector("[data-oc-bezig]");
+  var uitslag = box.querySelector("[data-oc-uitslag]");
+  var MAX = 6 * 1024 * 1024;
+  var TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+
+  box.querySelector("[data-oc-hand]").addEventListener("click", function () {
+    if (hand) { hand.hidden = false; }
+  });
+
+  function toonFout(t) { fout.textContent = t; fout.classList.add("show"); }
+  function esc(t) {
+    return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function euro(n) { return "€" + Math.round(n).toLocaleString("nl-NL"); }
+
+  function leesBestand(f) {
+    return new Promise(function (ok, nee) {
+      var r = new FileReader();
+      r.onload = function () { ok(String(r.result).split(",")[1]); };
+      r.onerror = nee;
+      r.readAsDataURL(f);
+    });
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    fout.classList.remove("show");
+    var bestand = form.bestand.files[0];
+    var tekst = form.tekst.value.trim();
+    if (!bestand && tekst.length < 20) return toonFout("Upload je offerte of plak de tekst.");
+    if (bestand && TYPES.indexOf(bestand.type) < 0) return toonFout("Upload een pdf, jpg, png of webp.");
+    if (bestand && bestand.size > MAX) return toonFout("Het bestand is te groot. Maximaal 6 MB.");
+    if (!form.plaats.value) return toonFout("Kies je plaats.");
+    if (!form.akkoord.checked) return toonFout("Vink aan dat je akkoord gaat.");
+    var index = parseFloat(form.plaats.value) || 1;
+
+    var invoer = bestand
+      ? leesBestand(bestand).then(function (d) { return { bestand: { type: bestand.type, data: d } }; })
+      : Promise.resolve({ tekst: tekst });
+
+    form.hidden = true; bezig.hidden = false; uitslag.hidden = true;
+    invoer.then(function (body) {
+      return fetch(CFG.OFFERTECHECK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY || "" },
+        body: JSON.stringify(body)
+      });
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; });
+    }).then(function (res) {
+      bezig.hidden = true;
+      if (!res.ok) { form.hidden = false; return toonFout(res.fout || "Er ging iets mis. Probeer het opnieuw."); }
+      toonUitslag(res.offerte, index);
+    }).catch(function () {
+      bezig.hidden = true; form.hidden = false;
+      toonFout("We konden de check niet bereiken. Probeer het later opnieuw.");
+    });
+  });
+
+  function vergelijk(p, index, btw) {
+    var b = BANDEN[p.categorie];
+    if (!b || !p.hoeveelheid || p.hoeveelheid <= 0) return null;
+    var bedrag;
+    if (b.excl_btw) {
+      bedrag = p.bedrag_excl_btw != null ? p.bedrag_excl_btw
+        : p.bedrag_incl_btw != null ? p.bedrag_incl_btw / (1 + btw) : null;
+    } else {
+      bedrag = p.bedrag_incl_btw != null ? p.bedrag_incl_btw
+        : p.bedrag_excl_btw != null ? p.bedrag_excl_btw * (1 + btw) : null;
+    }
+    if (bedrag == null) return null;
+    var van = b.van * index * p.hoeveelheid, tot = b.tot * index * p.hoeveelheid;
+    var oordeel = bedrag < van * 0.9 ? "laag" : bedrag > tot * 1.1 ? "hoog" : "binnen";
+    return { bedrag: bedrag, van: van, tot: tot, oordeel: oordeel, band: b };
+  }
+
+  function toonUitslag(o, index) {
+    if (!o || !o.leesbaar) {
+      form.hidden = false;
+      return toonFout("We herkennen hier geen schildersofferte in. Probeer een scherpere foto, of plak de tekst.");
+    }
+    var btw = (o.btw_percentage != null ? o.btw_percentage : 9) / 100;
+    var LABEL = { laag: "Onder de richtprijs", binnen: "Binnen de richtprijs", hoog: "Boven de richtprijs" };
+    var tel = { laag: 0, binnen: 0, hoog: 0 };
+    var rijen = o.posten.map(function (p) {
+      var v = vergelijk(p, index, btw);
+      if (!v) {
+        var excl = p.bedrag_incl_btw == null && p.bedrag_excl_btw != null;
+        var bedrag = excl ? p.bedrag_excl_btw : p.bedrag_incl_btw;
+        return "<li><div class='oc-post'><strong>" + esc(p.omschrijving) + "</strong><span class='oc-oordeel oc-geen'>Niet te vergelijken</span></div>" +
+          "<small>Offerte: " + (bedrag != null ? euro(bedrag) + (excl ? " excl. btw" : "") : "geen bedrag") + "</small></li>";
+      }
+      tel[v.oordeel]++;
+      return "<li><div class='oc-post'><strong>" + esc(p.omschrijving) + "</strong><span class='oc-oordeel oc-" + v.oordeel + "'>" + LABEL[v.oordeel] + "</span></div>" +
+        "<small>" + esc(p.hoeveelheid) + " × " + esc(v.band.eenheid.replace("per ", "")) + " · offerte " + euro(v.bedrag) +
+        " · richtprijs " + euro(v.van) + " – " + euro(v.tot) + (v.band.excl_btw ? " (excl. btw)" : "") + "</small></li>";
+    }).join("");
+
+    var kop = tel.hoog > 0
+      ? "Een deel van je offerte ligt boven de richtprijs"
+      : tel.laag > 0 ? "Je offerte ligt deels onder de richtprijs"
+      : tel.binnen > 0 ? "Je offerte ligt binnen de richtprijzen"
+      : "We konden de posten niet vergelijken";
+    var uitleg = tel.hoog > 0
+      ? "Dat kan kloppen, bijvoorbeeld bij slecht hout of veel voorwerk. Vraag de schilder waar het verschil in zit, of leg er een tweede offerte naast."
+      : tel.laag > 0 ? "Een lage prijs is niet altijd slecht. Check wel of alles erin zit, zoals het aantal lagen, de steiger en houtrot."
+      : tel.binnen > 0 ? "Check hieronder of er niets ontbreekt. Dan weet je zeker dat je appels met appels vergelijkt."
+      : "De offerte noemt geen aantallen of bedragen per post. Vraag de schilder om een gespecificeerde offerte.";
+
+    function lijst(items) {
+      return items && items.length ? "<ul>" + items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : "<p>Niets bijzonders gevonden.</p>";
+    }
+    var totaal = o.totaal_incl_btw != null ? euro(o.totaal_incl_btw) + " incl. btw"
+      : o.totaal_excl_btw != null ? euro(o.totaal_excl_btw) + " excl. btw" : null;
+
+    uitslag.innerHTML =
+      "<h2>" + kop + "</h2><p>" + esc(uitleg) + "</p>" +
+      (totaal ? "<p><strong>Totaal op de offerte:</strong> " + totaal + (o.btw_percentage != null ? " (" + esc(o.btw_percentage) + "% btw)" : "") + "</p>" : "") +
+      "<h3>Per post</h3><ul class='oc-posten'>" + (rijen || "<li>Geen losse posten gevonden.</li>") + "</ul>" +
+      "<h3>Wat er niet in staat</h3>" + lijst(o.ontbrekend) +
+      "<h3>Let hierop</h3>" + lijst(o.aandachtspunten) +
+      "<h3>Samenvatting</h3><p>" + esc(o.samenvatting) + "</p>" +
+      "<p class='formfoot'>Automatisch uitgelezen en vergeleken met onze richtprijzen voor jouw regio. Dit is een indicatie, geen oordeel over het bedrijf. Klopt een post niet, check dan de offerte zelf.</p>" +
+      "<div class='formnav'><a class='btn btn-primary' href='/offerte-aanvragen/'>Vraag vergelijkende offertes aan</a></div>" +
+      "<div class='formnav'><button type='button' class='btn btn-ghost' data-oc-opnieuw>Nog een offerte checken</button></div>";
+    uitslag.hidden = false;
+    uitslag.querySelector("[data-oc-opnieuw]").addEventListener("click", function () {
+      uitslag.hidden = true; form.reset(); form.hidden = false;
+    });
+    box.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+})();
+"""

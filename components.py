@@ -122,6 +122,7 @@ def footer():
       <h4>Handig</h4>
       <ul>
         <li><a href="/prijzen/">Prijzen &amp; tarieven</a></li>
+        <li><a href="/kosten/">Kosten per klus</a></li>
         <li><a href="/offerte-vergelijken/">Offerte laten checken</a></li>
         <li><a href="/werkgebied/">Alle plaatsen</a></li>
         <li><a href="/over-ons/">Over Topschilder</a></li>
