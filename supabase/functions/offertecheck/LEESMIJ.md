@@ -1,7 +1,9 @@
-# Offertecheck aanzetten
+# Offertecheck met Claude (reserve, staat niet aan)
 
-De automatische offertecheck op /offerte-vergelijken/ staat uit tot je deze stappen doet.
-Zolang `OFFERTECHECK_URL` leeg is, ziet een bezoeker het gewone formulier.
+De offertecheck op /offerte-vergelijken/ werkt nu gratis in de browser (pdf.js en patroonherkenning, zie het blok
+"offertecheck in de browser" in `assets.py`). Deze functie is een betaalde uitbreiding voor later, bijvoorbeeld om
+foto's en scans te lezen. Hij staat al in Supabase, maar zonder `ANTHROPIC_API_KEY` doet hij niets.
+De koppeling aan de site moet dan opnieuw worden gemaakt; een eerdere versie staat in commit 041bedf.
 
 ## Wat het doet
 
@@ -21,9 +23,8 @@ Er wordt niets opgeslagen: geen offerte, geen uitkomst.
    De functie accepteert alleen verzoeken vanaf topschilder.nl.
 4. **Secret.** Ga naar *Edge Functions* → *Secrets* en voeg `ANTHROPIC_API_KEY` toe met de sleutel uit stap 1.
    Optioneel: `OFFERTECHECK_MODEL` om een ander model te gebruiken (bijvoorbeeld een goedkoper model als de kosten oplopen).
-5. **Aanzetten.** Zet in `assets.py` bij CONFIG_JS:
-   `OFFERTECHECK_URL: "https://dijcpmqlzetxmnzonytw.supabase.co/functions/v1/offertecheck"`
-   en zet de site live.
+5. **Koppelen.** Laat de browsercheck bij een foto of scan deze functie aanroepen op
+   `https://dijcpmqlzetxmnzonytw.supabase.co/functions/v1/offertecheck` en vul met het antwoord de posten in.
 
 ## Testen
 
@@ -33,5 +34,5 @@ Haal die secret weg als je klaar bent.
 ## Let op
 
 - De prijsbanden in `kosten_data.py` en de categorieën in `index.ts` moeten gelijk blijven.
-- De privacyverklaring noemt Anthropic al als partij die de offerte uitleest.
-- Er zit geen limiet per bezoeker in. De maandlimiet bij Anthropic is je vangnet. Wordt de check misbruikt, zet `OFFERTECHECK_URL` dan weer op `""`.
+- Pas de privacyverklaring aan: noem Anthropic als partij die de offerte uitleest.
+- Er zit geen limiet per bezoeker in. De maandlimiet bij Anthropic is je vangnet. Wordt de check misbruikt, haal dan de secret weg.
