@@ -115,7 +115,7 @@ KOSTEN = [
         "klus": "kozijnen schilderen",
         "h1": "Wat kost kozijnen schilderen in 2026?",
         "title": "Kozijnen schilderen kosten 2026: prijs per kozijn",
-        "description": "Buitenkozijnen laten schilderen kost €90 tot €190 per kozijn, binnenkozijnen €45 tot €95. Met rekenvoorbeelden per woningtype, steigerkosten en btw-regels.",
+        "description": "Buitenkozijnen laten schilderen kost €90 tot €190 per kozijn, binnenkozijnen €35 tot €75. Met rekenvoorbeelden per woningtype, steigerkosten en btw-regels.",
         "dienst": "buitenschilderwerk",
         "eenheid": "per buitenkozijn",
         "van": 90,
@@ -128,9 +128,9 @@ KOSTEN = [
             ("Vrijstaande woning", 18, "Kozijnen rondom, vaak met dakkapel en boeiboorden."),
         ],
         "extra": [
-            ("Binnenkozijnen (deurkozijnen binnen)", "€45 – €95 per kozijn"),
+            ("Binnenkozijnen (deurkozijnen binnen)", "€35 – €75 per kozijn"),
             ("Steiger of hoogwerker voor de bovenverdieping", "€300 – €900 per gevel, afhankelijk van de hoogte"),
-            ("Houtrot repareren", "€85 – €275 per reparatieplek"),
+            ("Houtrot repareren", "€50 – €275 per reparatieplek"),
         ],
         "prijsfactoren": [
             "De staat van het hout. Licht verweerde verf vraagt alleen schuren en twee lagen. Afbladderende verf en houtrot vragen veel meer voorwerk.",
@@ -152,7 +152,7 @@ KOSTEN = [
         "btw": "Schilderwerk aan een woning die ouder is dan twee jaar valt onder het lage btw-tarief van 9%, inclusief de verf. Houten inzetstukken en het vervangen van onderdorpels vallen onder 21%. Een nette offerte splitst die posten.",
         "faq": [
             ("Wat kost het schilderen van een kozijn?",
-             "Een buitenkozijn kost gemiddeld €90 tot €190, inclusief ramen en dorpels. Een binnenkozijn kost €45 tot €95. Steiger en houtrotherstel komen er meestal apart bij."),
+             "Een buitenkozijn kost gemiddeld €90 tot €190, inclusief ramen en dorpels. Een binnenkozijn kost €35 tot €75. Steiger en houtrotherstel komen er meestal apart bij."),
             ("Wat kost het schilderen van alle kozijnen van een tussenwoning?",
              "Met ongeveer acht kozijnen en twee deuren kom je op €900 tot €1.900, plus €300 tot €900 als er een steiger nodig is voor de bovenverdieping."),
             ("Rekent een schilder per kozijn of per uur?",
@@ -245,7 +245,7 @@ KOSTEN += [
             ("Hele woning binnen, muren en plafonds", None, "€2.500 – €5.500 voor zo'n 250 m² muren en plafonds."),
         ],
         "extra": [
-            ("Houtrot repareren", "€85 – €275 per reparatieplek"),
+            ("Houtrot repareren", "€50 – €275 per reparatieplek"),
             ("Dakkapel schilderen", "€400 – €950 per dakkapel"),
             ("Binnendeuren laten spuiten", "€95 – €185 per deur"),
         ],
@@ -456,7 +456,7 @@ KOSTEN += [
         ],
         "extra": [
             ("Deur met de kwast schilderen", "€65 – €140 per deur"),
-            ("Deurkozijn binnen", "€45 – €95 per kozijn"),
+            ("Deurkozijn binnen", "€35 – €75 per kozijn"),
             ("Nieuw hang- en sluitwerk monteren", "€15 – €35 per deur, exclusief materiaal"),
         ],
         "prijsfactoren": [
@@ -507,7 +507,7 @@ KOSTEN += [
         ],
         "extra": [
             ("Steiger of hoogwerker", "vaak inbegrepen bij een dakkapel; vraag het na"),
-            ("Houtrot repareren", "€85 – €275 per reparatieplek"),
+            ("Houtrot repareren", "€50 – €275 per reparatieplek"),
             ("Zijwangen met plaatmateriaal bekleden", "vraag een aparte prijs"),
         ],
         "prijsfactoren": [
@@ -550,11 +550,12 @@ KOSTEN_BY_SLUG = {k["slug"]: k for k in KOSTEN}
 PRIJSBANDEN = {
     "muren_plafonds_m2": {"naam": "Muren en plafonds", "van": 10, "tot": 22, "eenheid": "per m²"},
     "buitenkozijn": {"naam": "Buitenkozijnen", "van": 90, "tot": 190, "eenheid": "per kozijn"},
-    "binnenkozijn": {"naam": "Binnenkozijnen", "van": 45, "tot": 95, "eenheid": "per kozijn"},
+    "binnenkozijn": {"naam": "Binnenkozijnen", "van": 35, "tot": 75, "eenheid": "per kozijn"},
     "deur": {"naam": "Deuren", "van": 65, "tot": 185, "eenheid": "per deur"},
+    "buitendeur": {"naam": "Buitendeur", "van": 100, "tot": 185, "eenheid": "per deur"},  # bron: Trustoo, nov. 2026 (huiscalculator)
     "keukenfront": {"naam": "Keukenfronten", "van": 45, "tot": 95, "eenheid": "per front"},
     "trap": {"naam": "Trap", "van": 350, "tot": 950, "eenheid": "per trap"},
-    "houtrot_plek": {"naam": "Houtrotreparatie", "van": 85, "tot": 275, "eenheid": "per plek"},
+    "houtrot_plek": {"naam": "Houtrotreparatie", "van": 50, "tot": 275, "eenheid": "per plek"},
     "behang_m2": {"naam": "Behangen", "van": 9, "tot": 24, "eenheid": "per m²"},
     "uurloon": {"naam": "Uurloon", "van": 45, "tot": 68, "eenheid": "per uur", "excl_btw": True},
     "steiger": {"naam": "Steiger of hoogwerker", "van": 300, "tot": 900, "eenheid": "per gevel"},

@@ -131,7 +131,7 @@ DIENSTEN = [
         "naam_kort": "Houtrot",
         "kort": "Aangetast hout uitfrezen, vullen of vervangen",
         "icon": "wood",
-        "prijs_van": 85,
+        "prijs_van": 50,
         "prijs_tot": 275,
         "prijs_eenheid": "per reparatieplek",
         "prijs_extra": "Een heel kozijnhoekstuk vervangen ligt hoger: reken op €250 tot €600 per hoek inclusief schilderwerk.",

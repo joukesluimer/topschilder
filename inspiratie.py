@@ -12,21 +12,27 @@ woningen (Gooise villa, monument, nieuwbouw), de pagina, de CSS en de
 JavaScript. build.py roept alleen build_inspiratie() aan en zet op een paar
 pagina's inspiratie_teaser() neer.
 
-Geen foto's: alleen eigen SVG en CSS. Kleurnamen zijn beschrijvend en geen
-merknamen of officiële kleurcodes; de hexwaarden komen uit de kleurenkiezer.
+Sinds de inhoudsronde (inspiratie-content) heeft elke kleur een RAL Classic-code
+met de officiële naam en een hexwaarde als benadering (zie inspiratie_gids.py), en
+heeft elk woningtype een eigen gids op /inspiratie/{type}/ met echte foto's van
+Wikimedia Commons (foto_data.FOTOS_INSPIRATIE, ook op /fotoverantwoording/).
 """
 
 import json
 import os
 
-from components import page, crumbs, offerte_form, faq_blok, title
+from components import page, crumbs, offerte_form, faq_blok, title, foto
+from data import PLAATS_BY_SLUG
+from foto_data import FOTOS_INSPIRATIE
+from inspiratie_gids import KLEURCODES, BRONNEN, GIDSEN, ONDERHOUD_ALGEMEEN, bron, kleur_label
 from kleuren_kiezer import (VERFKLEUREN, STENEN, TYPES as KIEZER_TYPES, PAD as KIEZER_PAD,
                             LIJN, _r, _glas, raam, deur, boei, svg_woning,
                             _rijtjeshuis, _twee_onder_een_kap, _jaren30, _monument_plaatsen)
 
 PAD = "/inspiratie/"
 
-KLEUR = {i: (n, h) for i, n, h, _g in VERFKLEUREN}
+# Naam en hex komen van de RAL-code die we per kleur aanhouden (inspiratie_gids.KLEURCODES).
+KLEUR = {i: ((KLEURCODES[i][0], KLEURCODES[i][2]) if i in KLEURCODES else (n, h)) for i, n, h, _g in VERFKLEUREN}
 STEEN = {i: (n, s, s2, v) for i, n, s, s2, v in STENEN}
 
 ONDERDELEN = (("kozijn", "Kozijnen"), ("raam", "Ramen"), ("deur", "Voordeur"), ("boei", "Boeidelen"))
@@ -70,8 +76,8 @@ STIJLEN = [
      "tip": "Woon je in een rij? Kijk ook naar de buren. Een rij in dezelfde kleuren oogt rustig."},
     {"id": "villa-klassiek", "type": "villa", "naam": "Gooise klassieker",
      "kozijn": "cremewit", "raam": "gooiers-groen", "deur": "gooiers-groen", "boei": "cremewit", "gevel": "rood",
-     "waarom": "Diepgroen met crème is een klassieke combinatie voor een villa. Het groen van ramen, deur en "
-               "luiken staat rustig bij het riet en de tuin. Het crème houdt het geheel licht.",
+     "waarom": "Groen met crème is in Nederland al heel lang een gewone combinatie. Het donkergroen van ramen, "
+               "deur en luiken staat rustig bij het riet en de tuin. Het crème houdt het geheel licht.",
      "tip": "Luiken krijgen in deze tekening de kleur van de voordeur. Zo blijft het bij twee kleuren."},
     {"id": "villa-landhuis", "type": "villa", "naam": "Landhuis in wit en zwart",
      "kozijn": "wit", "raam": "wit", "deur": "zwart", "boei": "wit", "gevel": "wit",
@@ -95,8 +101,8 @@ STIJLEN = [
      "tip": "Bij een monument vraag je de gemeente vooraf welke kleur mag. Soms heb je een vergunning nodig."},
     {"id": "monument-rood", "type": "monument", "naam": "Diep rood accent",
      "kozijn": "cremewit", "raam": "ossenbloed", "deur": "ossenbloed", "boei": "cremewit", "gevel": "bruin",
-     "waarom": "Ossenbloedrood in de ramen en de deur geeft een historische gevel kleur, zonder dat het "
-               "schreeuwt. Het past goed bij donkere baksteen.",
+     "waarom": "Een diep wijnrood, dicht bij wat vaak ossenbloedrood heet, in de ramen en de deur geeft een "
+               "historische gevel kleur, zonder dat het schreeuwt. Het past goed bij donkere baksteen.",
      "tip": "Ook in een beschermd stadsgezicht kan een kleurwissel vergunningplichtig zijn. Vraag het na."},
     {"id": "nieuwbouw-antraciet", "type": "nieuwbouw", "naam": "Modern antraciet",
      "kozijn": "antraciet", "raam": "antraciet", "deur": "eiken", "boei": "zwart", "gevel": "wit",
@@ -347,17 +353,19 @@ def inspiratie_home_sectie():
 
 def _kaart(st, n):
     chips = "".join(
-        f'<li><i style="background:{KLEUR[st[d]][1]}"></i><span><small>{lab}</small>{KLEUR[st[d]][0].split(" (")[0]}</span></li>'
+        f'<li><i style="background:{KLEUR[st[d]][1]}"></i><span><small>{lab}</small>{KLEUR[st[d]][0]}'
+        + (f'<em>{KLEURCODES[st[d]][1]}</em>' if KLEURCODES.get(st[d], ("", None))[1] else '<em>beits, geen RAL</em>')
+        + '</span></li>'
         for d, lab in ONDERDELEN)
     chips += (f'<li><i class="ip-steen" style="--s:{STEEN[st["gevel"]][1]};--v:{STEEN[st["gevel"]][3]}"></i>'
               f'<span><small>Gevel</small>{STEEN[st["gevel"]][0].split(" (")[0]}</span></li>')
     kort = dict(KIEZER_TYPES)[KIEZER_TYPE[st["type"]]].lower()
-    omschrijving = (f"stijl ‘{st['naam']}’ ({WONINGTYPE_NAAM[st['type']].lower()}): kozijnen {_naam(st['kozijn'])}, "
-                    f"ramen {_naam(st['raam'])}, voordeur {_naam(st['deur'])}, boeidelen {_naam(st['boei'])}")
+    omschrijving = (f"stijl ‘{st['naam']}’ ({WONINGTYPE_NAAM[st['type']].lower()}): kozijnen {kleur_label(st['kozijn'])}, "
+                    f"ramen {kleur_label(st['raam'])}, voordeur {kleur_label(st['deur'])}, boeidelen {kleur_label(st['boei'])}")
     return f"""<article class="ip-kaart" id="{st['id']}" data-type="{st['type']}">
   <div class="ip-plaat">{svg_stijl(st, n)}</div>
   <div class="ip-tekst">
-    <span class="ip-label">{WONINGTYPE_NAAM[st['type']]}</span>
+    <a class="ip-label" href="{PAD}{st['type']}/">{WONINGTYPE_NAAM[st['type']]}</a>
     <h3>{st['naam']}</h3>
     <ul class="ip-chips">{chips}</ul>
     <p>{st['waarom']}</p>
@@ -366,7 +374,7 @@ def _kaart(st, n):
       <a class="btn btn-primary" href="{kiezer_link(st)}">Probeer deze stijl</a>
       <a class="btn btn-ghost" href="#offerte" data-offerte="{omschrijving}">Offerte</a>
     </div>
-    <p class="ip-noot">Opent de kleurenkiezer met deze kleuren, op een {kort}.</p>
+    <p class="ip-noot">Opent de kleurenkiezer met vergelijkbare kleuren, op een {kort}.</p>
   </div>
 </article>"""
 
@@ -413,6 +421,204 @@ def _deur_svg(muur, deur_kleur, n):
             f'</svg>')
 
 
+
+# ---------------------------------------------------------------------------
+# inspiratie-content: foto's, kleurcodes, bronnen en de gidsen per woningtype
+# ---------------------------------------------------------------------------
+
+KORT_PER_TYPE = {
+    "jaren30": "Erker, glas-in-lood en veel houtwerk.",
+    "jaren70": "Brede kozijnen, dakkapel en een donkere steen.",
+    "villa": "Luiken, lijsten en grote kozijnen.",
+    "polder": "Houten gevels in zon en wind.",
+    "monument": "Hoge ramen, kroonlijst en soms een vergunning.",
+    "nieuwbouw": "Strak, veel glas, hout of kunststof.",
+}
+
+
+def _e(t):
+    return t.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;")
+
+
+def foto_met_bijschrift(f, sizes, boven_vouw=False, kort=False):
+    """Foto uit foto_data met een bijschrift en de naamsvermelding die de licentie vraagt."""
+    tekst = "" if kort else f'{_e(f["onderschrift"])} '
+    credit = (f'<span class="ip-credit">Foto: {_e(f["maker"])}, '
+              f'<a href="{f["licentie_url"]}" rel="license nofollow noopener" target="_blank">{f["licentie"]}</a>, '
+              f'<a href="{f["bron"]}" rel="nofollow noopener" target="_blank">Wikimedia Commons</a></span>')
+    html = foto(f, sizes, boven_vouw)
+    return html.replace("</figure>", f'<figcaption>{tekst}{credit}</figcaption></figure>')
+
+
+def types_sectie(kop="Kies je woningtype", h="h2"):
+    kaarten = ""
+    for k, naam, _kort in WONINGTYPES:
+        f = FOTOS_INSPIRATIE[k][0]
+        kaarten += (f'<a class="ip-type" href="{PAD}{k}/">'
+                    f'{foto(f, "(max-width:640px) calc(50vw - 28px), (max-width:1000px) 30vw, 360px")}'
+                    f'<span class="ip-type-tekst"><strong>{naam}</strong><small>{KORT_PER_TYPE[k]}</small></span></a>')
+    return (f'<section class="section-sm ip-types-sec"><div class="wrap"><{h} class="ip-types-kop">{kop}</{h}>'
+            f'<p class="ip-smal">Per woningtype een gids met foto’s uit de regio: wat je schildert, waar je op let, '
+            f'onderhoud en kleuren met RAL-code.</p>'
+            f'<div class="ip-types">{kaarten}</div></div></section>')
+
+
+def kleurcodes_tabel(ids):
+    rijen = ""
+    for i in ids:
+        naam, ral, hexw, noot = KLEURCODES[i]
+        rijen += (f'<tr><td><i class="ip-staal" style="background:{hexw}"></i></td><td><strong>{naam}</strong>'
+                  f'{("<br><small>" + noot + "</small>") if noot else ""}</td>'
+                  f'<td>{ral or "geen RAL-code"}</td><td><code>{hexw.upper()}</code></td></tr>')
+    return (f'<div class="ip-tabel-wrap"><table class="ip-codes"><thead><tr><th><span class="sr-only">Staal</span></th>'
+            f'<th>Kleur</th><th>Code</th><th>Hex (scherm)</th></tr></thead><tbody>{rijen}</tbody></table></div>')
+
+
+def bronnen_lijst(sleutels):
+    items = "".join(f'<li><a href="{BRONNEN[k][1]}" rel="nofollow noopener" target="_blank">{BRONNEN[k][0]}</a></li>'
+                    for k in sleutels)
+    return f'<ul class="ip-bronnen">{items}</ul>'
+
+
+def _kleur_ids(stijlen):
+    gezien = []
+    for st in stijlen:
+        for d in ("kozijn", "raam", "deur", "boei"):
+            if st[d] not in gezien:
+                gezien.append(st[d])
+    return gezien
+
+
+def _woorden(html):
+    import re
+    tekst = re.sub(r"<[^>]+>", " ", html)
+    return len(tekst.split())
+
+
+def build_gids(write, sleutel, n_start):
+    g = GIDSEN[sleutel]
+    naam = WONINGTYPE_NAAM[sleutel]
+    url = f"{PAD}{sleutel}/"
+    cr, cr_ld = crumbs([("Home", "/"), ("Inspiratie", PAD), (naam, None)])
+    fotos = FOTOS_INSPIRATIE[sleutel]
+    stijlen = [st for st in STIJLEN if st["type"] == sleutel]
+    kaarten = "".join(_kaart(st, n_start + i) for i, st in enumerate(stijlen))
+    kenmerken = "".join(f"<p>{p}</p>" for p in g["kenmerken"])
+    onderdelen = "".join(f"<li><strong>{t}.</strong> {u}</li>" for t, u in g["onderdelen"])
+    letop = "".join(f"<li>{t}</li>" for t in g["letop"])
+    kleuren = "".join(f"<p>{p}</p>" for p in g["kleuren"])
+    kosten = "".join(f'<li><a href="{u}">{t}</a></li>' for u, t in g["kosten"])
+    plaatsen = ", ".join(f'<a href="/schilder/{s}/">{PLAATS_BY_SLUG[s]["naam"]}</a>'
+                         for s in g["plaatsen"] if s in PLAATS_BY_SLUG)
+    andere = "".join(f'<li><a href="{PAD}{k}/">{n}</a></li>' for k, n, _ in WONINGTYPES if k != sleutel)
+    tweede = (f'<div class="ip-gids-foto2">{foto_met_bijschrift(fotos[1], "(max-width:760px) calc(100vw - 40px), 720px")}</div>'
+              if len(fotos) > 1 else "")
+    bronnen = list(dict.fromkeys(g["bronnen"] + ["ral", "ral-hex"]))
+
+    tekst = f"""
+  <p class="lead">{g['intro']}</p>
+  <h2>Kenmerken van dit woningtype</h2>
+  {kenmerken}
+  <h2>Wat wordt er geschilderd?</h2>
+  <ul class="checklist">{onderdelen}</ul>
+  {tweede}
+  <h2>Waar let je op?</h2>
+  <ul class="ip-letop">{letop}</ul>
+  <h2>Onderhoud</h2>
+  <p>{ONDERHOUD_ALGEMEEN}</p>
+  <p>{g['onderhoud']}</p>
+  <h2>Welke kleuren passen erbij?</h2>
+  {kleuren}"""
+
+    faq_html, faq_ld = faq_blok([
+        (f"Hoe vaak moet ik een {naam.lower()} laten schilderen?",
+         "Gemiddeld zit er ongeveer vijf jaar tussen twee schilderbeurten, maar dat hangt af van de verf, de "
+         "kwaliteit van het werk en hoeveel zon en regen het hout vangt. Kijk elk voorjaar zelf even na."),
+        ("Kloppen de RAL-codes met de kleur op mijn scherm?",
+         "De codes kloppen; de kleur op je scherm is een benadering. Vraag de schilder om een staal of een "
+         "proefvlak op je eigen kozijn voordat je kiest."),
+    ], f"Vragen over een {naam.lower()}")
+
+    body = f"""{cr}
+<section class="section-sm ip-gids"><div class="wrap narrow">
+  <span class="badge">Inspiratie per woningtype</span>
+  <h1>{g['h1']}</h1>
+  {foto_met_bijschrift(fotos[0], "(max-width:760px) calc(100vw - 40px), 720px", boven_vouw=True)}
+  <div class="prose">{tekst}</div>
+</div></section>
+
+<section class="section-sm soft"><div class="wrap">
+  <h2>Twee uitgewerkte kleurcombinaties</h2>
+  <p class="ip-smal">Probeer een combinatie in de <a href="{KIEZER_PAD}">kleurenkiezer</a>, of vraag er direct een offerte voor aan.</p>
+  <div class="ip-grid ip-grid-2">{kaarten}</div>
+  <p class="ip-schermnoot">De tekeningen zijn voorbeelden. Kleuren op een scherm wijken altijd wat af van echte verf.</p>
+</div></section>
+
+<section class="section-sm"><div class="wrap narrow">
+  <h2>De kleuren met hun RAL-code</h2>
+  <p>RAL Classic is een Duitse kleurnorm die schilders en verfwinkels in heel Nederland kennen. Met de code mengt de verfwinkel de kleur bij elk merk. De namen in deze tabel zijn de officiële RAL-namen; welke code bij een stijl hoort, is ons voorstel.</p>
+  {kleurcodes_tabel(_kleur_ids(stijlen))}
+  <div class="grid g2 ip-verder">
+    <div><h3>Kosten</h3><ul>{kosten}<li><a href="/kosten/calculator/">Reken je eigen huis door</a></li></ul></div>
+    <div><h3>Verder kijken</h3><ul><li><a href="{KIEZER_PAD}">Zelf kleuren kiezen in de kleurenkiezer</a></li><li><a href="/onderhoudscheck/">Doe de onderhoudscheck</a></li><li><a href="/schilderwerk/buitenschilderwerk/">Buitenschilderwerk</a></li><li><a href="/schilderwerk/houtrot-reparatie/">Houtrot laten repareren</a></li></ul></div>
+  </div>
+  <p>Schilders in de buurt van dit soort woningen vind je onder meer in {plaatsen}.</p>
+  <h3>Andere woningtypes</h3>
+  <ul class="ip-andere">{andere}</ul>
+  <h3>Bronnen</h3>
+  {bronnen_lijst(bronnen)}
+</div></section>
+
+<section class="section" id="offerte-inspiratie"><div class="wrap">
+  <div class="grid g2" style="gap:48px;align-items:start">
+    <div>
+      <span class="badge">Van idee naar offerte</span>
+      <h2>Laat je {naam.lower()} schilderen</h2>
+      <p class="lead">Klik bij een combinatie op <strong>Offerte</strong>; die komt dan vanzelf in het formulier.</p>
+      <ul class="checklist">
+        <li><strong>Gratis en vrijblijvend.</strong> Je krijgt offertes van maximaal drie schilders uit jouw regio.</li>
+        <li><strong>Vraag om een kleurstaal.</strong> Een goede schilder laat je de kleur eerst op je eigen kozijn zien.</li>
+      </ul>
+    </div>
+    <div>{offerte_form("Offerte voor jouw nieuwe kleuren", "Gratis · vrijblijvend · maximaal 3 schilders")}</div>
+  </div>
+</div></section>
+{faq_html}"""
+
+    artikel_ld = {
+        "@context": "https://schema.org", "@type": "Article", "headline": g["h1"],
+        "description": g["description"], "inLanguage": "nl-NL",
+        "image": f"https://topschilder.nl/assets/fotos/{fotos[0]['naam']}-1600.webp",
+        "mainEntityOfPage": f"https://topschilder.nl{url}",
+        "publisher": {"@type": "Organization", "name": "Topschilder", "url": "https://topschilder.nl/"},
+    }
+    html = page(title(g["titel"]), g["description"], url, body, [cr_ld, artikel_ld, faq_ld])
+    html = html.replace('<link rel="stylesheet" href="/assets/css/style.css">',
+                        '<link rel="stylesheet" href="/assets/css/style.css">'
+                        '<link rel="stylesheet" href="/assets/css/inspiratie.css">')
+    html = html.replace("</body>", '<script src="/assets/js/inspiratie.js" defer></script></body>')
+    write(url, html, prio=0.6)
+    return _woorden(tekst)
+
+
+def kleurnamen_sectie():
+    alle = _kleur_ids(STIJLEN)
+    return f"""<section class="section-sm" id="kleurcodes"><div class="wrap narrow prose">
+  <span class="badge">Kleurnamen en codes</span>
+  <h2>Waar komen de kleurnamen vandaan?</h2>
+  <p>Namen als monumentengroen, grachtengroen of ossenbloedrood klinken als vaste kleuren, maar dat zijn ze niet. Elk verfmerk maakt er een eigen versie van. Daarom staat bij elke kleur op deze pagina een RAL-code: daarmee weet de verfwinkel precies welke kleur je bedoelt.</p>
+  <ul>
+    <li><strong>Groen met wit is een oude Nederlandse combinatie.</strong> Het {bron("olm-kozijn", "Nederlands Openluchtmuseum")} schrijft dat groene kozijnen eerst iets voor deftige huizen waren, omdat de verf duur was. Toen in de negentiende eeuw het goedkopere standgroen op de markt kwam, kozen veel mensen alsnog voor groen.</li>
+    <li><strong>Monumentengroen is minder oud dan het klinkt.</strong> Volgens het {bron("olm-gebouwen", "Openluchtmuseum")} bestaat het pas sinds de twintigste eeuw. Daarvoor werd groen gebruikt van grijsgroen tot helder lichtgroen.</li>
+    <li><strong>Groen verkleurt.</strong> Groen dat uit geel en blauw pigment is gemengd, wordt in de zon blauwer, en standgroen wordt donkerder met de jaren ({bron("olm-kozijn", "bron")}).</li>
+    <li><strong>Ossenbloed was echt bloed.</strong> In de Middeleeuwen werd ossenbloed gebruikt als bindmiddel voor verf ({bron("olm-kozijn", "bron")}). De rode kleur die nu zo heet, is gewone verf.</li>
+  </ul>
+  <h3>Alle kleuren op deze pagina</h3>
+  <p>De codes en namen komen uit de {bron("ral", "officiële RAL-lijst")}. De hexwaarde is een benadering voor je scherm, overgenomen uit de {bron("ral-hex", "Wikipedia-lijst van RAL-kleuren")}. Welke code bij een stijl hoort, is ons voorstel.</p>
+  {kleurcodes_tabel(alle)}
+</div></section>"""
+
+
 def build_inspiratie(write, out_dir):
     cr, cr_ld = crumbs([("Home", "/"), ("Buitenschilderwerk", "/schilderwerk/buitenschilderwerk/"),
                         ("Inspiratie", None)])
@@ -453,9 +659,9 @@ def build_inspiratie(write, out_dir):
          "en leuningen die veel te verduren hebben. Hoe hoger de glans, hoe beter af te wassen, maar hoe meer "
          "je oneffenheden ziet."),
         ("Kloppen de kleuren in de tekeningen met echte verf?",
-         "Niet precies. Elk scherm toont kleuren anders, en buiten ziet verf er in de zon anders uit dan "
-         "binnen. De namen zijn omschrijvingen, geen kleurcodes. Vraag je schilder om een kleurstaal of een "
-         "proefvlak op je eigen kozijn."),
+         "De RAL-codes kloppen, maar de kleur op je scherm is een benadering. Elk scherm toont kleuren anders, "
+         "en buiten ziet verf er in de zon anders uit dan binnen. Geef de RAL-code door aan je schilder en vraag "
+         "om een kleurstaal of een proefvlak op je eigen kozijn."),
     ]
     faq_html, faq_ld = faq_blok(faqs, "Vragen over kleur en stijl")
 
@@ -476,17 +682,19 @@ def build_inspiratie(write, out_dir):
 <section class="section-sm ip-intro"><div class="wrap">
   <span class="badge">Inspiratie en stijlgids</span>
   <h1>Welke kleuren passen bij jouw huis?</h1>
-  <p class="lead">Een jaren-30-woning vraagt om andere kleuren dan een strakke nieuwbouwwoning. Hier vind je per woningtype twee kleurcombinaties voor kozijnen, ramen, voordeur en boeidelen, met uitleg waarom ze werken. Bevalt er een? Probeer hem in de <a href="{KIEZER_PAD}">kleurenkiezer</a> en pas hem aan.</p>
+  <p class="lead">Een jaren-30-woning vraagt om andere kleuren dan een strakke nieuwbouwwoning. Hier vind je per woningtype een gids met foto’s, en twee kleurcombinaties voor kozijnen, ramen, voordeur en boeidelen, met RAL-codes en uitleg waarom ze werken. Bevalt er een? Probeer hem in de <a href="{KIEZER_PAD}">kleurenkiezer</a> en pas hem aan.</p>
   <p class="ip-snel">Direct naar: {snel}</p>
 </div></section>
+{types_sectie()}
 
 <section class="ip-galerij"><div class="wrap">
   {ankers}
   <div class="ip-filters" role="group" aria-label="Filter op woningtype" hidden>{filters}</div>
   <p class="ip-telling" role="status" aria-live="polite"></p>
   <div class="ip-grid">{kaarten}</div>
-  <p class="ip-schermnoot">De tekeningen zijn voorbeelden, geen foto's. Kleuren op een scherm wijken altijd wat af van echte verf.</p>
+  <p class="ip-schermnoot">De tekeningen zijn voorbeelden, geen foto's. Kleuren op een scherm wijken altijd wat af van echte verf; bij elke kleur staat de RAL-code.</p>
 </div></section>
+{kleurnamen_sectie()}
 
 <section class="section soft"><div class="wrap">
   <h2>Zo kies je zelf een combinatie</h2>
@@ -568,6 +776,14 @@ def build_inspiratie(write, out_dir):
                         '<link rel="stylesheet" href="/assets/css/inspiratie.css">')
     html = html.replace("</body>", '<script src="/assets/js/inspiratie.js" defer></script></body>')
     write(PAD, html, prio=0.7)
+
+    # inspiratie-content: één gids per woningtype
+    n = len(STIJLEN) + 1
+    for k, _naam, _kort in WONINGTYPES:
+        woorden = build_gids(write, k, n)
+        n += 2
+        if woorden < 400:
+            print(f"  LET OP: gids {k} heeft maar {woorden} woorden lopende tekst")
 
     _schrijf(os.path.join(out_dir, "assets", "css", "inspiratie.css"), INSPIRATIE_CSS)
     data = {"types": {k: n for k, n, _ in WONINGTYPES}}
@@ -658,6 +874,53 @@ INSPIRATIE_CSS = r'''/* Inspiratie en stijlgids — alleen geladen op /inspirati
 @media(max-width:900px){.ip-deuren{grid-template-columns:minmax(0,1fr);gap:10px}}
 @media(max-width:420px){.ip-deur{grid-template-columns:110px minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.ip-kaart{transition:none}.ip-kaart:hover{transform:none}}
+
+/* inspiratie-content: woningtypes met foto, gidsen, kleurcodes */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ip-label{text-decoration:none}
+.ip-label:hover{text-decoration:underline}
+.ip-chips em{display:block;font-style:normal;font-size:.72rem;color:var(--muted)}
+.ip-types-sec{padding-top:8px}
+.ip-types-kop{font-size:1.35rem;margin-bottom:.2em}
+.ip-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:14px}
+.ip-type{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;color:var(--ink);text-decoration:none;box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s}
+.ip-type:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.ip-type .foto{margin:0}
+.ip-type img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover}
+.ip-type-tekst{display:flex;flex-direction:column;padding:10px 14px 13px}
+.ip-type-tekst strong{font-size:1rem}
+.ip-type-tekst small{font-size:.85rem;color:var(--muted);line-height:1.35}
+.ip-gids h1{margin:.2em 0 .5em}
+.ip-gids .foto{margin:0 0 6px}
+.ip-gids .foto img,.ip-gids-foto2 img{display:block;width:100%;height:auto;border-radius:var(--radius-lg)}
+.foto figcaption{font-size:.84rem;color:var(--muted);margin-top:6px;line-height:1.4}
+.ip-credit{display:block;font-size:.76rem}
+.ip-credit a{color:inherit}
+.ip-gids-foto2{margin:22px 0}
+.ip-letop li{margin-bottom:.45em}
+.ip-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ip-tabel-wrap{overflow-x:auto;margin:14px 0 22px}
+.ip-codes{width:100%;border-collapse:collapse;font-size:.92rem}
+.ip-codes th,.ip-codes td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.ip-codes th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.ip-codes small{color:var(--muted)}
+.ip-codes td:nth-child(3),.ip-codes td:nth-child(4){white-space:nowrap}
+.ip-staal{display:inline-block;width:28px;height:28px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+.ip-verder ul,.ip-andere{padding-left:1.1em}
+.ip-andere{display:flex;flex-wrap:wrap;gap:4px 22px}
+.ip-bronnen{font-size:.86rem;padding-left:1.1em}
+.ip-bronnen li{margin-bottom:.3em;overflow-wrap:anywhere}
+@media(max-width:1000px){.ip-types{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){
+  .ip-types{gap:10px}
+  .ip-type-tekst small{display:none}
+  .ip-grid-2{grid-template-columns:minmax(0,1fr)}
+  .ip-codes{font-size:.84rem}
+  .ip-codes th,.ip-codes td{padding:7px 5px}
+  .ip-codes th{white-space:normal;font-size:.7rem}
+  .ip-codes code{font-size:.76rem}
+  .ip-staal{width:20px;height:20px}
+}
 '''
 
 # ---------------------------------------------------------------------------
@@ -671,6 +934,7 @@ INSPIRATIE_JS = r'''/* Inspiratie — filter op woningtype (ook via #woningtype 
   var balk = document.querySelector(".ip-filters");
   var kaarten = [].slice.call(document.querySelectorAll(".ip-kaart"));
   var telling = document.querySelector(".ip-telling");
+  koppelOfferte();
   if (!balk || !kaarten.length) return;
   balk.hidden = false;
 
@@ -713,6 +977,7 @@ INSPIRATIE_JS = r'''/* Inspiratie — filter op woningtype (ook via #woningtype 
   vanHash();
 
   /* Stijl in het offerteformulier zetten */
+  function koppelOfferte() {
   document.querySelectorAll("[data-offerte]").forEach(function (a) {
     a.addEventListener("click", function (e) {
       var form = document.querySelector("form[data-wizard]");
@@ -730,5 +995,6 @@ INSPIRATIE_JS = r'''/* Inspiratie — filter op woningtype (ook via #woningtype 
       if (box) window.scrollTo({ top: box.getBoundingClientRect().top + window.scrollY - 90, behavior: "smooth" });
     });
   });
+  }
 })();
 '''

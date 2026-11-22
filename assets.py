@@ -1692,6 +1692,175 @@ APP_JS += r'''
 '''
 
 
+STYLE_CSS += r"""
+/* =========================================================================
+   Ronde 3 — visuele bouwstenen (componenten staan in components.py)
+   ========================================================================= */
+
+:root{--penseel:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 24' preserveAspectRatio='none'%3E%3Cpath d='M3 12C40 5 90 4 130 6s60 3 87 1l-1 10c-30 4-62 2-96 1S40 16 4 21z' fill='%23f4820b' fill-opacity='.4'/%3E%3C/svg%3E");--golf:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 28' preserveAspectRatio='none'%3E%3Cpath d='M0 28V16C140 5 260 1 390 6s250 18 380 16 250-16 380-17 210 6 290 12v11z'/%3E%3C/svg%3E")}
+
+/* ---------- Typografie en ritme ---------- */
+h1,h2,h3{text-wrap:balance}
+p,li{text-wrap:pretty}
+.lead{line-height:1.6}
+
+/* ---------- Penseelstreek onder een woord: streep("woord") ---------- */
+.section .center > h2:has(.streep)::after{display:none}
+.streep{background:var(--penseel) 0 88%/100% .42em no-repeat;padding:0 .08em;margin:0 -.08em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+
+/* ---------- Dienst-iconen: vlakken in de accentkleur ---------- */
+.dicon .ia{fill:var(--accent);stroke:none;opacity:.9}
+.badge-ic{display:inline-flex;align-items:center;gap:7px}
+.badge-ic .dicon{color:#7a3f00}
+
+/* ---------- Dienstkaarten: icoon op de foto ---------- */
+.card-dienst > .foto{position:relative}
+.card-chip{position:absolute;left:14px;bottom:14px;width:46px;height:46px;border-radius:14px;background:#fff;color:var(--navy);display:grid;place-items:center;box-shadow:0 6px 16px rgba(36,25,6,.22);transition:transform .3s ease}
+.card-dienst:hover .card-chip{transform:translateY(-3px) rotate(-5deg)}
+@media(max-width:600px){.card-chip{display:none}}
+
+/* ---------- Feitenblok: feiten_blok([...]) ---------- */
+.feiten{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:14px;margin:34px 0 0}
+.feit{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px 20px 16px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(60,41,15,.04)}
+.feit::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--accent),#ffcf94)}
+.feit-getal{display:inline-block;font-size:clamp(1.8rem,3.4vw,2.3rem);font-weight:800;color:var(--ink);line-height:1.05;margin:0 0 6px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;background:var(--penseel) 0 100%/100% .3em no-repeat;padding-bottom:.18em}
+.feit-label{font-size:.9rem;margin:0;color:var(--body);line-height:1.45}
+.feit-label a{color:#8a4500;font-size:.82rem}
+.feiten-noot{font-size:.82rem;color:var(--muted);margin:10px 0 0}
+.soft .feit{background:#fff}
+.feiten-donker .feit{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);box-shadow:none}
+.feiten-donker .feit-getal{color:#fff}
+.feiten-donker .feit-label{color:#e3d6c2}
+.prose .feiten{margin:24px 0 8px}
+@media(max-width:560px){.feiten{grid-template-columns:1fr 1fr;gap:10px}.feit{padding:14px 14px 12px}.feit-getal{font-size:1.6rem}.feit-label{font-size:.84rem}.feit:last-child:nth-child(odd){grid-column:1/-1}}
+
+/* ---------- Stappen-tijdlijn: stappen_blok([...]) ---------- */
+.stappen{list-style:none;padding:0;margin:22px 0 26px}
+ol.stappen > li{display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:18px;margin:0;padding:0 0 22px;counter-increment:none;position:relative}
+ol.stappen > li::before{content:"";counter-increment:none;border-radius:0;box-shadow:none;height:auto;display:block;font-size:0;position:absolute;left:21px;top:50px;bottom:4px;width:2px;background:repeating-linear-gradient(180deg,#eebd85 0 7px,transparent 7px 12px)}
+ol.stappen > li:last-child{padding-bottom:0}
+ol.stappen > li:last-child::before{display:none}
+.stap-nr{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:1.05rem;color:#fff;background:var(--navy);box-shadow:0 0 0 4px var(--accent-soft),0 0 0 6px #f6c995;position:relative;z-index:1}
+.stappen h3,.prose .stappen h3{margin:8px 0 .2em;font-size:1.1rem}
+.stappen p{margin:0;font-size:.97rem}
+
+/* ---------- Foto met bijschrift: foto_kader(...) ---------- */
+.foto-kader{position:relative;isolation:isolate;margin:34px 0 30px}
+.foto-kader::before{content:"";position:absolute;left:-10px;top:-10px;width:110px;height:110px;border-radius:16px;background:repeating-linear-gradient(-45deg,#fbd3a2 0 5px,transparent 5px 11px);z-index:-1}
+.foto-kader img{box-shadow:var(--shadow-lg)}
+.foto-kader figcaption{font-size:.86rem;color:var(--muted);margin-top:12px;padding-left:12px;border-left:3px solid var(--accent);line-height:1.5}
+.foto-credit{display:block;font-size:.78rem;margin-top:2px}
+.foto-credit a{color:var(--muted)}
+
+/* ---------- Prijsbalken: prijs_balken([...]) ---------- */
+.prijs-balken{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px 22px 14px;margin:20px 0 18px;box-shadow:var(--shadow)}
+.prijs-balken ul{list-style:none;padding:0;margin:0}
+.prijs-balken li{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1.4fr) 8.6em;gap:16px;align-items:center;margin:0;padding:10px 0;border-top:1px solid var(--line)}
+.prijs-balken li:first-child{border-top:0}
+.pb-eenheid{font-size:.78rem;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:#a35200;margin:0 0 4px}
+.pb-label{font-weight:650;color:var(--ink);font-size:.93rem;line-height:1.35}
+.pb-baan{height:12px;border-radius:99px;background:var(--bg-soft);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.pb-balk{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ffb15c,var(--accent));transform-origin:left center}
+.pb-bedrag{font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink);font-size:.92rem;white-space:nowrap;text-align:right}
+.pb-noot{font-size:.82rem;color:var(--muted);margin:8px 0 0}
+.prijs-balken.reveal .pb-balk{transform:scaleX(0);transition:transform .9s cubic-bezier(.2,.7,.2,1) .25s}
+.prijs-balken.reveal.in .pb-balk{transform:none}
+@media(max-width:560px){
+  .prijs-balken{padding:16px 16px 12px}
+  .prijs-balken li{grid-template-columns:minmax(0,1fr) auto;row-gap:7px;column-gap:10px}
+  .pb-baan{grid-column:1/-1;grid-row:2}
+}
+
+/* ---------- Voor/na: label dat het een illustratie is ---------- */
+.vn-soort{position:absolute;top:12px;left:12px;font-size:.72rem;font-weight:750;letter-spacing:.05em;text-transform:uppercase;background:rgba(255,255,255,.92);color:#6b3600;padding:4px 10px;border-radius:99px}
+
+/* ---------- Mobiel menu ---------- */
+.burger{width:44px;height:44px;padding:0;position:relative;border-radius:11px;background:#fff;font-size:0;color:var(--ink)}
+.burger span{position:absolute;left:12px;right:12px;height:2px;border-radius:2px;background:currentColor;transition:transform .25s ease,opacity .2s ease}
+.burger span:nth-child(1){top:15px}.burger span:nth-child(2){top:21px}.burger span:nth-child(3){top:27px}
+.burger[aria-expanded="true"] span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.burger[aria-expanded="true"] span:nth-child(2){opacity:0}
+.burger[aria-expanded="true"] span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+.burger:focus-visible,.nav a:focus-visible{outline:3px solid #ffb15c;outline-offset:2px}
+.nav-ic,.nav-noot{display:none}
+.nav-scherm{display:none}
+@media(max-width:900px){
+  .nav{display:flex;visibility:hidden;opacity:0;transform:translateY(-10px);transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s;max-height:calc(100vh - 70px);overflow-y:auto;padding:10px 16px 18px;gap:2px;border-radius:0 0 18px 18px}
+  .nav.open{visibility:visible;opacity:1;transform:none;transition:opacity .2s ease,transform .2s ease}
+  .nav a:not(.btn){display:flex;align-items:center;gap:13px;padding:10px;border-radius:12px;font-size:1.04rem}
+  .nav a:not(.btn)::after{display:block;content:"›";position:static;margin-left:auto;transform:none;background:none;height:auto;width:auto;font-size:1.4rem;line-height:1;color:var(--muted)}
+  .nav-ic{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:11px;background:var(--accent-soft);color:#a35200}
+  .nav .btn{padding:15px;margin-top:10px}
+  .nav-noot{display:block;text-align:center;font-size:.85rem;color:var(--muted);margin:10px 0 0}
+  .nav-scherm{display:block;position:fixed;inset:70px 0 0;background:rgba(36,25,6,.45);z-index:55;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility 0s linear .2s}
+  body.menu-open{overflow:hidden}
+  body.menu-open .nav-scherm{opacity:1;visibility:visible;transition:opacity .2s ease}
+}
+
+/* ---------- Footer ---------- */
+.footer{position:relative;background:linear-gradient(180deg,#3c290f 0%,#2a1d09 100%);color:#d9c9ae;padding-top:52px}
+.footer-golf{position:absolute;left:0;right:0;top:-27px;height:28px;background:#3c290f;-webkit-mask:var(--golf) 0 0/100% 100% no-repeat;mask:var(--golf) 0 0/100% 100% no-repeat;pointer-events:none}
+.footer a{color:#e8dcc8}
+.footer a:hover{color:#fff}
+.footer .fh{color:#fff;font-size:.82rem;text-transform:uppercase;letter-spacing:.08em}
+.footer-cta{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:22px 26px;margin:0 0 44px;border-radius:var(--radius-lg);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+.footer-cta p{margin:0;color:#e3d6c2}
+.footer-cta .footer-cta-titel{color:#fff;font-weight:750;font-size:1.15rem;margin-bottom:2px}
+.footer-cta .btn{flex:0 0 auto}
+section:has(.cta) + .footer .footer-cta{display:none}
+@media(max-width:620px){.footer-cta{flex-direction:column;align-items:stretch;padding:20px}}
+.footer-diensten a,.footer-tools a{display:inline-flex;align-items:center;gap:10px}
+.f-ic{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.08);color:#fff;flex:0 0 30px}
+.footer-tools{margin-top:16px!important}
+.footer-tools a{font-weight:650;color:#ffd9ab}
+.footer-tools svg{color:#ffb15c}
+.footer-plaatsen{display:grid;grid-template-columns:1fr 1fr;column-gap:14px}
+.footer-meer{color:#ffd9ab!important;font-weight:700}
+.footer-bot{border-top-color:rgba(255,255,255,.12);color:#c9b89c}
+.footer-bot a{color:#d9c9ae}
+
+@media(prefers-reduced-motion:reduce){
+  .card-chip,.burger span,.nav,.nav-scherm{transition:none!important}
+  .card-dienst:hover .card-chip{transform:none}
+  .prijs-balken.reveal .pb-balk{transform:none;transition:none}
+}
+"""
+
+APP_JS += r"""
+/* ---------- Ronde 3: mobiel menu (scherm erachter, Esc, focus terug) ---------- */
+(function () {
+  "use strict";
+  var burger = document.querySelector(".burger");
+  var nav = document.getElementById("hoofdmenu");
+  if (!burger || !nav) return;
+  var scherm = document.createElement("div");
+  scherm.className = "nav-scherm";
+  document.body.appendChild(scherm);
+  function sync() {
+    var open = nav.classList.contains("open");
+    burger.setAttribute("aria-expanded", open);
+    burger.setAttribute("aria-label", open ? "Menu sluiten" : "Menu");
+    document.body.classList.toggle("menu-open", open);
+  }
+  function sluit(focusTerug) {
+    if (!nav.classList.contains("open")) return;
+    nav.classList.remove("open");
+    sync();
+    if (focusTerug) burger.focus();
+  }
+  /* De klik zelf wordt al afgehandeld in het menublok hierboven; hier alleen de rest. */
+  burger.addEventListener("click", function () {
+    sync();
+    if (nav.classList.contains("open")) { var a = nav.querySelector("a"); if (a) a.focus({ preventScroll: true }); }
+  });
+  scherm.addEventListener("click", function () { sluit(false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") sluit(true); });
+  nav.addEventListener("click", function (e) { if (e.target.closest("a")) sluit(false); });
+  window.addEventListener("resize", function () { if (window.innerWidth > 900) sluit(false); });
+})();
+"""
+
+
 def css_klein(css):
     """Lichte verkleining voor de build: commentaar en overbodige witruimte eruit."""
     import re
@@ -1699,3 +1868,29 @@ def css_klein(css):
     css = re.sub(r"\s+", " ", css)
     css = re.sub(r"\s*([{};,])\s*", r"\1", css)
     return css.replace(";}", "}").strip()
+
+
+# =========================================================================
+# PLAATSDATA — staafdiagram bouwjaren en wijktabel op plaatspagina's (plaats_content.py)
+# (los blok aan het eind, zodat samenvoegen met andere branches makkelijk blijft)
+# =========================================================================
+
+STYLE_CSS += r'''
+/* ---------- Plaatsdata: bouwjaren ---------- */
+.pc-fig{margin:22px 0 26px;padding:18px 18px 12px;border:1px solid var(--line);border-radius:var(--radius);background:#fff}
+.pc-fig figcaption{font-weight:700;color:var(--ink);margin-bottom:12px}
+.pc-bars{list-style:none;margin:0;padding:0}
+.pc-bars li{display:grid;grid-template-columns:7.2em 1fr 6.6em;gap:10px;align-items:center;padding:4px 0;margin:0;font-size:.92rem}
+.prose .pc-bars > li{padding-left:0;margin-bottom:0;counter-increment:none}
+.prose .pc-bars > li::before{content:none;display:none}
+.pc-lab{color:var(--ink);white-space:nowrap}
+.pc-bar{display:block;height:14px;background:var(--bg-soft);border-radius:7px;overflow:hidden}
+.pc-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#ffb15c);border-radius:7px}
+.pc-val{font-variant-numeric:tabular-nums;font-weight:650;color:var(--ink);white-space:nowrap;text-align:right}
+.pc-n{font-weight:400;color:var(--muted)}
+.pc-bron{color:var(--muted);margin-top:18px}
+.pc-wijken th{white-space:normal}
+@media(max-width:560px){.pc-wijken th,.pc-wijken td{padding:10px 8px;font-size:.88rem}}
+@media(max-width:480px){.pc-wijken .pc-groep{display:none}.pc-wijken th{letter-spacing:0;font-size:.72rem}.pc-wijken td:first-child{hyphens:auto;overflow-wrap:anywhere}}
+@media(max-width:480px){.pc-bars li{grid-template-columns:6.4em 1fr 3em;gap:8px;font-size:.86rem}.pc-n{display:none}}
+'''

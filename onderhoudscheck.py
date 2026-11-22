@@ -2,7 +2,7 @@
 """
 Onderhoudscheck: "Is jouw schilderwerk aan de beurt?"
 
-Een losse pagina (/onderhoudscheck/) met acht korte vragen, een onderhoudsmeter
+Een losse pagina (/onderhoudscheck/) met negen korte vragen, een onderhoudsmeter
 als uitslag, richtprijzen uit kosten_data.py, een agendaherinnering (.ics) die in
 de browser wordt gemaakt en een knop die het offerteformulier vast invult.
 Er wordt niets opgeslagen of verstuurd tot iemand zelf het offerteformulier verstuurt.
@@ -21,6 +21,46 @@ from foto_data import FOTOS
 from kosten_data import KOSTEN, PRIJSBANDEN
 
 PAD = "/onderhoudscheck/"
+
+# Foto's voor de zelfcheck. Bron: ~/Desktop/Topschilder/Gratis content (kopie, niet bewerkt
+# in die map). Webversies in fotos/. Staan ook op /fotoverantwoording/ (zie build.py).
+_BEW = "Bijgesneden tot 3:2 (uit {}), verkleind naar 1600, 800 en 400 px breed en omgezet naar WebP."
+FOTOS_ONDERHOUDSCHECK = [
+    {"naam": "verweerde-blauwe-houten-schutting",
+     "alt": "Verweerde blauwe houten schutting waar de verf grotendeels af is en het grijze hout bloot ligt",
+     "w": 1600, "h": 1067, "titel": "Alt Blau Holz-Zaun.jpg", "maker": "ZeWrestler",
+     "licentie": "CC BY-SA 3.0", "licentie_url": "https://creativecommons.org/licenses/by-sa/3.0",
+     "bron": "https://commons.wikimedia.org/wiki/File:Alt_Blau_Holz-Zaun.jpg",
+     "bewerking": _BEW.format("5184 × 3127 px")},
+    {"naam": "hout-met-blokvormige-scheuren-close-up",
+     "alt": "Close-up van hout met blokvormige scheuren en witte schimmeldraden",
+     "w": 1600, "h": 1067, "titel": "Merule sur Douglas 3.jpg", "maker": "Jiròni B.",
+     "licentie": "CC BY-SA 4.0", "licentie_url": "https://creativecommons.org/licenses/by-sa/4.0",
+     "bron": "https://commons.wikimedia.org/wiki/File:Merule_sur_Douglas_3.jpg",
+     "bewerking": _BEW.format("2048 × 1536 px")},
+    {"naam": "aangetast-houten-balk-met-meetlint",
+     "alt": "Door bruinrot aangetaste, brokkelige houten balk met een meetlint ernaast",
+     "w": 1600, "h": 1067, "titel": "Braunfaeule Holz FI20070208.jpg", "maker": "Mätes II.",
+     "licentie": "CC BY-SA 3.0", "licentie_url": "https://creativecommons.org/licenses/by-sa/3.0",
+     "bron": "https://commons.wikimedia.org/wiki/File:Braunfaeule_Holz_FI20070208.jpg",
+     "bewerking": _BEW.format("2288 × 1447 px")},
+]
+_F = {f["naam"]: f for f in FOTOS_ONDERHOUDSCHECK}
+
+# Bronnen voor de onderhoudstermijnen (gelezen in november 2026)
+BRONNEN_TERMIJN = {
+    "nbvt": ("Nederlandse Bond van Timmerfabrikanten en Stichting Garantiefonds Timmerwerk, brochure Onderhoud van houten gevelelementen (onderhoudsschema voor de eigenaar-bewoner)", "https://www.gilskozijnen.nl/uploads/file/Onderhoud%20van%20houten%20gevelelementen.pdf"),
+    "sikkens": ("Helwig Stipt, Onderhoudsvoorschriften houten kozijnen, april 2021 (schema voor kozijnen afgewerkt met Sikkens Concept II+)", "https://stiptkozijnen.nl/Content/Docs/Helwig%20Stipt%20-%20Onderhoudsvoorschriften.pdf"),
+    "sigma": ("Van de Vin ramen en kozijnen, Onderhoudsvoorschriften kozijnen, april 2011 (afgewerkt met Sigma Coatings)", "https://www.vandevin.nl/upload/e01303_vinEasyfitOnderhoudsvoor.pdf"),
+    "dejong": ("De Jong Kozijnen, Onderhoud van houten gevelelementen", "https://dejongkozijnen.nl/onderhoud-van-houten-gevelelementen/"),
+    "koopmans": ("Koopmans Verf, Hoe herken en repareer je houtrot? (november 2022)", "https://www.koopmansverf.nl/klushulp/hoe-herken-en-repareer-je-houtrot/"),
+    "vanassen": ("Schildersbedrijf Van Assen, Hoe vaak buiten schilderen? (oktober 2026)", "https://schildersbedrijfvanassen.nl/blog/hoe-vaak-buiten-schilderen"),
+    "homedeal": ("Homedeal, Kozijnen onderhoud (juni 2026)", "https://www.homedeal.nl/kozijnen/onderhoud-kozijnen/"),
+}
+
+
+def _bl(k, kort):
+    return f'<a href="{BRONNEN_TERMIJN[k][1]}" rel="nofollow noopener" target="_blank">{kort}</a>'
 
 
 # ---------------------------------------------------------------------------
@@ -102,6 +142,12 @@ VRAGEN = [
       ("schaduw", "Noord of oost", "Weinig zon", "schaduw", "g"),
       ("open", "Open ligging", "Aan het water of in de polder", "water", "o"),
       ("onbekend", "Weet ik niet", "Of het verschilt per kant", "vraag", "n")]),
+    ("afwerking", "Hoe is het houtwerk afgewerkt?",
+     "Kijk naar de kozijnen. De kleur bepaalt hoe warm de verf in de zon wordt, en dus hoe snel hij slijt.",
+     [("licht", "Lichte dekkende verf", "Wit, crème, lichtgrijs of pastel", "zon", "g"),
+      ("donker", "Donkere dekkende verf", "Antraciet, donkergroen, donkerblauw, zwart", "schaduw", "o"),
+      ("transparant", "Transparant", "Je ziet de houtnerf: beits of blanke lak", "naad", "r"),
+      ("onbekend", "Weet ik niet", "Of het is gemengd", "vraag", "n")]),
     ("bladderen", "Zie je verf die afbladdert?",
      "Let vooral op de onderkant van kozijnen, op dorpels en op de hoeken.",
      [("nee", "Nee, het zit goed", "Gesloten verflaag", "goed", "g"),
@@ -184,7 +230,7 @@ def teaser_home():
     <div>
       <span class="badge">Nieuw · 2 minuten</span>
       <h2>Is jouw schilderwerk aan de beurt?</h2>
-      <p>Twijfel je of het al tijd is? Beantwoord acht korte vragen over je kozijnen en je ziet meteen of het nog goed is, binnenkort moet of nu. Met wat het ongeveer kost en het beste moment om te plannen.</p>
+      <p>Twijfel je of het al tijd is? Beantwoord negen korte vragen over je kozijnen en je ziet meteen of het nog goed is, binnenkort moet of nu. Met wat het ongeveer kost en het beste moment om te plannen.</p>
       <p style="margin:0"><a class="btn btn-primary" href="{PAD}">Doe de onderhoudscheck</a></p>
     </div>
   </div>
@@ -194,7 +240,7 @@ def teaser_home():
 
 def teaser_kort():
     return (f'<div class="callout"><p><strong>Twijfel je of het al tijd is?</strong> '
-            f'Doe de <a href="{PAD}">onderhoudscheck</a>: in acht korte vragen zie je of je '
+            f'Doe de <a href="{PAD}">onderhoudscheck</a>: in negen korte vragen zie je of je '
             f'schilderwerk nog goed is, binnenkort moet of nu, en wat het ongeveer kost.</p></div>')
 
 
@@ -243,7 +289,7 @@ def build_onderhoudscheck(write):
     <div class="ohc-intro">
       <span class="badge">Gratis tool · 2 minuten · niets opgeslagen</span>
       <h1>Is jouw schilderwerk aan de beurt?</h1>
-      <p class="lead">Acht korte vragen over je kozijnen, deuren en boeidelen. Daarna zie je op de onderhoudsmeter hoe je ervoor staat, wat je nu het beste doet en wat het ongeveer kost.</p>
+      <p class="lead">Negen korte vragen over je kozijnen, deuren en boeidelen. Daarna zie je op de onderhoudsmeter hoe je ervoor staat, wat je nu het beste doet en wat het ongeveer kost.</p>
       <ul class="checklist ohc-usps">
         <li>Direct een uitslag, zonder e-mailadres</li>
         <li>Richtprijzen voor jouw type woning</li>
@@ -289,19 +335,45 @@ def build_onderhoudscheck(write):
 </section>"""
 
     w = p["woning"]
-    signalen = f"""<section class="section soft"><div class="wrap narrow prose">
-  <h2>Zo check je zelf je schilderwerk</h2>
-  <p>Je hoeft geen schilder te zijn om te zien of je houtwerk een beurt nodig heeft. Loop een keer om je huis heen, het liefst op een droge dag, en let op deze vijf signalen.</p>
-  <ol>
-    <li><strong>Afbladderen.</strong> Loszittende verf, blaasjes of kale plekken. Begin bij de onderkant van de kozijnen en bij de dorpels: daar blijft water het langst staan.</li>
-    <li><strong>Krijten.</strong> Veeg met je vinger over de verf. Blijft er wit poeder op je vinger, dan breekt de zon de verflaag af. De laag wordt dunner en beschermt minder.</li>
-    <li><strong>Open naden en losse kit.</strong> Haarscheurtjes in hoeken en langs het glas zijn het begin. Door een open naad loopt water achter de verf.</li>
-    <li><strong>Zacht hout.</strong> Druk met een sleutel of schroevendraaier in de dorpel en de onderhoeken. Gaat hij erin, of zie je donkere plekken, dan kan er houtrot zitten.</li>
-    <li><strong>Grijs, kaal hout.</strong> Is de verf weg, dan neemt het hout vocht op. Dan is het tijd om niet langer te wachten.</li>
-  </ol>
-  {foto(houtrotfoto, "(max-width:760px) calc(100vw - 40px), 720px")}
+    kaart = lambda id_, titel, f, tekst: (
+        f'<article class="ohc-sig" id="check-{id_}">{foto(f, "(max-width:640px) calc(100vw - 40px), 360px")}'
+        f'<div class="ohc-sig-tekst"><h3>{titel}</h3>{tekst}</div></article>')
+    signalen = f"""<section class="section soft" id="zelf-checken"><div class="wrap">
+  <div class="prose ohc-sec-intro">
+    <h2>Zo check je zelf je schilderwerk</h2>
+    <p>Je hoeft geen schilder te zijn om te zien of je houtwerk een beurt nodig heeft. De onderhoudsschema's van de timmerindustrie adviseren om het houtwerk elk jaar na te lopen ({_bl("nbvt", "NBvT/SGT")}). Doe dat op een droge dag, het liefst na de winter, en let op deze vier signalen.</p>
+  </div>
+  <div class="ohc-sigs">
+    {kaart("afbladderen", "1. Afbladderen", houtrotfoto, "<p>Loszittende verf, blaasjes of schilfers. Begin onder aan de kozijnen en bij de dorpels: daar blijft water het langst staan. Bladdert het ver, dan zit er vaak al vocht achter. <small>Op de foto: afbladderende verf op een rottende raamdorpel.</small></p>")}
+    {kaart("scheuren", "2. Scheuren", _F["hout-met-blokvormige-scheuren-close-up"], f"<p>Begin het met haarscheurtjes in de verf, vooral in hoeken en op naden waar stukken hout samenkomen. Door een scheur of open naad loopt water achter de verf. Krimpscheuren in de verflaag kunnen ook op houtrot wijzen ({_bl('koopmans', 'Koopmans')}). <small>Op de foto: rot dat al ver is, met blokvormige scheuren en schimmeldraden. Zo ver wil je het niet laten komen.</small></p>")}
+    {kaart("kaal", "3. Kale plekken", _F["verweerde-blauwe-houten-schutting"], f"<p>Grijs, kaal hout op scherpe kanten en randen. Die slijten het eerst, net als de onderdorpels aan de zonkant ({_bl('nbvt', 'NBvT/SGT')}). Kaal hout neemt vocht op; wacht dan niet langer. <small>Op de foto: verf die bijna helemaal is verweerd.</small></p>")}
+    {kaart("zacht", "4. Zachte plekken", _F["aangetast-houten-balk-met-meetlint"], f"<p>Druk met een priem, sleutel of schroevendraaier in de dorpel en de onderhoeken. Gaat hij er makkelijk in, dan is het hout zacht en zit er waarschijnlijk houtrot ({_bl('koopmans', 'Koopmans')}). Schilder daar nooit overheen. <small>Op de foto: hout dat door bruinrot brokkelig is geworden.</small></p>")}
+  </div>
+  <p class="ohc-extra"><strong>Nog twee snelle tests:</strong> veeg met je vinger over de verf. Blijft er wit poeder aan je vinger, dan krijt de verf en wordt de laag dunner. En kijk naar de kit langs het glas: die moet soepel zijn en goed aansluiten.</p>
+</div></section>
+
+<section class="section" id="termijnen"><div class="wrap narrow prose">
   <h2>Hoe vaak moet je buiten laten schilderen?</h2>
-  <p>Met dekkende verf gaat een goede beurt meestal zes tot acht jaar mee. De kant op het zuiden en westen en woningen aan open water hebben vaak eerder een beurt nodig. Wacht je te lang, dan wordt houtrot herstellen een flink deel van de rekening. Lees meer in de gids <a href="/gids/wanneer-buiten-schilderen/">wanneer kun je buiten schilderen</a>.</p>
+  <p>Er is geen vaste termijn, maar de timmerindustrie en de verffabrikanten geven wel onderhoudsschema's. Die gaan uit van goed aangebracht schilderwerk en een gemiddelde ligging. De schilder controleert het houtwerk dan een jaar voordat het bijwerken gepland staat, en schuift het schema op als het nog goed is.</p>
+  <div class="tablewrap"><table class="ohc-termijn">
+    <thead><tr><th>Afwerking</th><th>Bijwerken</th><th>Nieuwe laag</th><th>Bron</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Dekkend, lichte kleur</strong><br><small>wit, crème, lichtgrijs</small></td><td>na ± 3 jaar</td><td>na ± 6 jaar</td><td>{_bl("nbvt", "NBvT/SGT")}; Sikkens-schema: 4 en 7 jaar ({_bl("sikkens", "Helwig Stipt")}); Sigma-schema: nieuwe laag na 7 jaar ({_bl("sigma", "Van de Vin")})</td></tr>
+      <tr><td><strong>Dekkend, donkere kleur</strong><br><small>antraciet, donkergroen, zwart</small></td><td>na ± 2 jaar</td><td>na ± 4 jaar</td><td>{_bl("nbvt", "NBvT/SGT")}; Sikkens-schema: 3 en 5 jaar ({_bl("sikkens", "Helwig Stipt")})</td></tr>
+      <tr><td><strong>Transparant</strong><br><small>beits of lak waar de nerf doorheen te zien is</small></td><td>elk jaar</td><td>om de 2 jaar</td><td>{_bl("nbvt", "NBvT/SGT")}, {_bl("sikkens", "Helwig Stipt")}, {_bl("sigma", "Van de Vin")}</td></tr>
+    </tbody>
+  </table></div>
+  <p class="ohc-klein">Ter vergelijking: schildersbedrijven en prijssites noemen voor dekkend schilderwerk als vuistregel 6 tot 8 jaar ({_bl("vanassen", "Van Assen")}) of 5 tot 7 jaar ({_bl("homedeal", "Homedeal")}).</p>
+
+  <h3>Wat de termijn korter of langer maakt</h3>
+  <ul>
+    <li><strong>Zonkant of schaduwkant.</strong> Aan de zonkant (zuid en west) slijt de verf sneller dan aan de schaduwkant of onder een ruime dakgoot of een balkon. Verpoederen begint meestal op de onderdorpels aan de zonkant ({_bl("nbvt", "NBvT/SGT")}, {_bl("dejong", "De Jong Kozijnen")}).</li>
+    <li><strong>Kleur.</strong> Donkere kleuren worden in de zon veel warmer. Het hout krimpt en zwelt dan meer en de verf breekt sneller af. Daarom het kortere schema voor donkere kleuren. Een middenkleur op een zeer zonnige, beschutte zuidgevel valt ook onder dat schema ({_bl("sikkens", "Helwig Stipt")}).</li>
+    <li><strong>Hardhout of naaldhout.</strong> Dekkende verf kan op beide. Transparante systemen mogen niet op elke houtsoort. Bij naaldhout zoals vuren wordt een lichte kleur aangeraden ({_bl("sikkens", "Helwig Stipt")}, {_bl("sigma", "Van de Vin")}). Twijfel je wat je hebt, vraag het de schilder bij de opname.</li>
+    <li><strong>Kust of open polder.</strong> Voor een ligging aan zee, open water of in de open polder noemen de schema's geen apart getal. Wind, regen en vocht belasten de verf daar extra. Ons advies: houd daar de korte kant van het schema aan en loop het houtwerk elk jaar na.</li>
+    <li><strong>Schoonhouden.</strong> Was het houtwerk mee als je de ramen lapt. Vuil houdt vocht vast; schoon houtwerk gaat langer mee ({_bl("nbvt", "NBvT/SGT")}).</li>
+  </ul>
+
   <h2>Wat kost een buitenbeurt?</h2>
   <div class="tablewrap"><table>
     <thead><tr><th>Woning</th><th>Richtprijs buitenkant</th></tr></thead>
@@ -313,8 +385,12 @@ def build_onderhoudscheck(write):
       <tr><td>Houtrot herstellen, per plek</td><td class="num">{eur(p['houtrot'][0])} – {eur(p['houtrot'][1])}</td></tr>
     </tbody>
   </table></div>
-  <p><small>Richtprijzen van onze pagina's over <a href="/kosten/huis-schilderen/">een huis schilderen</a> en <a href="/kosten/kozijnen-schilderen/">kozijnen schilderen</a>. De echte prijs hangt af van de staat van het houtwerk, de bereikbaarheid en de regio.</small></p>
+  <p><small>Richtprijzen inclusief 9% btw en materiaal, prijspeil 2026, van onze pagina's over <a href="/kosten/huis-schilderen/">een huis schilderen</a> en <a href="/kosten/kozijnen-schilderen/">kozijnen schilderen</a>. Reken je hele klus uit met de <a href="/kosten/calculator/">huiscalculator</a>. De echte prijs hangt af van de staat van het houtwerk, de bereikbaarheid en de regio.</small></p>
+
+  <h3>Bronnen</h3>
+  <ol class="ohc-bronnen">{"".join(f'<li><a href="{u}" rel="nofollow noopener" target="_blank">{t}</a></li>' for t, u in BRONNEN_TERMIJN.values())}</ol>
 </div></section>"""
+
 
     offerte = f"""<section class="section"><div class="wrap">
   <div class="grid g2" style="gap:48px;align-items:start">
@@ -334,15 +410,19 @@ def build_onderhoudscheck(write):
 
     faqs = [
         ("Hoe weet ik of mijn kozijnen geschilderd moeten worden?",
-         "Let op afbladderende verf, wit poeder als je over de verf veegt (krijten), open naden en losse kit, en zacht hout bij de dorpels en onderhoeken. Zie je een of meer van deze signalen, dan is een schilderbeurt meestal binnen een jaar of twee verstandig."),
+         "Let op vier signalen: afbladderende verf, scheurtjes en open naden, kale plekken op randen en de zonkant, en zacht hout bij de dorpels en onderhoeken. Veeg ook even over de verf: wit poeder op je vinger betekent dat de verf krijt. Zie je een of meer signalen, dan is een beurt meestal binnen een jaar of twee verstandig. Bij zacht hout laat je het eerst nakijken."),
         ("Hoe vaak moet je buitenschilderwerk laten doen?",
-         "Met dekkende verf meestal elke zes tot acht jaar. De kant op het zuiden en westen en woningen aan open water hebben vaak eerder een beurt nodig."),
+         "Volgens het onderhoudsschema van de Nederlandse Bond van Timmerfabrikanten en het Garantiefonds Timmerwerk: bij lichte dekkende verf bijwerken na ongeveer 3 jaar en een nieuwe laag na ongeveer 6 jaar, bij donkere kleuren na 2 en 4 jaar, en transparant elk jaar bijwerken met om de 2 jaar een nieuwe laag. De zonkant en een open ligging vragen vaak eerder onderhoud."),
+        ("Is de zonkant echt eerder aan de beurt?",
+         "Ja. Aan de zuid- en westkant slijt de verf sneller dan aan de schaduwkant, en een donkere kleur maakt dat erger omdat het hout in de zon warmer wordt. Dat staat ook in de onderhoudsadviezen van timmerfabrikanten. Laat de zonkant zo nodig apart bijwerken, dan hoeft niet alles tegelijk."),
         ("Hoe herken je houtrot?",
-         "Houtrot zit vaak bij dorpels, onderhoeken van kozijnen en de onderkant van deuren. Het hout voelt zacht als je er met een sleutel of schroevendraaier in drukt, en je ziet vaak donkere plekken of afbladderende verf."),
+         "Houtrot zit vaak bij dorpels, onderhoeken van kozijnen en de onderkant van deuren. Het hout voelt zacht als je er met een priem of schroevendraaier in drukt, en je ziet vaak krimpscheuren of afbladderende verf. Schilder nooit over houtrot heen. Wat herstel kost, lees je bij <a href=\"/schilderwerk/houtrot-reparatie/\">houtrot reparatie</a>."),
+        ("Wat kost buitenschilderwerk?",
+         "Voor de buitenkant van een tussenwoning rekenen we met €1.500 tot €3.500, inclusief 9% btw en materiaal. Per buitenkozijn is dat €90 tot €190. Meer prijzen per woningtype vind je bij <a href=\"/schilderwerk/buitenschilderwerk/\">buitenschilderwerk</a> en op <a href=\"/kosten/huis-schilderen/\">wat kost een huis schilderen</a>."),
         ("Wordt mijn uitslag opgeslagen?",
          "Nee. De check werkt helemaal in je browser. Ook het agendabestand wordt op je eigen toestel gemaakt. Pas als je zelf het offerteformulier verstuurt, gaan je gegevens naar maximaal drie schilders."),
         ("Is de uitslag hetzelfde als het oordeel van een schilder?",
-         "Nee. De check geeft een eerste indruk op basis van wat jij ziet. Een schilder beoordeelt het houtwerk ter plekke en kan dan ook zeggen of er houtrot onder de verf zit."),
+         "Nee. De check geeft een eerste indruk op basis van wat jij ziet en van de algemene onderhoudsschema's. Een schilder beoordeelt het houtwerk ter plekke en kan dan ook zeggen of er houtrot onder de verf zit."),
     ]
     faq_html, faq_ld = faq_blok(faqs, "Veelgestelde vragen over de onderhoudscheck")
 
@@ -355,7 +435,7 @@ def build_onderhoudscheck(write):
         "operatingSystem": "Alle browsers",
         "inLanguage": "nl-NL",
         "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
-        "description": "Acht korte vragen over je buitenschilderwerk, met een uitslag van goed tot houtrot-risico, richtprijzen en het beste moment om te plannen.",
+        "description": "Negen korte vragen over je buitenschilderwerk, met een uitslag van goed tot houtrot-risico, richtprijzen en het beste moment om te plannen.",
     }
 
     data_tag = ('<script type="application/json" id="ohc-data">'
@@ -365,7 +445,7 @@ def build_onderhoudscheck(write):
 
     write(PAD, page(
         title("Onderhoudscheck: is je schilderwerk aan de beurt?"),
-        "Doe de gratis onderhoudscheck: acht korte vragen en je ziet of je buitenschilderwerk goed is, binnenkort moet of nu. Met richtprijzen en het beste moment.",
+        "Doe de gratis onderhoudscheck: negen korte vragen en je ziet of je buitenschilderwerk goed is, binnenkort moet of nu. Met richtprijzen en het beste moment.",
         PAD, body, [cr_ld, faq_ld, app_ld]), prio=0.8)
 
 
@@ -374,6 +454,29 @@ def build_onderhoudscheck(write):
 # ---------------------------------------------------------------------------
 
 PAGE_CSS = """<style>
+/* zelfcheck met foto's, termijnentabel, checklist in de uitslag */
+.ohc-sec-intro{max-width:720px;margin-bottom:22px}
+.ohc-sigs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media(max-width:760px){.ohc-sigs{grid-template-columns:minmax(0,1fr)}}
+.ohc-sig{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;min-width:0;scroll-margin-top:90px}
+.ohc-sig .foto{margin:0}
+.ohc-sig .foto img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:0}
+.ohc-sig-tekst{padding:16px 18px}
+.ohc-sig-tekst h3{font-size:1.08rem;margin:0 0 6px}
+.ohc-sig-tekst p{font-size:.95rem;margin:0}
+.ohc-sig-tekst small{display:block;margin-top:8px;color:var(--muted);font-size:.82rem}
+.ohc-extra{max-width:720px;margin:20px 0 0;font-size:.97rem}
+.ohc-termijn{font-size:.92rem}
+.ohc-termijn td{vertical-align:top}
+.ohc-termijn td small{color:var(--muted)}
+@media(max-width:640px){.ohc-termijn thead{display:none}.ohc-termijn tr{display:block;border-bottom:1px solid var(--line);padding:8px 0}.ohc-termijn td{display:block;border:0;padding:2px 0}.ohc-termijn td:nth-child(2)::before{content:"Bijwerken: ";font-weight:650}.ohc-termijn td:nth-child(3)::before{content:"Nieuwe laag: ";font-weight:650}}
+.ohc-bronnen{font-size:.88rem}
+.ohc-bronnen li{margin:4px 0;overflow-wrap:anywhere}
+.ohc-check{list-style:none;padding:0;margin:0}
+.ohc-check li{margin:0 0 8px}
+.ohc-check label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:.95rem;margin:0;font-weight:400}
+.ohc-check input{margin-top:4px;flex:0 0 auto;width:18px;height:18px;accent-color:var(--accent)}
+.ohc-check input:checked+span{color:var(--muted)}
 [data-ohc] [hidden]{display:none!important}
 .ohc-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,520px);gap:48px;align-items:start}
 .ohc-hero.klaar .ohc-grid{grid-template-columns:minmax(0,1fr);max-width:760px;margin:0 auto}
@@ -496,7 +599,11 @@ PAGE_JS = r"""<script>
   /* ------------------------------------------------------------ uitslag */
   function bereken() {
     var a = ans, s = 0;
-    s += { "0-2": 0, "3-5": 1.5, "6-8": 3.5, "8+": 5, "onbekend": 2 }[a.leeftijd] || 0;
+    // leeftijd van de verflaag tegenover de termijn voor een nieuwe laag (zie INTERVAL)
+    var iv = INTERVAL[a.afwerking] || INTERVAL.onbekend;
+    var jaren = { "0-2": 1, "3-5": 4, "6-8": 7, "8+": 10 }[a.leeftijd];
+    var ratio = jaren ? jaren / iv.nieuw : null;
+    s += ratio === null ? 2 : ratio < 0.5 ? 0 : ratio < 0.9 ? 1.5 : ratio < 1.3 ? 3.5 : 5;
     s += { zon: 1, open: 1, schaduw: 0, onbekend: 0.5 }[a.ligging] || 0;
     s += { nee: 0, beetje: 2, veel: 4 }[a.bladderen] || 0;
     s += { nee: 0, beetje: 1, veel: 2 }[a.krijten] || 0;
@@ -509,15 +616,54 @@ PAGE_JS = r"""<script>
     else if (s >= 7) n = 2;
     else if (s >= 3) n = 1;
     else n = 0;
-    if (n < 2 && (a.bladderen === "veel" || a.naden === "open" || a.leeftijd === "8+")) n = 2;
-    if (n < 1 && (a.zacht === "twijfel" || a.leeftijd === "6-8")) n = 1;
+    if (n < 2 && (a.bladderen === "veel" || a.naden === "open" || (ratio !== null && ratio >= 1.3))) n = 2;
+    if (n < 1 && (a.zacht === "twijfel" || (ratio !== null && ratio >= 0.9))) n = 1;
 
     // positie van de naald binnen het vak: hoe hoger de score, hoe verder
     var grenzen = [[0, 3], [3, 7], [7, 14], [0, 1]];
     var g = grenzen[n], frac = n === 3 ? 0.55 : Math.max(0.12, Math.min(0.88, (s - g[0]) / (g[1] - g[0])));
     var hoek = -90 + n * 45 + frac * 45;
-    res = { n: n, s: s, hoek: hoek };
+    res = { n: n, s: s, hoek: hoek, iv: iv, ratio: ratio };
     toonUitslag();
+  }
+
+  /* Termijnen uit de onderhoudsschema's van de timmerindustrie (NBvT/SGT) en
+     de verffabrikanten: bijwerken en een geheel nieuwe laag, in jaren. */
+  var INTERVAL = {
+    licht: { bij: 3, nieuw: 6, naam: "lichte dekkende verf" },
+    donker: { bij: 2, nieuw: 4, naam: "donkere dekkende verf" },
+    transparant: { bij: 1, nieuw: 2, naam: "een transparant systeem" },
+    onbekend: { bij: 3, nieuw: 6, naam: "dekkende verf (we gaan uit van een lichte kleur)" }
+  };
+
+  function waarom() {
+    var a = ans, iv = res.iv, r = [];
+    r.push("Bij " + iv.naam + " rekenen de onderhoudsschema's van de timmerindustrie met bijwerken na ongeveer " + iv.bij + " jaar en een nieuwe laag na ongeveer " + iv.nieuw + " jaar." + (a.afwerking === "transparant" ? " Transparant moet dus eigenlijk elk jaar even worden nagelopen." : ""));
+    if (res.ratio !== null) {
+      r.push(res.ratio >= 1.3 ? "Je laatste beurt is duidelijk langer geleden dan die termijn." :
+        res.ratio >= 0.9 ? "Je laatste beurt zit rond die termijn." :
+        res.ratio >= 0.5 ? "Je zit ongeveer halverwege die termijn: een goed moment om te controleren en klein onderhoud te doen." :
+        "Je laatste beurt is nog vrij recent.");
+    } else r.push("Je weet niet wanneer er voor het laatst is geschilderd. Daarom tellen de signalen die je ziet extra zwaar.");
+    if (a.ligging === "zon") r.push("De zon- en regenkant (zuid en west) slijt sneller dan de schaduwkant. Daar zie je het eerst kale plekken en verpoedering, vooral op de onderdorpels.");
+    if (a.ligging === "open") r.push("Bij een open ligging aan het water of in de polder krijgt de verf veel wind en regen. De schema's noemen daarvoor geen apart getal; wij raden aan om de kortste termijn aan te houden.");
+    if (a.afwerking === "donker" && (a.ligging === "zon" || a.ligging === "open")) r.push("Een donkere kleur op de zonkant wordt veel warmer dan een lichte. Het hout krimpt en zwelt meer, waardoor de verf sneller loslaat.");
+    var sig = { bladderen: { beetje: "Je ziet hier en daar afbladderende verf.", veel: "Je ziet grote stukken afbladderende verf of kaal hout: daar trekt vocht in." },
+      krijten: { beetje: "De verf krijt een beetje: de toplaag wordt dunner.", veel: "De verf krijt duidelijk: de beschermende laag is grotendeels weg." },
+      naden: { scheurtjes: "Er zitten haarscheurtjes in de naden.", open: "Er zijn open naden of losse kit: daar loopt water achter de verf." },
+      zacht: { twijfel: "Je twijfelt over zachte of donkere plekken: laat die nakijken.", zacht: "Het hout bij de dorpels of hoeken is zacht: dat wijst op houtrot." } };
+    Object.keys(sig).forEach(function (k) { if (sig[k][a[k]]) r.push(sig[k][a[k]]); });
+    return "<ul>" + r.map(function (x) { return "<li>" + x + "</li>"; }).join("") + '</ul><p><a href="#termijnen">Waar deze termijnen vandaan komen</a></p>';
+  }
+
+  function checklist() {
+    var items = [["afbladderen", "Afbladderen", "Loszittende verf of blaasjes, vooral onder aan kozijnen en op dorpels."],
+      ["scheuren", "Scheuren", "Haarscheurtjes in de verf en open naden waar stukken hout samenkomen."],
+      ["kaal", "Kale plekken", "Grijs, kaal hout op scherpe kanten en op de zonkant."],
+      ["zacht", "Zachte plekken", "Prik met een schroevendraaier in dorpels en onderhoeken: geeft het hout mee?"]];
+    return '<ul class="ohc-check">' + items.map(function (i) {
+      return '<li><label><input type="checkbox"> <span><strong>' + i[1] + ".</strong> " + i[2] + ' <a href="#check-' + i[0] + '">Zo ziet het eruit</a></span></label></li>';
+    }).join("") + "</ul><p class=\"ohc-klein\">Vink af wat je bent nagelopen. Er wordt niets opgeslagen.</p>";
   }
 
   function moment() {
@@ -552,7 +698,7 @@ PAGE_JS = r"""<script>
     "voor1945": "Bij een vooroorlogse woning zitten vaak veel oude verflagen op het houtwerk. Een schilder kijkt dan extra goed naar lagen die loslaten en naar naden die zijn gaan werken.",
     "1945-1980": "Bij woningen uit deze periode zijn de kozijnen vaak van zachtere houtsoorten. Open naden laten daar sneller houtrot toe, dus houd de dorpels en onderhoeken goed in de gaten.",
     "1980-2000": "Bij woningen uit deze periode is het houtwerk vaak nog goed als het op tijd is onderhouden. Let vooral op de dorpels en de onderhoeken.",
-    "na2000": "Nieuwere kozijnen hebben vaak een goede fabrieksafwerking, maar ook die hebben na zes tot acht jaar een beurt nodig. Zijn je kozijnen van kunststof? Dan gaat het vooral om deuren en boeidelen."
+    "na2000": "Nieuwere kozijnen hebben vaak een goede fabrieksafwerking, maar ook daarvoor rekenen de onderhoudsschema's met een nieuwe laag na ongeveer zes jaar bij een lichte kleur en vier jaar bij een donkere. Zijn je kozijnen van kunststof? Dan gaat het vooral om deuren en boeidelen."
   };
 
   function toonUitslag() {
@@ -565,13 +711,15 @@ PAGE_JS = r"""<script>
       "Zacht hout bij dorpels of hoeken wijst vaak op houtrot. Laat een schilder het zo snel mogelijk bekijken: houtrot breidt zich uit zolang het nat blijft."
     ];
     var nu = [
-      "<ul><li>Was je kozijnen een of twee keer per jaar met water en een scheutje allesreiniger. Vuil houdt vocht vast.</li><li>Kijk elk voorjaar even naar de kit en de dorpels.</li><li>" + (a.leeftijd === "0-2" ? "Reken op een nieuwe beurt over ongeveer vier tot zes jaar." : "Reken op een nieuwe beurt over een paar jaar; doe de check volgend jaar nog eens.") + "</li></ul>",
+      "<ul><li>Was je kozijnen een of twee keer per jaar met water en een scheutje allesreiniger. Vuil houdt vocht vast.</li><li>Kijk elk voorjaar even naar de kit en de dorpels.</li><li>" + (a.leeftijd === "0-2" ? "Reken op klein onderhoud na ongeveer " + res.iv.bij + " jaar en een nieuwe laag na ongeveer " + res.iv.nieuw + " jaar na de vorige beurt." : "Doe de check volgend jaar nog eens; de schema's adviseren een jaar voor het bijwerken een controle.") + "</li></ul>",
       "<ul><li>Maak foto's van de plekken die je opvallen, dan kan een schilder sneller een prijs geven.</li><li>Laat losse kit en kleine scheurtjes alvast bijwerken; dat voorkomt erger.</li><li>Vraag op tijd offertes aan, zodat je kunt kiezen wanneer het past.</li></ul>",
       "<ul><li>Vraag offertes aan bij een paar schilders en vergelijk ze.</li><li>Vraag in de offerte naar de voorbereiding, het aantal lagen en hoe eventuele houtrot wordt afgerekend.</li><li>Wacht niet nog een winter: vocht en vorst maken de schade groter.</li></ul>",
       "<ul><li>Laat een schilder het houtwerk ter plekke beoordelen. Vaak is houtrot met een reparatie op te lossen, zonder het kozijn te vervangen.</li><li>Vraag om een stelpost met een maximum voor houtrot, niet om &quot;houtrot in regie&quot;.</li><li>Laat het herstel en het schilderen in \u00e9\u00e9n keer doen.</li></ul>"
     ];
 
-    var blokken = blok("#", "Wat je nu doet", nu[n]);
+    var blokken = blok("#", "Waarom dit advies", waarom());
+    blokken += blok("#", "Wat je nu doet", nu[n]);
+    blokken += blok("#", "Loop het zelf even na", checklist());
     if (n === 3) blokken += blok("!", "Houtrot herstellen", '<p>Een schilder haalt het rotte hout weg en vult het aan met een houtreparatiemiddel of een nieuw stuk hout. Lees <a href="/schilderwerk/houtrot-reparatie/">hoe houtrot reparatie werkt en wat het kost</a>.</p>');
     if (n >= 1) blokken += kostenBlok();
     if (n >= 1) blokken += blok("#", "Het beste moment", "<p>" + moment() + '</p><p><a href="/gids/wanneer-buiten-schilderen/">Wanneer kun je buiten schilderen?</a></p>');
@@ -626,8 +774,8 @@ PAGE_JS = r"""<script>
   function icsTekst(s) { return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n"); }
   function vouw(r) { var o = ""; while (r.length > 60) { o += r.slice(0, 60) + "\r\n "; r = r.slice(60); } return o + r; }
   function samenvatting() {
-    var k = ["leeftijd", "ligging", "bladderen", "krijten", "naden", "zacht", "woning", "bouw"];
-    var namen = { leeftijd: "Laatst geschilderd", ligging: "Zwaarste kant", bladderen: "Afbladderen", krijten: "Krijten", naden: "Naden en kit", zacht: "Hout bij dorpels", woning: "Woning", bouw: "Bouwperiode" };
+    var k = ["leeftijd", "ligging", "afwerking", "bladderen", "krijten", "naden", "zacht", "woning", "bouw"];
+    var namen = { leeftijd: "Laatst geschilderd", ligging: "Zwaarste kant", afwerking: "Afwerking", bladderen: "Afbladderen", krijten: "Krijten", naden: "Naden en kit", zacht: "Hout bij dorpels", woning: "Woning", bouw: "Bouwperiode" };
     return k.filter(function (x) { return ans[x]; }).map(function (x) { return namen[x] + ": " + L[x][ans[x]]; });
   }
   root.querySelector(".ohc-ics").addEventListener("click", function () {

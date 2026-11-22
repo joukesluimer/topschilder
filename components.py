@@ -100,32 +100,46 @@ def header():
   <a class="logo" href="/" aria-label="Topschilder.nl, naar de homepage">
     <img src="/assets/merk/logo.svg" alt="Topschilder.nl — de schilder bij u in de buurt" width="843" height="367">
   </a>
-  <button class="burger" aria-label="Menu" aria-expanded="false">☰</button>
-  <nav class="nav">
-    <a href="/schilderwerk/">Diensten</a>
-    <a href="/werkgebied/">Werkgebied</a>
-    <a href="/prijzen/">Wat kost het?</a>
-    <a href="/offerte-vergelijken/">Offerte laten checken</a>
-    <a href="/voor-schilders/">Voor schilders</a>
+  <button class="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="hoofdmenu"><span></span><span></span><span></span></button>
+  <nav class="nav" id="hoofdmenu" aria-label="Hoofdmenu">
+    <a href="/schilderwerk/"><span class="nav-ic">{icon('roller', 20)}</span>Diensten</a>
+    <a href="/werkgebied/"><span class="nav-ic">{icon('house', 20)}</span>Werkgebied</a>
+    <a href="/prijzen/"><span class="nav-ic">{icon('euro', 20)}</span>Wat kost het?</a>
+    <a href="/offerte-vergelijken/"><span class="nav-ic">{icon('match', 20)}</span>Offerte laten checken</a>
+    <a href="/voor-schilders/"><span class="nav-ic">{icon('users', 20)}</span>Voor schilders</a>
     <a class="btn btn-primary" href="/offerte-aanvragen/">Offertes aanvragen</a>
+    <p class="nav-noot">Gratis en vrijblijvend · maximaal 3 schilders</p>
   </nav>
 </div>
 </header>{diensten_nav}"""
 
 
 def footer():
-    dl = "".join(f'<li><a href="/schilderwerk/{d["slug"]}/">{d["naam"]}</a></li>' for d in DIENSTEN)
+    dl = "".join(f'<li><a href="/schilderwerk/{d["slug"]}/"><span class="f-ic">{dienst_icoon(d["slug"], 18)}</span>{d["naam"]}</a></li>' for d in DIENSTEN)
+    pl = "".join(f'<li><a href="/schilder/{p["slug"]}/">{p["naam"]}</a></li>'
+                 for p in sorted((p for p in PLAATSEN if p["prio"] == 1), key=lambda x: x["naam"]))
     return f"""<footer class="footer">
+<div class="footer-golf" aria-hidden="true"></div>
 <div class="wrap">
+  <div class="footer-cta">
+    <div>
+      <p class="footer-cta-titel">Eén aanvraag, maximaal drie offertes</p>
+      <p>Gratis en vrijblijvend. Je kiest zelf of je met een van de schilders verder gaat.</p>
+    </div>
+    <a class="btn btn-primary" href="/offerte-aanvragen/">Offertes aanvragen</a>
+  </div>
   <div class="footer-grid">
     <div>
       <a class="logo" href="/" aria-label="Topschilder.nl"><img src="/assets/merk/logo-wit.svg" alt="Topschilder.nl" width="843" height="367" loading="lazy"></a>
       <p style="margin-top:14px;max-width:34ch">Vergelijk vrijblijvend offertes van schilders bij jou in de buurt. Gratis, zonder verplichtingen en met maximaal drie bedrijven die contact opnemen.</p>
-      <p><a href="/offerte-aanvragen/" style="color:#ffd9ab;font-weight:700">Offertes aanvragen →</a></p>
+      <ul class="footer-tools">
+        <li><a href="/tools/">{icon('match', 18)}Gratis tools</a></li>
+        <li><a href="/offerte-vergelijken/">{icon('form', 18)}Offerte laten checken</a></li>
+      </ul>
     </div>
     <div>
       <h2 class="fh">Diensten</h2>
-      <ul>{dl}</ul>
+      <ul class="footer-diensten">{dl}</ul>
     </div>
     <div>
       <h2 class="fh">Handig</h2>
@@ -133,20 +147,22 @@ def footer():
         <li><a href="/prijzen/">Prijzen &amp; tarieven</a></li>
         <li><a href="/kosten/">Kosten per klus</a></li>
         <li><a href="/gids/">Gids</a></li>
-        <li><a href="/offerte-vergelijken/">Offerte laten checken</a></li>
-        <li><a href="/tools/">Gratis tools</a></li>
+        <li><a href="/kennisbank/">Kennisbank</a></li>
         <li><a href="/werkgebied/">Alle plaatsen</a></li>
         <li><a href="/over-ons/">Over Topschilder</a></li>
         <li><a href="/contact/">Contact</a></li>
       </ul>
-    </div>
-    <div>
-      <h2 class="fh">Schilders</h2>
+      <h2 class="fh" style="margin-top:22px">Schilders</h2>
       <ul>
         <li><a href="/voor-schilders/">Aanmelden als schilder</a></li>
         <li><a href="/voor-schilders/#tarieven">Wat kost een lead?</a></li>
         <li><a href="/voor-schilders/#exclusief">Exclusieve leads</a></li>
       </ul>
+    </div>
+    <div>
+      <h2 class="fh">Werkgebied</h2>
+      <ul class="footer-plaatsen">{pl}</ul>
+      <p style="margin-top:10px"><a href="/werkgebied/" class="footer-meer">Alle {len(PLAATSEN)} plaatsen →</a></p>
     </div>
   </div>
   <div class="footer-bot">
@@ -348,7 +364,7 @@ def hoe_werkt_het(plaats=None):
 <div class="wrap">
   <div class="center" style="max-width:640px;margin:0 auto 44px">
     <span class="badge">In 3 stappen</span>
-    <h2>Zo werkt het</h2>
+    <h2>Zo {streep("werkt")} het</h2>
     <p class="lead">Eén aanvraag, meerdere prijzen. Je hoeft niet zelf bedrijf voor bedrijf af te bellen.</p>
   </div>
   <ol class="steps3">
@@ -391,10 +407,16 @@ def waarom_blok():
 <div class="wrap">
   <div class="center" style="max-width:620px;margin:0 auto 40px">
     <span class="badge">Waarom wij</span>
-    <h2>Waarom via Topschilder</h2>
+    <h2>Waarom via {streep("Topschilder")}</h2>
     <p class="lead">Omdat één offerte je geen idee geeft of je een goede prijs betaalt.</p>
   </div>
   <div class="grid g4">{cards}</div>
+  {feiten_blok([
+      ("€0", "betaal je voor een aanvraag; de schilders betalen ons"),
+      ("3", "schilders maximaal krijgen je aanvraag"),
+      ("4", "korte vragen, en je aanvraag staat"),
+      (str(len(PLAATSEN)), "plaatsen in ons werkgebied, van Urk tot Hilversum"),
+  ])}
 </div>
 </section>"""
 
@@ -406,9 +428,12 @@ def dienst_cards(plaats_slug=None, plaats_naam=None, exclude=None):
             continue
         url = f"/schilder/{plaats_slug}/{d['slug']}/" if plaats_slug else f"/schilderwerk/{d['slug']}/"
         titel = f"{d.get('naam_lang', d['naam'])}{' in ' + plaats_naam if plaats_naam else ''}"
+        chip = f'<span class="card-chip">{dienst_icoon(d["slug"], 27)}</span></figure>'
+        beeld = (foto(FOTOS[d["slug"]]["hero"], "(max-width:600px) 92px, (max-width:900px) 45vw, 340px").replace("</figure>", chip)
+                 if d["slug"] in FOTOS else illustratie(d["slug"]))
         out.append(
-            f'<a class="card reveal" href="{url}">'
-            f'{foto(FOTOS[d["slug"]]["hero"], "(max-width:600px) 92px, (max-width:900px) 45vw, 340px") if d["slug"] in FOTOS else illustratie(d["slug"])}'
+            f'<a class="card card-dienst reveal" href="{url}">'
+            f'{beeld}'
             f"<h3>{titel}</h3><p>{d['kort']}</p>"
             f'<div class="price">Vanaf {eur(d["prijs_van"])} {d["prijs_eenheid"]}</div>'
             f'<p style="margin:10px 0 0"><span class="go">Bekijk &amp; vraag offertes aan →</span></p></a>'
@@ -576,3 +601,100 @@ def cta_midden(titel, tekst, knop="Gratis offertes aanvragen", href="/offerte-aa
   <div class="cta-midden-tekst"><p class="cta-midden-titel">{titel}</p><p>{tekst}</p></div>
   <a class="btn btn-primary" href="{href}">{knop}</a>
 </div>"""
+
+
+# ===========================================================================
+# Visuele bouwstenen (ronde 3) — herbruikbaar voor alle pagina's
+# ===========================================================================
+#
+# Alles hieronder is pure HTML + CSS uit style.css (blok "Ronde 3" in assets.py),
+# zonder extra bestanden of bibliotheken. Kort overzicht:
+#
+#   dienst_icoon(slug, size=28)      Eigen tweekleurig SVG-icoon per dienst.
+#   streep(tekst)                    Penseelstreek onder een woord in een kop:
+#                                    f"<h2>Zo {streep('werkt')} het</h2>"
+#   feiten_blok(feiten, bron=None)   Rij met cijfers. ALLEEN controleerbare feiten
+#                                    (eigen werkwijze, wetgeving, eigen richtprijzen).
+#                                    feiten = [("9%", "btw op ...", "https://bron" of None), ...]
+#   stappen_blok(stappen)            Genummerde tijdlijn, voor werkwijzen en gidsen.
+#                                    stappen = [("Titel", "Uitleg"), ...]
+#   foto_kader(f, sizes, bijschrift) Foto uit foto_data.py met bijschrift en
+#                                    makersvermelding (licentie staat op /fotoverantwoording/).
+#   prijs_balken(rijen, eenheid)     Visuele prijsvergelijking uit eigen richtprijzen.
+#                                    rijen = [("Label", van, tot), ...]
+#
+# Scrollanimaties: zet class "reveal" (en eventueel "reveal-d1".."reveal-d3") op
+# een element; zonder JS of met prefers-reduced-motion staat alles gewoon stil in beeld.
+
+DIENST_ICONEN = {
+    # Elk icoon: lijnen in currentColor, vlakken met class "ia" in de accentkleur.
+    "binnenschilderwerk": '<rect class="ia" x="5" y="3" width="13" height="5.5" rx="1.6"/><rect x="5" y="3" width="13" height="5.5" rx="1.6"/><path d="M18 5.7h2.2v4.8H12v2.6"/><rect x="10" y="13.1" width="4" height="7.9" rx="1.3"/><path d="M7.5 8.5v2.2"/>',
+    "buitenschilderwerk": '<path d="M3 11 12 3.5l9 7.5"/><path d="M5.2 9.6V21h13.6V9.6"/><rect class="ia" x="8" y="11.5" width="8" height="5.6" rx=".8"/><rect x="8" y="11.5" width="8" height="5.6" rx=".8"/><path d="M12 11.5v5.6M8 14.3h8"/>',
+    "houtrot-reparatie": '<rect x="2.8" y="8.5" width="15.5" height="8.5" rx="1"/><path d="M5.5 11c2.5 0 3.2 2.6 6.2 2.6"/><path class="ia" d="M13 10.6c1.9-.9 3.9.2 3.9 2.1s-2 3.1-3.9 2.2c-1.4-.7-1.4-3.6 0-4.3z"/><path d="m16.5 4.2 4.3 4.3-1.9 1.9-4.3-4.3z"/><path d="m14.6 6.1-2 2"/>',
+    "spuitwerk": '<rect class="ia" x="9" y="2.8" width="4.4" height="4.2" rx=".8"/><path d="M9 2.8h4.4V7"/><rect x="3.5" y="7" width="11" height="5" rx="1.6"/><path d="M14.5 8.6h3M8 12l-1.3 8.4h3.6l1-8.4"/><path d="M19.8 6.6h.01M21 9.5h.01M19.8 12.4h.01" stroke-width="2.6"/>',
+    "behangen": '<rect class="ia" x="4.5" y="3" width="13" height="4.8" rx="2.4"/><rect x="4.5" y="3" width="13" height="4.8" rx="2.4"/><path d="M6.5 7.8V21h9V7.8"/><path d="m9 12 2-2 2 2-2 2zM9 17.5l2-2 2 2"/><path d="M20 9v12"/>',
+    "zakelijk-schilderwerk": '<path d="M4 21V4.5h10V21"/><path d="M14 10h6v11"/><path d="M7 8h1M10.5 8h1M7 11.5h1M10.5 11.5h1M17 13.5h.5M17 17h.5"/><rect class="ia" x="7.3" y="15.2" width="3.6" height="5.8" rx=".6"/><path d="M2.5 21h19"/>',
+}
+
+
+def dienst_icoon(slug, size=28):
+    """Tweekleurig dienst-icoon; valt terug op het gewone icoon uit ICONS."""
+    p = DIENST_ICONEN.get(slug)
+    if not p:
+        d = next((x for x in DIENSTEN if x["slug"] == slug), None)
+        return icon(d["icon"] if d else "check", size)
+    return (f'<svg class="dicon" viewBox="0 0 24 24" width="{size}" height="{size}" fill="none" '
+            f'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" '
+            f'aria-hidden="true">{p}</svg>')
+
+
+def streep(tekst):
+    """Penseelstreek-accent onder een woord of korte zinsdeel in een kop."""
+    return f'<span class="streep">{tekst}</span>'
+
+
+def feiten_blok(feiten, bron=None, donker=False):
+    """Cijferblok. Gebruik alleen feiten die je kunt onderbouwen; geef bij wetgeving een bronlink."""
+    items = ""
+    for n, f in enumerate(feiten):
+        waarde, label = f[0], f[1]
+        url = f[2] if len(f) > 2 else None
+        lbl = f'{label} <a href="{url}" rel="noopener">bron</a>' if url else label
+        items += (f'<div class="feit reveal reveal-d{n % 4}"><p class="feit-getal">{waarde}</p>'
+                  f'<p class="feit-label">{lbl}</p></div>')
+    noot = f'<p class="feiten-noot">{bron}</p>' if bron else ""
+    return f'<div class="feiten{" feiten-donker" if donker else ""}">{items}</div>{noot}'
+
+
+def stappen_blok(stappen, kop_tag="h3"):
+    """Visuele tijdlijn met genummerde stappen."""
+    li = "".join(
+        f'<li class="reveal"><span class="stap-nr" aria-hidden="true">{i + 1}</span>'
+        f'<div><{kop_tag}>{t}</{kop_tag}><p>{p}</p></div></li>'
+        for i, (t, p) in enumerate(stappen))
+    return f'<ol class="stappen">{li}</ol>'
+
+
+def foto_kader(f, sizes, bijschrift=None):
+    """Foto met bijschrift en makersvermelding; de volledige licentie staat op /fotoverantwoording/."""
+    img = foto(f, sizes).replace('<figure class="foto">', '').replace("</figure>", "")
+    tekst = bijschrift or f["alt"]
+    maker = _html.escape(f.get("maker", ""))
+    credit = (f' <span class="foto-credit">Foto: <a href="/fotoverantwoording/">{maker}</a>'
+              f'{", " + f["licentie"] if f.get("licentie") else ""}</span>') if maker else ""
+    return f'<figure class="foto foto-kader reveal">{img}<figcaption>{tekst}{credit}</figcaption></figure>'
+
+
+def prijs_balken(rijen, eenheid="", noot=None):
+    """Horizontale balken van/tot, geschaald op de hoogste prijs. Alleen eigen richtprijzen gebruiken."""
+    hoogste = max(t for _, _, t in rijen) or 1
+    out = ""
+    for label, van, tot in rijen:
+        l = round(van / hoogste * 100, 1)
+        b = max(round((tot - van) / hoogste * 100, 1), 2)
+        out += (f'<li><span class="pb-label">{label}</span>'
+                f'<span class="pb-baan" aria-hidden="true"><span class="pb-balk" style="margin-left:{l}%;width:{b}%"></span></span>'
+                f'<span class="pb-bedrag">{eur(van)} – {eur(tot)}</span></li>')
+    kop = f'<p class="pb-eenheid">{eenheid}</p>' if eenheid else ""
+    voet = f'<p class="pb-noot">{noot}</p>' if noot else ""
+    return f'<div class="prijs-balken reveal">{kop}<ul>{out}</ul>{voet}</div>'

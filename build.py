@@ -18,6 +18,9 @@ from illustraties import illustratie, voor_na
 from foto_data import FOTOS, FOTO_HOME, FOTOS_PAGINA
 from kosten_data import KOSTEN, PRIJSBANDEN
 from wijk_data import WIJKEN
+# --- PLAATSDATA (open data per plaats, zie plaats_content.py) ---
+from plaats_content import plaats_sectie, dienst_blok, bouwperiode_zin
+# --- einde PLAATSDATA ---
 from huiscalculator import build_huiscalculator, teaser_blok
 import json
 from kleuren_kiezer import (build_kleurenkiezer, kleuren_teaser, kleuren_home_sectie,
@@ -26,6 +29,12 @@ from onderhoudscheck import build_onderhoudscheck, teaser_home, teaser_kort
 from inspiratie import build_inspiratie, inspiratie_teaser, inspiratie_home_sectie
 from tools import beschikbare_tools, tools_sectie, build_tools_pagina
 from components import prijskaart, cta_midden
+# --- kennisbank-sessie: kennisbank en extra foto's ---
+from kennisbank import build_kennisbank, kennis_links_dienst, kennis_links_kosten, fotogroepen as kennis_fotogroepen
+from foto_extra import KOSTEN_FOTOS, KOSTEN_SECTIE, DIENST_EXTRA
+# --- einde kennisbank-sessie ---
+from schilderweer import build_schilderweer, schilderweer_blok, schilderweer_gids
+from components import feiten_blok, stappen_blok, foto_kader, prijs_balken, dienst_icoon  # ronde 3
 from components import (
     page, crumbs, offerte_form, hoe_werkt_het, waarom_blok, dienst_cards,
     faq_blok, cta_blok, prijstabel, icon, eur, title, desc, calculator, foto, werkgebied_kaart,
@@ -272,20 +281,17 @@ def dienst_body(d, plaats=None):
         'verflaag houdt het water uit je houtwerk.</p>' + voor_na() + teaser_kort())
     if d["slug"] == "buitenschilderwerk":
         vn_blok += kleuren_teaser() + inspiratie_teaser()
+        vn_blok += schilderweer_blok(plaats)
     wat = "".join(f"<li>{x}</li>" for x in d["wat"])
     werk = "".join(
         f"<li><h3>{t}</h3><p>{p}</p></li>" for t, p in
         [(f"{i+1}. {t}", p) for i, (t, p) in enumerate(d["werkwijze"])]
     )
-    werk = "<ol style='list-style:none;padding:0'>" + "".join(
-        f"<li style='border-left:3px solid var(--line);padding:0 0 18px 20px;margin:0'>"
-        f"<h3 style='margin-bottom:.2em'>{t}</h3><p style='margin:0;font-size:.97rem'>{p}</p></li>"
-        for t, p in d["werkwijze"]
-    ) + "</ol>"
+    werk = stappen_blok(d["werkwijze"])
     fotos = FOTOS.get(d["slug"], {})
     beeld = (foto(fotos["hero"], "(max-width:980px) calc(100vw - 40px), 536px", boven_vouw=True) if fotos else
              f'<div class="reveal" style="margin-top:24px">{illustratie(d["slug"])}</div>')
-    sectiefoto = foto(fotos["sectie"], "(max-width:760px) calc(100vw - 40px), 720px") if fotos else ""
+    sectiefoto = foto_kader(fotos["sectie"], "(max-width:760px) calc(100vw - 40px), 720px") if fotos else ""
     latex_blok = ("" if d["slug"] != "spuitwerk" else """
   <h2>Latex spuiten van muren en plafonds</h2>
   <p>Muren en plafonds kunnen ook gespoten worden, met muurverf in plaats van lak. Dat heet latex spuiten. Het loont vooral bij grote, lege ruimtes, zoals nieuwbouw of een verbouwing. Wat het kost per m², hoeveel verf je nodig hebt en wanneer het goedkoper is dan rollen, lees je op de pagina over <a href="/kosten/latex-spuiten/">latex spuiten</a>.</p>
@@ -297,12 +303,19 @@ def dienst_body(d, plaats=None):
     }.get(d["slug"], "")
     fact = "".join(f"<li>{x}</li>" for x in d["prijsfactoren"])
     tips = "".join(f"<li>{x}</li>" for x in d["tips"])
+    feiten = feiten_blok([
+        (f"{eur(p_van)}–{eur(p_tot)}", f"richtprijs {d['prijs_eenheid']}{inplaats}"),
+        ("21%" if d["slug"] == "zakelijk-schilderwerk" else "9%",
+         "btw op schilderwerk aan bedrijfspanden" if d["slug"] == "zakelijk-schilderwerk"
+         else "btw op het schilderwerk aan een woning ouder dan twee jaar", BELASTINGDIENST_9 if d["slug"] != "zakelijk-schilderwerk" else None),
+        ("3", "offertes maximaal, gratis en vrijblijvend"),
+    ])
 
     hero = f"""<section class="section-sm">
 <div class="wrap">
   <div class="grid g2" style="gap:48px;align-items:start">
     <div>
-      <span class="badge">{d['naam_kort']}</span>
+      <span class="badge badge-ic">{dienst_icoon(d['slug'], 18)}{d['naam_kort']}</span>
       <h1>{h1}</h1>
       <p class="lead">{d['intro']}</p>
       {intro_extra}
@@ -322,6 +335,7 @@ def dienst_body(d, plaats=None):
         content = f"""<section class="section soft"><div class="wrap narrow prose reveal">
   <h2>Wat valt er onder {d['naam'].lower()}?</h2>
   <ul class="checklist">{wat}</ul>
+  {feiten}
   <p>Hoe een schilder te werk gaat, wat de prijs bepaalt en waar je op let in de offerte, lees je uitgebreid op onze pagina over <a href="/schilderwerk/{d['slug']}/">{d['naam'].lower()}</a>. Hieronder staat wat specifiek voor {pn} geldt.</p>
   {vn_blok}
 </div></section>"""
@@ -330,6 +344,7 @@ def dienst_body(d, plaats=None):
     content = f"""<section class="section soft"><div class="wrap narrow prose reveal">
   <h2>Wat valt er onder {d['naam'].lower()}?</h2>
   <ul class="checklist">{wat}</ul>
+  {feiten}
   {latex_blok}
 
   <h2>Zo gaat een schilder te werk</h2>
@@ -339,6 +354,7 @@ def dienst_body(d, plaats=None):
   {vn_blok}
 
   <h2>Waar hangt de prijs vanaf?</h2>
+  {foto(DIENST_EXTRA[d['slug']], "(max-width:760px) calc(100vw - 40px), 720px") if d['slug'] in DIENST_EXTRA else ''}
   <p>Twee offertes voor ogenschijnlijk dezelfde klus kunnen honderden euro's uit elkaar liggen. Dat komt zelden door de winstmarge en bijna altijd door deze factoren:</p>
   <ul>{fact}</ul>
 
@@ -355,6 +371,8 @@ def dienst_body(d, plaats=None):
     <li>Een concrete start- en opleverdatum, geen &quot;in overleg&quot;</li>
     <li>De garantietermijn en wat daar wel en niet onder valt</li>
   </ul>
+  <p>De volledige checklist staat in <a href="/kennisbank/goede-offerte-schilderwerk/">wat staat er in een goede offerte</a>.</p>
+  {kennis_links_dienst(d['slug'])}
 </div></section>"""
 
     return cr, cr_ld, hero + content
@@ -526,7 +544,7 @@ def build_plaats_pages():
   {cta_midden(f"Prijzen van schilders in {p['naam']} vergelijken?", "Eén aanvraag, maximaal drie offertes van schilders die in " + p['naam'] + " werken.")}
 
   <h3>De woningvoorraad van {p['naam']}</h3>
-  <p>Het gros van de woningen in {p['naam']} is gebouwd {p['bouwperiode']}. Het gaat overwegend om {p['woningmix']}. Dat is relevant voor je offerte, want het bepaalt hoeveel kozijnen er zijn, hoe hoog er gewerkt moet worden en of er een steiger nodig is. Bij {'ruime, vrijstaande bouw loopt het aantal te schilderen kozijnen snel op' if 'vrijstaande' in p['woningmix'] or 'villa' in p['woningmix'] else 'rijwoningen blijft het aantal kozijnen beperkt, maar is de bereikbaarheid van de achtergevel soms lastig'}.</p>
+  <p>{bouwperiode_zin(p)} Het gaat overwegend om {p['woningmix']}. Dat is relevant voor je offerte, want het bepaalt hoeveel kozijnen er zijn, hoe hoog er gewerkt moet worden en of er een steiger nodig is. Bij {'ruime, vrijstaande bouw loopt het aantal te schilderen kozijnen snel op' if 'vrijstaande' in p['woningmix'] or 'villa' in p['woningmix'] else 'rijwoningen blijft het aantal kozijnen beperkt, maar is de bereikbaarheid van de achtergevel soms lastig'}.</p>
   <p>Daarnaast telt de ligging mee: {p['naam']} kenmerkt zich door {p['ligging']}. Gevels die het meeste weer vangen, vragen eerder onderhoud dan de beschutte kant van hetzelfde huis. Een schilder die daar bij de opname onderscheid in maakt, weet waar hij het over heeft.</p>
 
   {blok_a}
@@ -578,6 +596,9 @@ def build_plaats_pages():
   <p><small>Bouwperiodes zijn globaal. Binnen een wijk staan vaak woningen uit verschillende jaren.</small></p>
 </div></section>"""
 
+        # --- PLAATSDATA: sectie 'woningen in cijfers' (BAG, CBS, RCE) ---
+        prijs_sec += plaats_sectie(p)
+        # --- einde PLAATSDATA ---
         body = (cr + hero + diensten_sec + hoe_werkt_het(p["naam"]) + prijs_sec + wijk_sec
                 + faq_html + buren_sec
                 + cta_blok(f"Schilder zoeken in {p['naam']}?",
@@ -695,9 +716,12 @@ def build_plaats_dienst_pages():
             kostenlink = (f"<p>Specifiek prijzen nodig? Lees ook "
                           + (", ".join(kl[:-1]) + " en " + kl[-1] if len(kl) > 1 else kl[0]) + ".</p>") if ks else ""
 
+            # --- PLAATSDATA: dienstspecifieke cijfers (BAG, CBS, RCE) ---
+            data_blok = dienst_blok(d, p)
+            # --- einde PLAATSDATA ---
             lokaal = f"""<section class="section"><div class="wrap narrow prose">
   <h2>{d['naam']} in {p['naam']}: wat je moet weten</h2>
-  <p>Bouwperiode van de woningen in {p['naam']}: {p['bouwperiode']}. Je vindt er vooral {p['woningmix']}. Dat bepaalt meer van je offerte dan mensen denken: {'bij dit type woning zit het buitenschilderwerk vooral in kozijnen, boeidelen en dakranden, en dus in bereikbaarheid' if seizoen else 'bij dit type woning gaat het vooral om de hoeveelheid vierkante meters en om hoeveel voorbereiding de ondergrond vraagt'}. {p['hook']}</p>
+  <p>{bouwperiode_zin(p)} Je vindt er vooral {p['woningmix']}. Dat bepaalt meer van je offerte dan mensen denken: {'bij dit type woning zit het buitenschilderwerk vooral in kozijnen, boeidelen en dakranden, en dus in bereikbaarheid' if seizoen else 'bij dit type woning gaat het vooral om de hoeveelheid vierkante meters en om hoeveel voorbereiding de ondergrond vraagt'}. {p['hook']}</p>
 
   <h3>Richtprijs in {p['provincie']}</h3>
   <p>Voor {d['naam'].lower()} in {p['naam']} zie je prijzen tussen <strong>{eur(p_van)} en {eur(p_tot)}</strong> {d['prijs_eenheid']}. {INDEX_TOELICHTING.get(p['provincie'], '')}</p>
@@ -707,6 +731,7 @@ def build_plaats_dienst_pages():
 
   {cta_midden(f"Offertes voor {d['naam'].lower()} in {p['naam']}?", "Vraag gratis prijzen aan bij maximaal drie schilders uit de buurt. Je zit nergens aan vast.")}
   {advies}
+  {data_blok}
   {kostenlink}
 
   <h3>Het beste moment om in te plannen</h3>
@@ -1181,6 +1206,9 @@ def build_kosten():
                 f'<tr><td><strong>{lab}</strong></td><td>{uitleg}</td></tr>'
                 for lab, n, uitleg in k["voorbeelden"])
         extra_rows = "".join(f'<tr><td>{a}</td><td class="num">{b}</td></tr>' for a, b in k["extra"])
+        balken = (prijs_balken([(lab, n * k["van"], n * k["tot"]) for lab, n, _ in k["voorbeelden"] if n is not None],
+                               "Prijs per situatie", "Dezelfde richtprijzen als in de tabel hieronder.")
+                  if k["voorbeelden"][0][1] is not None else "")
 
         regio_rows = ""
         for slug in KOSTEN_REGIO:
@@ -1202,6 +1230,12 @@ def build_kosten():
         faq_html, faq_ld = faq_blok(k["faq"], f"Veelgestelde vragen over {k['klus']}")
 
         kopfoto = foto(fotos["hero"], "(max-width:900px) calc(100vw - 40px), 400px") if fotos else ""
+        # --- kennisbank-sessie: eigen foto per kostenpagina ---
+        if k["slug"] in KOSTEN_FOTOS:
+            kopfoto = foto(KOSTEN_FOTOS[k["slug"]], "(max-width:900px) calc(100vw - 40px), 400px")
+        if k["slug"] in KOSTEN_SECTIE:
+            beeld = foto(KOSTEN_SECTIE[k["slug"]], "(max-width:760px) calc(100vw - 40px), 720px")
+        # --- einde kennisbank-sessie ---
         kaart = prijskaart(k['van'], k['tot'], k['eenheid'],
                            f"{'Exclusief btw' if k.get('excl_btw') else 'Inclusief materiaal en btw'}. Gemiddeld over Nederland; per regio zie je hieronder het verschil.",
                            beeld=kopfoto, knop="Vraag gratis offertes aan",
@@ -1222,6 +1256,7 @@ def build_kosten():
 </div></div></section>
 <section class="section-sm kosten-inhoud"><div class="wrap narrow prose">
   <h2>Rekenvoorbeelden</h2>
+  {balken}
   <div class="tablewrap"><table>
     <thead><tr><th>Situatie</th><th>Indicatie</th></tr></thead>
     <tbody>{vb_rows}</tbody>
@@ -1260,6 +1295,7 @@ def build_kosten():
   <h2>Heb je al een offerte?</h2>
   <p>Leg hem naast deze richtprijzen, of <a href="/offerte-vergelijken/">laat je offerte checken</a>. Meer prijzen vind je op <a href="/prijzen/">wat kost een schilder</a> en op de pagina over <a href="/schilderwerk/{d['slug']}/">{d['naam'].lower()}</a>.</p>
   {deelblok(k)}
+  <p><small>Uit de kennisbank: {kennis_links_kosten(k['slug'], d['slug'])}</small></p>
   <p><small>Ook handig: {andere} · <a href="/gids/btw-schilderwerk/">btw op schilderwerk</a>{' · <a href="/gids/wanneer-buiten-schilderen/">wanneer buiten schilderen</a>' if d['slug'] in ('buitenschilderwerk', 'houtrot-reparatie') else ''}{' · <a href="/gids/verf-berekenen/">hoeveel verf heb je nodig</a>' if d['slug'] in ('binnenschilderwerk', 'spuitwerk') else ''}</small></p>
 </div></section>
 {faq_html}
@@ -1431,6 +1467,7 @@ def build_gidsen():
     <li><strong>Niet vlak voor regen.</strong> De verf moet een paar uur kunnen drogen.</li>
     <li><strong>Niet op nat hout.</strong> Na een bui of bij ochtenddauw wacht de schilder tot het hout droog is.</li>
   </ul>
+  {schilderweer_gids()}
 
   <h2>Hoe vaak moet je buiten laten schilderen?</h2>
   <p>Met dekkende verf gaat een goede beurt zes tot acht jaar mee. Met een transparante beits is dat korter, zo'n drie tot vijf jaar. Wacht je te lang, dan dringt water in het hout en ontstaat houtrot. Dan wordt de rekening snel twee keer zo hoog.</p>
@@ -1439,7 +1476,7 @@ def build_gidsen():
     <li>Woningen aan <strong>open water of in de polder</strong> vangen meer wind en vocht.</li>
     <li><strong>Dakkapellen en boeidelen</strong> zitten hoog en hebben vaak eerder een beurt nodig.</li>
   </ul>
-  <p>Twijfel je of het tijd is? Doe de <a href="/onderhoudscheck/">onderhoudscheck</a>: in acht korte vragen zie je of je schilderwerk aan de beurt is. Krassen met je nagel in de verf, afbladderende hoeken en grijs, kaal hout zijn duidelijke signalen. Lees ook <a href="/kosten/kozijnen-schilderen/">wat kozijnen schilderen kost</a> en <a href="/kosten/huis-schilderen/">wat een huis schilderen kost</a>.</p>
+  <p>Twijfel je of het tijd is? Doe de <a href="/onderhoudscheck/">onderhoudscheck</a>: in negen korte vragen zie je of je schilderwerk aan de beurt is. Krassen met je nagel in de verf, afbladderende hoeken en grijs, kaal hout zijn duidelijke signalen. Lees ook <a href="/kosten/kozijnen-schilderen/">wat kozijnen schilderen kost</a> en <a href="/kosten/huis-schilderen/">wat een huis schilderen kost</a>.</p>
 
   <h2>Op tijd plannen</h2>
   <p>Wil je in het voorjaar een schilder, vraag dan in januari of februari al offertes aan. Voor het najaar is juni of juli een goed moment. Wie op het laatste moment belt, staat achteraan in de rij.</p>
@@ -1542,6 +1579,7 @@ def build_gidsen():
   <div class="narrow prose">
     <h1>Gids voor schilderwerk</h1>
     <p class="lead">Praktische uitleg voor wie schilderwerk laat doen: over btw, het juiste moment en wat je in een offerte moet terugzien.</p>
+    <p>Meer uitleg over verf, voorbereiding en schade vind je in onze <a href="/kennisbank/">kennisbank</a>.</p>
   </div>
   <div class="grid g3" style="margin-top:26px">{kaarten}</div>
   <div class="narrow prose" style="margin-top:34px">
@@ -1785,6 +1823,9 @@ def build_static_pages():
   <h2>Offertecheck</h2>
   <p>De directe offertecheck op onze site werkt helemaal in je browser. De offerte die je kiest of plakt, wordt niet naar ons of naar anderen verstuurd. Alleen als je je offerte via het formulier naar ons stuurt om hem door een mens te laten bekijken, ontvangen wij hem.</p>
 
+  <h2>Schilderweer-check</h2>
+  <p>De <a href="/schilderweer/">schilderweer-check</a> haalt de weersverwachting op bij MET Norway, het Noorse meteorologisch instituut (api.met.no). Dat doet je browser zelf, rechtstreeks. MET Norway krijgt daarbij alleen de coördinaten van de plaats die je kiest. Kies je voor mijn locatie, dan vraagt je browser eerst om toestemming en rondt hij je locatie af op ongeveer een kilometer voordat die naar MET Norway gaat. Zoals bij elke website ziet MET Norway technisch ook je IP-adres en van welke website de vraag komt; MET Norway houdt daar logbestanden van bij. Wij krijgen je locatie niet en slaan niets op.</p>
+
   <h2>Hoelang bewaren we gegevens</h2>
   <p>Aanvraaggegevens bewaren we maximaal 24 maanden na je aanvraag, tenzij een langere bewaartermijn wettelijk verplicht is. Gegevens van schildersbedrijven bewaren we zolang de samenwerking loopt en daarna zeven jaar in verband met de fiscale bewaarplicht.</p>
 
@@ -1806,6 +1847,20 @@ def build_static_pages():
     e = htmllib.escape
     blokken = ""
     groepen = [("Homepage", [FOTOS["buitenschilderwerk"]["hero"]]), ("Diensten-overzicht", [FOTOS_PAGINA["diensten"]]), ("Werkgebied", [FOTOS_PAGINA["werkgebied"]]), ("Wat kost het?", [FOTOS_PAGINA["prijzen"]]), ("Offerte laten checken", [FOTOS_PAGINA["checken"]]), ("Voor schilders", [FOTOS_PAGINA["schilders"]])] + [(d["naam"], list(FOTOS[d["slug"]].values())) for d in DIENSTEN if d["slug"] in FOTOS]
+    # --- [rekentools-content] foto's van de onderhoudscheck ---
+    from onderhoudscheck import FOTOS_ONDERHOUDSCHECK
+    groepen.append(("Onderhoudscheck", FOTOS_ONDERHOUDSCHECK))
+    # --- einde [rekentools-content] ---
+    # --- inspiratie-content: foto's van de gidsen per woningtype ---
+    from foto_data import FOTOS_INSPIRATIE
+    from inspiratie import WONINGTYPES as _IP_TYPES
+    groepen += [(f"Inspiratie: {_n}", FOTOS_INSPIRATIE[_k]) for _k, _n, _ in _IP_TYPES if _k in FOTOS_INSPIRATIE]
+    # --- einde inspiratie-content ---
+    # --- kennisbank-sessie: extra foto's op dienst-, kosten- en kennisbankpagina's ---
+    groepen += [(f"{d['naam']} (extra foto)", [DIENST_EXTRA[d['slug']]]) for d in DIENSTEN if d['slug'] in DIENST_EXTRA]
+    groepen += [(f"Kosten: {(k.get('kruimel') or k['klus'].removeprefix('een ')).capitalize()}", [KOSTEN_FOTOS[k['slug']]] + ([KOSTEN_SECTIE[k['slug']]] if k['slug'] in KOSTEN_SECTIE else [])) for k in KOSTEN if k['slug'] in KOSTEN_FOTOS]
+    groepen += kennis_fotogroepen()
+    # --- einde kennisbank-sessie ---
     for naam, lijst in groepen:
         blokken += f"<h2>{naam}</h2>"
         for f in lijst:
@@ -1894,6 +1949,9 @@ def build_static_pages():
     <li><strong>Hoelang:</strong> 90 dagen</li>
   </ul>
   <p>De termijnen van Meta staan zo in de huidige code van de Meta-pixel; Meta kan ze wijzigen. Als je bent ingelogd bij Facebook of Instagram, kan Meta ook cookies van zijn eigen domeinen gebruiken. Daarover lees je meer in het <a href="https://www.facebook.com/privacy/policies/cookies/" rel="nofollow noopener">cookiebeleid van Meta</a>.</p>
+
+  <h2>Schilderweer-check</h2>
+  <p>De <a href="/schilderweer/">schilderweer-check</a> plaatst geen cookies en gebruikt geen lokale opslag. Je browser haalt de weersverwachting op bij MET Norway, met alleen de coördinaten van de gekozen plaats (of je locatie, afgerond op ongeveer een kilometer, als je daar zelf voor kiest). Er wordt niets bewaard.</p>
 
   <h2>Wat Meta van ons krijgt</h2>
   <p>Na toestemming laadt de Meta-pixel. Die meldt aan Meta dat je een pagina bekijkt en, als je een offerteaanvraag verstuurt, dat er een aanvraag is gedaan. Je naam, e-mailadres, telefoonnummer en de omschrijving van je klus sturen we niet naar Meta, ook niet versleuteld of gehasht. Meta ontvangt wel technische gegevens zoals je IP-adres, je browser en de pagina die je bezoekt. Meer hierover staat in onze <a href="/privacy/">privacyverklaring</a>.</p>
@@ -2057,9 +2115,11 @@ def main():
     build_kosten()
     build_huiscalculator(write, OUT)
     build_gidsen()
+    build_kennisbank(write, TODAY)  # kennisbank-sessie
     build_kleurenkiezer(write, OUT)
     build_inspiratie(write, OUT)
     build_onderhoudscheck(write)
+    build_schilderweer(write, OUT)
     build_tools_pagina(write, beschikbare_tools(globals()))
     build_static_pages()
     build_assets()
