@@ -678,9 +678,15 @@ def lokaal_advies(d, p):
     return "".join(f"<p>{x}</p>" for x in delen[:2])
 
 
+# Plaatsen onder deze grens krijgen geen eigen dienstpagina's in Google: daar is
+# te weinig lokaal te vertellen, en de plaatspagina zelf dekt de zoekvraag al.
+DORP_GRENS = 5000
+
+
 def build_plaats_dienst_pages():
     for p in PLAATSEN:
         buren = buurplaatsen(p, 5)
+        dun = p["inwoners"] < DORP_GRENS
         for d in DIENSTEN:
             cr, cr_ld, body_top = dienst_body(d, p)
 
@@ -787,8 +793,9 @@ def build_plaats_dienst_pages():
                      "Vergelijk gratis en vrijblijvend offertes van maximaal 3 lokale schilders.",
                      f"Actief in heel {p['gemeente']}.",
                      "Geen verplichtingen."),
-                f"/schilder/{p['slug']}/{d['slug']}/", body, [cr_ld, faq_ld, svc_ld]),
-                prio=0.7 if p["prio"] == 1 else 0.5)
+                f"/schilder/{p['slug']}/{d['slug']}/", body, [cr_ld, faq_ld, svc_ld],
+                noindex=dun),
+                prio=0.7 if p["prio"] == 1 else 0.5, index=not dun)
 
 
 # ===========================================================================
