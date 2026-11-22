@@ -104,6 +104,185 @@ BTW_NIEUWBOUW = round(1.21 / 1.09, 4)
 
 
 # ---------------------------------------------------------------------------
+# Uitleg per onderdeel: wat doet de schilder, wat maakt het duurder of goedkoper
+# (wat, [duurder], [goedkoper])
+# ---------------------------------------------------------------------------
+
+UITLEG = {
+    "kozijnen": (
+        "De schilder wast het kozijn af, schuurt het op, haalt losse verf weg en werkt kale plekken bij met grondverf. Open naden en scheurtjes worden gevuld en waar nodig komt nieuwe kit langs het glas. Daarna volgt een of twee lagen dekkende lak.",
+        ["De verf bladdert of het hout is kaal en grijs", "Er zitten veel kleine ruitjes of roeden in", "Het kozijn zit hoog en er is een steiger nodig", "Er moet veel nieuwe kit langs het glas"],
+        ["De oude verflaag is nog gesloten en alleen dof", "Het kozijn zit op de begane grond", "Je laat alle kozijnen in één keer doen"]),
+    "buitendeuren": (
+        "Een buitendeur krijgt het zwaarst te verduren. De schilder schuurt de deur, werkt beschadigingen en de onderkant goed bij, schildert de randen mee en zet de lak in een of twee lagen. Beslag gaat eraf of wordt afgeplakt.",
+        ["De deur heeft panelen of glas met roeden", "De onderkant is beschadigd of zacht", "Je wilt een andere kleur, zodat er meer lagen nodig zijn"],
+        ["Een vlakke deur in goede staat", "Dezelfde kleur als nu"]),
+    "boeidelen": (
+        "Boeidelen en windveren zijn de planken langs de dakrand. Ze zitten hoog en vangen veel zon en regen. De schilder schuurt, werkt bij en lakt ze, meestal vanaf de steiger die er toch al staat.",
+        ["Lange boeidelen rondom het huis", "Houtrot in de hoeken of aan de onderkant"],
+        ["De steiger staat er al voor de kozijnen boven"]),
+    "dakkapel": (
+        "Bij een dakkapel schildert de schilder het kozijn, de boeidelen en vaak de zijwangen. Hij werkt meestal vanaf een steiger of het dak. Rotte hoeken worden eerst hersteld.",
+        ["Een brede dakkapel met meerdere ramen", "Houten zijwangen die ook geverfd moeten worden", "Slecht bereikbaar, bijvoorbeeld aan de straatkant"],
+        ["Een kleine dakkapel met één raam", "Zijwangen van plaatmateriaal dat niet geverfd hoeft"]),
+    "steiger": (
+        "Voor werk op de bovenverdieping zet een schilder een steiger of gebruikt hij een hoogwerker. Een ladder is voor langdurig werk op hoogte geen veilige werkplek. De kosten hangen af van hoe lang de steiger blijft staan.",
+        ["Drie verdiepingen of een hoge nok", "De steiger moet over een schuur, serre of op de stoep", "Slecht weer, zodat de steiger langer blijft staan"],
+        ["Alle hoge delen in één ronde, zodat de steiger maar één keer komt", "Een rolsteiger is genoeg, zoals bij een lage achtergevel"]),
+    "houtrot": (
+        "De schilder prikt met een priem of schroevendraaier waar het hout zacht is, haalt al het rotte hout weg tot op gezond hout, behandelt de plek en vult hem met een houtreparatiemiddel. Bij grote schade zaagt hij het stuk eruit en zet hij nieuw hout in.",
+        ["De rot zit diep of over een groot stuk", "Er moet een nieuw stuk hout of een nieuwe onderdorpel in (dat deel valt onder 21% btw)", "Het glas moet eruit om bij de dorpel te komen"],
+        ["Kleine plekjes die je vroeg ontdekt", "Herstel en schilderen in dezelfde beurt"]),
+    "muren": (
+        "De schilder dekt vloer en meubels af, vult gaatjes en kleine scheuren, plakt af en zet de muren en plafonds in twee lagen muurverf. Plafonds kosten per m² iets meer, omdat hij boven zijn hoofd werkt.",
+        ["Een andere kleur dan nu, of donker over licht", "Veel gaten, scheuren of oude behangresten", "Hoge plafonds of een vide", "Een volle kamer die eerst leeg moet"],
+        ["Grote, lege ruimtes, die soms gespoten kunnen worden", "Dezelfde kleur, alleen opfrissen"]),
+    "binnendeuren": (
+        "De schilder haalt de deur meestal uit de scharnieren, schuurt hem, vult beschadigingen en lakt beide kanten. Met de kwast gebeurt dat vaak ter plekke. Spuiten gaat in de werkplaats of een spuitcabine en geeft een gladde laag zonder kwaststreken.",
+        ["Paneeldeuren of deuren met glas", "Spuiten in plaats van de kwast", "Een donkere of hoogglans kleur"],
+        ["Vlakke opdekdeuren", "Wit over wit"]),
+    "binnenkozijnen": (
+        "Een binnenkozijn wordt geschuurd, de naden worden gekit en het geheel krijgt een of twee lagen lak. De schilder doet dit vaak in dezelfde ronde als de deuren, zodat de kleur gelijk is.",
+        ["Kozijnen met een bovenlicht of glas", "Veel oude verflagen of beschadigingen"],
+        ["Samen met de deuren in één ronde", "Kozijnen in goede staat"]),
+    "trap": (
+        "De schilder schuurt de treden, stootborden, boom en leuning, vult beschadigingen en zet er een slijtvaste traplak op. Een trap kan niet in één keer: hij doet om en om treden, zodat je kunt blijven lopen.",
+        ["Een open trap met spijlen", "Een kwart- of halve draai", "Oude traploper met lijmresten die eraf moet"],
+        ["Een dichte rechte trap", "Alleen de stootborden en de zijkanten"]),
+    "keuken": (
+        "De fronten en laden gaan eraf, worden ontvet, geschuurd en meestal in de werkplaats gespoten: een grondlaag en twee lagen lak. Op kunststof of folie komt eerst een hechtprimer.",
+        ["Hoogglans", "Folie die loslaat en eerst helemaal weg moet", "Grote fronten of hoge kasten"],
+        ["Kleine fronten en ladefronten", "Matte of zijdeglans lak"]),
+}
+
+
+# ---------------------------------------------------------------------------
+# Voorbeeldberekeningen: vier woningtypes, met een link die de calculator vult.
+# De bedragen rekent de build uit met dezelfde prijzen en afronding als de JS.
+# ---------------------------------------------------------------------------
+
+VOORBEELDEN = [
+    {"type": "tussenwoning", "bouw": "1975-1999", "titel": "Tussenwoning uit 1985, buitenkant",
+     "situatie": "Een rijtjeswoning met acht kozijnen, een voor- en achterdeur en boeidelen. Achter is een steiger nodig voor de bovenramen. Bij de opname vindt de schilder twee kleine plekken houtrot in de onderdorpels.",
+     "klus": [("kozijnen", 8), ("buitendeuren", 2), ("boeidelen", None), ("steiger", 1), ("houtrot", 2)]},
+    {"type": "hoekwoning", "bouw": "1945-1974", "titel": "Hoekwoning uit 1965, buitenkant",
+     "situatie": "Een hoekwoning met een extra zijgevel: twaalf kozijnen, twee deuren en lange boeidelen. Steiger aan de zij- en achterkant. Het houtwerk is lang niet geschilderd, dus er zijn drie plekken houtrot.",
+     "klus": [("kozijnen", 12), ("buitendeuren", 2), ("boeidelen", None), ("steiger", 2), ("houtrot", 3)]},
+    {"type": "twee-onder-een-kap", "bouw": "2000-nu", "titel": "Twee-onder-een-kap uit 2005, binnen",
+     "situatie": "Alles binnen opnieuw: zo'n 290 m² muren en plafonds, negen binnendeuren gespoten met de kozijnen erbij, en een dichte rechte trap.",
+     "klus": [("muren", 290), ("binnendeuren", 9, "s"), ("binnenkozijnen", 9), ("trap", 1, "d")]},
+    {"type": "vrijstaand", "bouw": "voor-1945", "titel": "Vrijstaande woning uit 1930, buitenkant",
+     "situatie": "Houtwerk rondom: achttien kozijnen, twee deuren, een dakkapel en boeidelen. Steiger op drie gevels en vier plekken houtrot, zoals bij een oudere woning vaak voorkomt.",
+     "klus": [("kozijnen", 18), ("buitendeuren", 2), ("dakkapel", 1), ("boeidelen", None), ("steiger", 3), ("houtrot", 4)]},
+]
+
+
+def _rond(x, op):
+    """Zelfde afronding als Math.round in de JS (halven omhoog)."""
+    import math
+    return int(math.floor(x / op + 0.5)) * op
+
+
+def bereken_voorbeeld(vb, index=1.0):
+    """Regels en totaal zoals de calculator ze toont (landelijk: index 1)."""
+    ond = {o["key"]: o for o in onderdelen()}
+    regels, van, tot = [], 0, 0
+    for item in vb["klus"]:
+        key, n = item[0], item[1]
+        var = item[2] if len(item) > 2 else None
+        o = ond[key]
+        if not o["prijs"]:
+            regels.append({"naam": o["naam"], "aantal": "", "van": None, "tot": None})
+            continue
+        prijs, naam = o["prijs"], o["naam"]
+        if o.get("varianten"):
+            v = next(x for x in o["varianten"] if x["key"] == (var or o["varianten"][0]["key"]))
+            prijs, naam = v["prijs"], f'{o["naam"]} ({v["naam"].lower()})'
+        rv, rt = _rond(prijs[0] * n * index, 5), _rond(prijs[1] * n * index, 5)
+        van += rv
+        tot += rt
+        regels.append({"naam": naam, "aantal": f'{n} {o["een"] if n == 1 else o["mv"]}',
+                       "stuk": prijs, "van": rv, "tot": rt})
+    return regels, _rond(van, 10), _rond(tot, 10)
+
+
+def voorbeeld_url(vb):
+    delen = []
+    for item in vb["klus"]:
+        key, n = item[0], item[1]
+        deel = key + (f".{n}" if n is not None else "")
+        if len(item) > 2:
+            deel += f".{item[2]}"
+        delen.append(deel)
+    return f'{PAD}?woning={vb["type"]}&amp;bouw={vb["bouw"]}&amp;klus={",".join(delen)}'
+
+
+def _voorbeelden_html():
+    kaarten = ""
+    for vb in VOORBEELDEN:
+        regels, van, tot = bereken_voorbeeld(vb)
+        rijen = ""
+        for r in regels:
+            if r["van"] is None:
+                rijen += f'<tr><td>{r["naam"]}</td><td class="num">in de offerte</td></tr>'
+            else:
+                rijen += (f'<tr><td>{r["naam"]}<small>{r["aantal"]} × {eur(r["stuk"][0])} – {eur(r["stuk"][1])}</small></td>'
+                          f'<td class="num">{eur(r["van"])} – {eur(r["tot"])}</td></tr>')
+        kaarten += f"""<article class="hc-vb">
+  <div class="hc-vb-kop"><svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">{TYPE_ICON[vb["type"]]}</svg><h3>{vb["titel"]}</h3></div>
+  <p>{vb["situatie"]}</p>
+  <div class="tablewrap"><table class="hc-vb-tabel"><tbody>{rijen}</tbody>
+  <tfoot><tr><th>Totaal (landelijk)</th><th class="num">{eur(van)} – {eur(tot)}</th></tr></tfoot></table></div>
+  <a class="btn btn-ghost hc-vb-knop" href="{voorbeeld_url(vb)}">Open dit voorbeeld in de calculator</a>
+</article>"""
+    return kaarten
+
+
+# ---------------------------------------------------------------------------
+# Zo rekenen we: bronnen per prijs (gecontroleerd in november 2026)
+# ---------------------------------------------------------------------------
+
+BRONNEN = {
+    "bd": ("Belastingdienst, Btw-tarief schilderen", "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/tarieven_en_vrijstellingen/diensten_9_btw/werkzaamheden_aan_woningen/schilderen"),
+    "bd2": ("Belastingdienst, Woningen ouder dan 2 jaar", "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/tarieven_en_vrijstellingen/diensten_9_btw/werkzaamheden_aan_woningen/woningen_ouder_dan_2_jaar"),
+    "tr-koz": ("Trustoo, Kosten kozijnen schilderen (aangepast 3 november 2026)", "https://trustoo.nl/kosten/schilder-kosten/kosten-kozijnen-schilderen/"),
+    "tr-m2": ("Trustoo, Kosten schilderen muren per m² (aangepast 3 november 2026)", "https://trustoo.nl/kosten/schilder-kosten/kosten-schilderen-muren-per-m2/"),
+    "tr-trap": ("Trustoo, Trap schilderen kosten (aangepast 3 november 2026)", "https://trustoo.nl/kosten/schilder-kosten/trap-schilderen-kosten/"),
+    "hd-koz": ("Homedeal, Kozijnen schilderen prijs (27 oktober 2025)", "https://www.homedeal.nl/schilderwerk/kozijnen-schilderen-prijs"),
+    "hd-muur": ("Homedeal, Muur schilderen prijzen (13 oktober 2025)", "https://www.homedeal.nl/schilderwerk/muur-schilderen-prijzen/"),
+    "hd-trap": ("Homedeal, Trap schilderen kosten (13 juli 2026)", "https://www.homedeal.nl/schilderwerk/trap-schilderen-kosten/"),
+    "hd-dak": ("Homedeal, Dakkapel schilderen prijs (20 oktober 2025)", "https://www.homedeal.nl/schilderwerk/dakkapel-schilderen-prijs/"),
+    "hd-keuken": ("Homedeal, Keuken schilderen", "https://www.homedeal.nl/schilderwerk/keuken-schilderen/"),
+    "hd-kozrep": ("Homedeal, Houten kozijnen repareren", "https://www.homedeal.nl/kozijnen/houten-kozijnen-repareren/"),
+    "sl-trap": ("Slimster, Kosten trap schilderen (16 april 2026)", "https://slimster.nl/schilder/schilderwerk-prijzen/kosten-trap-schilderen/"),
+    "sl-rot": ("Slimster, Houtrot repareren", "https://slimster.nl/schilder/houtrot-repareren/"),
+    "cnv": ("CNV, Cao Schilders (SAVG) en nieuwe pensioenregeling een feit (17 december 2025)", "https://www.cnv.nl/bouw/schilders/cao-schilders-afwerkings-en-glaszetbedrijf/nieuws/cao-schilders-savg-en-nieuwe-pensioenregeling-een-feit-2025-12-17/"),
+    "fnv": ("FNV, Uurlonen cao Schilders (SAVG) stijgen per 1 januari 2027 (september 2026)", "https://www.fnv.nl/nieuwsbericht/sectornieuws/bouwen-en-wonen/2026/09/uurlonen-cao-schilders-savg-stijgen-in-januari2027"),
+}
+
+
+def _bron(*sleutels):
+    return ", ".join(f'<a href="{BRONNEN[k][1]}" rel="nofollow noopener" target="_blank">{BRONNEN[k][0].split(",")[0]}</a>' for k in sleutels)
+
+
+# (onderdeel-sleutel of eigen label, wat de bronnen noemen, bronnen, onze keuze)
+VERANTWOORDING = [
+    ("kozijnen", "€50 – €100 per kozijn buiten, inclusief arbeid en materiaal. Hun eigen voorbeeld (alle buitenkozijnen van een rijtjes- of hoekwoning: ongeveer €1.800) komt wel neer op zo'n €150 tot €225 per kozijn.", ("tr-koz", "hd-koz"),
+     "We nemen €90 – €190: het losse kozijnbedrag van de prijssites is een ondergrens zonder veel voorwerk; hun complete voorbeelden zitten aan de bovenkant."),
+    ("buitendeuren", "€100 – €185 per buitendeur.", ("tr-koz",), "We nemen dit over."),
+    ("binnendeuren:k", "€80 – €150 per binnendeur.", ("tr-koz",), "We houden €65 – €140 aan: een vlakke deur in goede staat kan onder de €80."),
+    ("binnendeuren:s", "Geen losse prijs per gespoten deur gevonden.", (), "Eigen bandbreedte €95 – €185: hoger dan met de kwast, omdat de deur naar de werkplaats gaat en meer lagen krijgt. Vraag het na in de offerte."),
+    ("binnenkozijnen", "€35 – €75 per binnenkozijn.", ("tr-koz", "hd-koz"), "We nemen dit over (tot november 2026 rekenden we met €45 – €95)."),
+    ("muren", "Twee lagen €15 – €30 per m² inclusief verf; sauzen €10 – €16 per m².", ("tr-m2", "hd-muur"), "We nemen €10 – €22: muren en plafonds samen, vaak in dezelfde kleur."),
+    ("trap", "€300 – €800 per trap (Slimster), €600 – €800 (Homedeal), €180 – €550 exclusief schuren (Trustoo).", ("sl-trap", "hd-trap", "tr-trap"), "We nemen €350 – €950, verdeeld naar soort trap. Een open trap met spijlen zit boven de prijssites, omdat elke spijl rondom geschuurd en gelakt wordt."),
+    ("keuken", "€20 – €80 per front, afhankelijk van de maat (klein ladefront tot groot front).", ("hd-keuken",), "We nemen €45 – €95 voor een gewoon deurfront tot hoogglans. Kleine ladefronten zijn goedkoper; tel die als half front."),
+    ("dakkapel", "€400 – €930 voor een dakkapel, inclusief steiger.", ("hd-dak",), "We nemen €400 – €950."),
+    ("houtrot", "€50 – €150 per plek (Slimster); €75 – €300 voor een standaard kozijnreparatie (Homedeal).", ("sl-rot", "hd-kozrep"), "We nemen €50 – €275 per plek (tot november 2026 begon de range bij €85). Let op: een nieuw ingezet stuk hout valt onder 21% btw."),
+    ("steiger", "Geen betrouwbare openbare prijs per gevel gevonden; prijssites rekenen de steiger meestal in de totaalprijs.", (), "We houden €300 – €900 per gevel aan als ruime marge. Vraag de steiger altijd als aparte post in de offerte."),
+]
+
+
+# ---------------------------------------------------------------------------
 # Onderdelen (alle prijzen uit kosten_data.py)
 # ---------------------------------------------------------------------------
 
@@ -118,7 +297,7 @@ def onderdelen():
          "een": "kozijn", "mv": "kozijnen", "max": 40,
          "tip": f"Ongeveer {KOZ_TUSSEN} bij een tussenwoning, {KOZ_HOEK} bij een hoekwoning of twee-onder-een-kap en {KOZ_VRIJ} bij een vrijstaande woning. Ramen en draaiende delen horen erbij.",
          "link": "/kosten/kozijnen-schilderen/"},
-        {"key": "buitendeuren", "groep": "buiten", "naam": "Buitendeuren", "prijs": _band("deur"),
+        {"key": "buitendeuren", "groep": "buiten", "naam": "Buitendeuren", "prijs": _band("buitendeur"),
          "een": "deur", "mv": "deuren", "max": 6,
          "tip": "Voordeur, achterdeur en eventueel de deur van de schuur of garage."},
         {"key": "boeidelen", "groep": "buiten", "naam": "Boeidelen en windveren", "prijs": None,
@@ -165,6 +344,16 @@ def onderdelen():
     ]
 
 
+def onderdelen_met_uitleg():
+    """Onderdelen plus de uitklapbare uitleg (wat doet de schilder, wat maakt het duurder of goedkoper)."""
+    uit = []
+    for o in onderdelen():
+        o = dict(o)
+        o["uitleg"] = UITLEG.get(o["key"])
+        uit.append(o)
+    return uit
+
+
 def _benchmarks():
     vb = KOSTEN_BY_SLUG["huis-schilderen"]["voorbeelden"]
     buiten = [{"label": vb[i][0], "prijs": _bereik(vb[i][2])} for i in range(3)]
@@ -181,7 +370,7 @@ def _data_json():
     plaatsen = [{"slug": p["slug"], "naam": p["naam"], "prov": p["provincie"],
                  "index": PRIJSINDEX.get(p["provincie"], 1.0)} for p in PLAATSEN]
     data = {
-        "onderdelen": [{k: v for k, v in o.items() if k not in ("tip",)} for o in onderdelen()],
+        "onderdelen": [{k: v for k, v in o.items() if k not in ("tip", "uitleg")} for o in onderdelen()],
         "types": WONINGTYPES,
         "periodes": BOUWPERIODES,
         "btwNieuwbouw": BTW_NIEUWBOUW,
@@ -219,6 +408,18 @@ def _periode_keuzes():
     return "".join(
         f'<label class="hc-chip"><input type="radio" name="hc-periode" value="{p["key"]}"><span>{p["naam"]}</span></label>'
         for p in BOUWPERIODES)
+
+
+def _uitleg_html(o):
+    u = o.get("uitleg")
+    if not u:
+        return ""
+    wat, duurder, goedkoper = u
+    li = lambda xs: "".join(f"<li>{x}</li>" for x in xs)
+    return (f'<details class="hc-uitleg"><summary>Wat doet de schilder en wat bepaalt de prijs?</summary>'
+            f'<div class="hc-uitleg-in"><p>{wat}</p>'
+            f'<div class="hc-uitleg-kol"><div><strong>Duurder als</strong><ul>{li(duurder)}</ul></div>'
+            f'<div><strong>Goedkoper als</strong><ul>{li(goedkoper)}</ul></div></div></div></details>')
 
 
 def _onderdeel_html(o):
@@ -264,6 +465,7 @@ def _onderdeel_html(o):
   </label>
   {aantal}
   <p class="hc-tip">{o['tip']}{link}</p>
+  {_uitleg_html(o)}
 </div>"""
 
 
@@ -296,7 +498,7 @@ def _huis_svg():
 
 
 def huiscalculator_html():
-    ond = onderdelen()
+    ond = onderdelen_met_uitleg()
     buiten = "".join(_onderdeel_html(o) for o in ond if o["groep"] == "buiten")
     binnen = "".join(_onderdeel_html(o) for o in ond if o["groep"] == "binnen")
 
@@ -424,16 +626,36 @@ def _uitleg_tabel():
 
 FAQ = [
     ("Hoe nauwkeurig is de huiscalculator?",
-     "De calculator geeft een bandbreedte, geen offerte. Hij rekent met dezelfde richtprijzen als onze kostenpagina's en past die aan op je regio. De echte prijs hangt af van de staat van het schilderwerk, houtrot en de bereikbaarheid. Daarom zie je altijd een van-totbedrag."),
+     "De calculator geeft een bandbreedte, geen offerte. Hij rekent met dezelfde richtprijzen als onze kostenpagina's, prijspeil 2026, en past die aan op je regio. Die richtprijzen hebben we in november 2026 naast openbare prijspagina's gelegd; per onderdeel zie je onder 'Zo rekenen we' welke bron wat noemt. De echte prijs hangt af van de staat van het schilderwerk, houtrot en de bereikbaarheid."),
     ("Waarom staat er geen prijs bij de boeidelen?",
-     "Schilders rekenen boeidelen en windveren bijna altijd mee in de prijs voor het houtwerk buiten. Een losse richtprijs per meter hebben we niet, dus die verzinnen we ook niet. Kies je ze aan, dan staan ze wel in je aanvraag, zodat de schilder ze meeneemt."),
+     "Schilders rekenen boeidelen en windveren bijna altijd mee in de prijs voor het houtwerk buiten. Een losse richtprijs per meter hebben we niet gevonden, dus die verzinnen we ook niet. Kies je ze aan, dan staan ze wel in je aanvraag, zodat de schilder ze meeneemt."),
     ("Zit de btw in de bedragen?",
-     "Ja. De bedragen zijn inclusief materiaal en 9% btw. Is je woning jonger dan twee jaar, dan geldt 21% btw; kies dan bij de bouwperiode 'jonger dan 2 jaar' en de calculator rekent het om."),
+     "Ja. De bedragen zijn inclusief materiaal en 9% btw. Volgens de Belastingdienst valt het schilderen van een woning ouder dan 2 jaar onder 9%, inclusief de gebruikte materialen. Is je woning jonger dan twee jaar, kies dan bij de bouwperiode 'jonger dan 2 jaar': dan rekent de calculator met 21%. Ook een nieuw stuk hout in een kozijn valt onder 21%."),
     ("Waarom verschilt de prijs per plaats?",
-     "Schilders in Noord-Holland en Utrecht rekenen meer dan in Flevoland en Overijssel, vooral door hogere loon- en bedrijfskosten. De calculator corrigeert daarvoor per provincie."),
+     "Schilders rekenen niet overal hetzelfde, maar er bestaat geen officiële index van schildersprijzen per regio. De correctie per provincie is onze eigen inschatting. We stellen haar bij zodra we genoeg offertes uit onze eigen aanvragen hebben."),
+    ("Worden de prijzen in 2027 hoger?",
+     "Waarschijnlijk iets. De cao-lonen van schilders stijgen per 1 januari 2027 met 3,7%. Loon is het grootste deel van de prijs, dus reken in 2027 op een paar procent meer dan de calculator nu laat zien."),
     ("Wat doe ik met de uitkomst?",
      "Gebruik hem als ijkpunt. Vraag daarna offertes aan en leg die per onderdeel naast de uitkomst. Met de knop onder de uitkomst zet je je keuzes meteen in het aanvraagformulier."),
 ]
+
+
+def _verantwoording_rijen():
+    ond = {o["key"]: o for o in onderdelen()}
+    rijen = ""
+    for sleutel, bron_tekst, bronnen, keuze in VERANTWOORDING:
+        key, _, var = sleutel.partition(":")
+        o = ond[key]
+        naam, prijs = o["naam"], o["prijs"]
+        if var:
+            v = next(x for x in o["varianten"] if x["key"] == var)
+            naam, prijs = f'{o["naam"]}, {v["naam"].lower()}', v["prijs"]
+        if o.get("varianten") and not var:
+            prijs = (min(x["prijs"][0] for x in o["varianten"]), max(x["prijs"][1] for x in o["varianten"]))
+        bron = f' <span class="hc-bron">Bron: {_bron(*bronnen)}</span>' if bronnen else ""
+        rijen += (f'<tr><td><strong>{naam}</strong><br>{eur(prijs[0])} – {eur(prijs[1])} per {o["een"]}</td>'
+                  f'<td>{bron_tekst}{bron}</td><td>{keuze}</td></tr>')
+    return rijen
 
 
 def build_huiscalculator(write, out):
@@ -471,6 +693,14 @@ def build_huiscalculator(write, out):
   <div class="wrap">{huiscalculator_html()}</div>
 </section>
 
+<section class="section" id="voorbeelden"><div class="wrap">
+  <div class="prose hc-vb-intro">
+    <h2>Voorbeeldberekeningen per woningtype</h2>
+    <p>Vier gangbare situaties, uitgerekend met precies dezelfde prijzen als de calculator, op landelijk prijspeil. Klik op een voorbeeld om het in de calculator te openen en pas daarna je eigen aantallen en plaats aan.</p>
+  </div>
+  <div class="hc-vbs">{_voorbeelden_html()}</div>
+</div></section>
+
 <section class="section soft" id="offerte-sectie">
   <div class="wrap">
     <div class="hc-offerte">
@@ -489,20 +719,35 @@ def build_huiscalculator(write, out):
   </div>
 </section>
 
-<section class="section"><div class="wrap narrow prose">
-  <h2>Zo rekent de calculator</h2>
-  <p>Per onderdeel vermenigvuldigen we het aantal met de richtprijs die schilders in Nederland rekenen. Dat zijn dezelfde prijzen als op onze <a href="/kosten/">kostenpagina's</a>, inclusief materiaal en 9% btw. Daarna corrigeren we voor je regio.</p>
+<section class="section soft" id="zo-rekenen-we"><div class="wrap narrow prose">
+  <h2>Zo rekenen we</h2>
+  <p>Per onderdeel vermenigvuldigen we het aantal met een richtprijs. Dat zijn dezelfde prijzen als op onze <a href="/kosten/">kostenpagina's</a>. Daarna corrigeren we voor je provincie. Elke regel ronden we af op €5, het totaal op €10.</p>
+  <ul>
+    <li><strong>Prijspeil 2026.</strong> We hebben de prijzen in november 2026 vergeleken met openbare prijspagina's (zie de tabel). Per 1 januari 2026 stegen de cao-lonen van schilders met 4% en per 1 januari 2027 stijgen ze met 3,7% ({_bron("cnv", "fnv")}). Reken in 2027 dus op iets hogere prijzen.</li>
+    <li><strong>Inclusief 9% btw en materiaal.</strong> Voor het schilderen van een woning die ouder is dan 2 jaar geldt 9% btw, ook over de gebruikte materialen en het voorbereidende werk. De 2 jaar tellen vanaf het moment dat de woning voor het eerst bewoond werd ({_bron("bd", "bd2")}).</li>
+    <li><strong>21% btw</strong> geldt voor een woning die jonger is dan 2 jaar (de calculator rekent dat om als je dat kiest), voor het deel van een pand dat geen woning is, en voor werk dat verder gaat dan schilderen, zoals een nieuw stuk hout in een kozijn of een vervangen onderdorpel ({_bron("bd")}).</li>
+    <li><strong>Een indicatie, geen offerte.</strong> De onderkant van een range geldt voor schilderwerk in goede staat dat makkelijk bereikbaar is, de bovenkant voor veel voorwerk of werk op hoogte.</li>
+  </ul>
+
+  <h3>Onze prijzen naast openbare bronnen</h3>
+  <div class="tablewrap"><table class="hc-verantw">
+    <thead><tr><th>Onderdeel en onze prijs</th><th>Wat openbare bronnen noemen</th><th>Onze keuze</th></tr></thead>
+    <tbody>{_verantwoording_rijen()}</tbody>
+  </table></div>
+  <p class="hc-klein">Prijssites zoals Trustoo, Homedeal en Slimster verdienen zelf aan offerteaanvragen, net als wij. Hun bedragen zijn gemiddelden, geen marktonderzoek. Werkspot konden we niet controleren: die site weigerde onze verzoeken.</p>
+
+  <h3>Regiocorrectie per provincie</h3>
+  <p>Er is geen officiële index van schildersprijzen per regio. De correctie hieronder is onze eigen inschatting en geen gemeten cijfer. We stellen haar bij zodra we genoeg offertes uit onze eigen aanvragen hebben.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Provincie</th><th>Correctie op landelijk</th></tr></thead>
+    <tbody>{regio}</tbody>
+  </table></div>
+
+  <h3>Alle richtprijzen in de calculator</h3>
   <div class="tablewrap"><table>
     <thead><tr><th>Onderdeel</th><th>Richtprijs</th></tr></thead>
     <tbody>{rijen}</tbody>
   </table></div>
-  <h3>Regiocorrectie per provincie</h3>
-  <div class="tablewrap"><table>
-    <thead><tr><th>Provincie</th><th>Ten opzichte van het gemiddelde</th></tr></thead>
-    <tbody>{regio}</tbody>
-  </table></div>
-  <h2>Waarom een range en geen vast bedrag?</h2>
-  <p>Twee woningen van hetzelfde type kunnen heel anders uitvallen. Afbladderende verf, houtrot of een steiger aan de straatkant maken een groot verschil. De onderkant van de range geldt voor schilderwerk in goede staat dat makkelijk bereikbaar is. De bovenkant voor veel voorwerk of lastig werk op hoogte.</p>
   <p>Meer over de prijs van een complete woning lees je op <a href="/kosten/huis-schilderen/">wat kost een huis schilderen</a>. Alle prijzen per type werk staan op <a href="/prijzen/">wat kost een schilder</a>.</p>
 </div></section>
 {faq_html}"""
@@ -547,6 +792,36 @@ def teaser_blok(stijl=""):
 # ---------------------------------------------------------------------------
 
 HC_CSS = r'''/* Huiscalculator — alleen op /kosten/calculator/ */
+/* uitleg per onderdeel, voorbeelden en verantwoording */
+.hc-uitleg{margin:0 16px 14px;border-top:1px dashed var(--line);padding-top:8px}
+.hc-uitleg summary{cursor:pointer;font-size:.88rem;font-weight:650;color:var(--accent-dark);list-style:none;display:flex;align-items:center;gap:6px}
+.hc-uitleg summary::-webkit-details-marker{display:none}
+.hc-uitleg summary::before{content:"+";display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--accent-soft);font-weight:800;flex:0 0 18px}
+.hc-uitleg[open] summary::before{content:"−"}
+.hc-uitleg-in{font-size:.9rem;padding-top:8px}
+.hc-uitleg-in p{margin:0 0 8px}
+.hc-uitleg-kol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hc-uitleg-kol ul{margin:4px 0 0;padding-left:18px}
+.hc-uitleg-kol li{margin:2px 0}
+@media(max-width:560px){.hc-uitleg{margin:0 12px 12px}.hc-uitleg-kol{grid-template-columns:minmax(0,1fr)}}
+.hc-vb-intro{max-width:720px;margin-bottom:22px}
+.hc-vbs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media(max-width:820px){.hc-vbs{grid-template-columns:minmax(0,1fr)}}
+.hc-vb{background:#fff;border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:var(--radius-lg);padding:20px;display:flex;flex-direction:column;min-width:0}
+.hc-vb-kop{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.hc-vb-kop svg{flex:0 0 40px;width:40px;height:40px;fill:none;stroke:var(--navy-500);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.hc-vb-kop h3{margin:0;font-size:1.08rem}
+.hc-vb p{font-size:.94rem;color:var(--body)}
+.hc-vb-tabel{font-size:.9rem}
+.hc-vb-tabel td small{display:block;color:var(--muted);font-size:.8rem}
+.hc-vb-tabel tfoot th{font-size:1rem}
+.hc-vb-knop{margin-top:auto;align-self:flex-start;white-space:normal}
+@media(max-width:560px){.hc-vb{padding:16px 14px}.hc-vb-tabel{font-size:.84rem}.hc-vb-tabel td,.hc-vb-tabel th{padding:8px 8px}.hc-vb-tabel tr{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;border-bottom:1px solid var(--line);padding:6px 8px}.hc-vb-tabel td,.hc-vb-tabel th{border:0;padding:0!important}.hc-vb-tabel td:first-child,.hc-vb-tabel th:first-child{flex:1 1 140px;min-width:0}.hc-vb-tabel .num{flex:0 0 auto;white-space:nowrap}.hc-vb-tabel td small{overflow-wrap:anywhere}}
+.hc-verantw{font-size:.88rem}
+.hc-verantw td{vertical-align:top}
+.hc-bron{display:block;margin-top:4px;color:var(--muted);font-size:.82rem}
+.hc-klein{font-size:.86rem;color:var(--muted)}
+@media(max-width:640px){.hc-verantw thead{display:none}.hc-verantw tr{display:block;border-bottom:1px solid var(--line);padding:8px 0}.hc-verantw td{display:block;border:0;padding:3px 0}}
 .hc-kop{padding:34px 0 8px}
 .hc-kop h1{max-width:20ch}
 .hc-kop .lead{max-width:62ch}
@@ -968,6 +1243,7 @@ HC_JS = r'''/* Huiscalculator — vanilla JS, geen afhankelijkheden. */
     }
     if (state.periode === "nieuwbouw") noten.push("<strong>Btw:</strong> je woning is jonger dan twee jaar, dus we rekenen met 21% btw in plaats van 9%.");
     else noten.push("<strong>Btw:</strong> de bedragen zijn inclusief materiaal en 9% btw, het tarief voor woningen ouder dan twee jaar.");
+    if (state.items.houtrot) noten.push("<strong>Houtrot:</strong> wordt er een nieuw stuk hout ingezet of een onderdorpel vervangen, dan valt dat deel onder 21% btw. <a href=\"#zo-rekenen-we\">Zo rekenen we</a>.");
     var buitenGekozen = rs.some(function (r) { return r.o.groep === "buiten"; });
     if (type && type.bench !== null && buitenGekozen) {
       var bb = D.benchBuiten[type.bench];

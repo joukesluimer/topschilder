@@ -302,12 +302,14 @@ def _gevel(vers):
 
 
 def voor_na():
-    """Interactieve schuif: sleep om het verschil te zien."""
+    """Interactieve schuif: sleep om het verschil te zien. Getekend, dus gelabeld als illustratie:
+    gebruik voor echte voor/na-foto's alleen paren waarvan de licentie vastligt."""
     return f'''<div class="vn" data-vn>
   <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gevel voor het schilderwerk">{_gevel(False)}</svg>
   <div class="vn-na"><svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gevel na het schilderwerk">{_gevel(True)}</svg></div>
   <span class="vn-label l">Voor</span>
   <span class="vn-label r">Na</span>
+  <span class="vn-soort">Illustratie</span>
   <div class="vn-greep" role="slider" tabindex="0" aria-label="Sleep om voor en na te vergelijken" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>
 </div>'''
 
@@ -333,3 +335,4 @@ Vraag ze op bij de schilders die je aansluit: zij hebben mappen vol
 opleveringsfoto's en geven die meestal graag, want hun werk komt in beeld.
 Laat wel even vastleggen dat je ze mag gebruiken.
 """
+

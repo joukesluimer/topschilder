@@ -211,3 +211,106 @@ FOTOS["spuitwerk"] = {'hero': {'naam': 'hout-spuiten-met-verfpistool-werkplaats'
             'bewerking': 'Bijgesneden tot 3:2 (uit 4288 × 2848 px), verkleind naar 1600 en 800 px breed en '
                          'omgezet naar WebP. Foto van de Amerikaanse overheid; dat betekent niet dat die '
                          'overheid deze site of onze diensten goedkeurt.'}}
+
+
+# ---------------------------------------------------------------------------
+# inspiratie-content: foto's per woningtype voor /inspiratie/ en /inspiratie/{type}/
+# (blok van de inspiratie-sessie; alles van Wikimedia Commons, gecontroleerd op 22-11-2026)
+# ---------------------------------------------------------------------------
+
+def _insp(naam, alt, titel, maker, licentie, licentie_url, bron, origineel, onderschrift):
+    return {"naam": naam, "alt": alt, "w": 1600, "h": 1067, "titel": titel, "maker": maker,
+            "licentie": licentie, "licentie_url": licentie_url, "bron": bron, "onderschrift": onderschrift,
+            "bewerking": f"Bijgesneden tot 3:2 (origineel {origineel} px), verkleind naar 1600, 800 en 400 px "
+                         "breed en omgezet naar WebP."}
+
+
+_BYSA4 = ("CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/")
+_BYSA3 = ("CC BY-SA 3.0", "https://creativecommons.org/licenses/by-sa/3.0/")
+
+FOTOS_INSPIRATIE = {
+    "jaren30": [
+        _insp("jaren30-dubbel-woonhuis-helstlaan-hilversum",
+              "Bakstenen dubbel woonhuis uit 1927 met een hoog schilddak, erkers en witte kozijnen aan de "
+              "Van der Helstlaan in Hilversum",
+              "Hilversum-helstlaan-2108120032.jpg", "Pim van Tend", *_BYSA4,
+              "https://commons.wikimedia.org/wiki/File:Hilversum-helstlaan-2108120032.jpg", "1600 × 1200",
+              "Dubbel woonhuis uit 1927 aan de Van der Helstlaan in Hilversum, gemeentelijk monument."),
+        _insp("jaren30-dubbel-woonhuis-zonnelaan-hilversum",
+              "Dubbel woonhuis uit 1928 met een steil oranje pannendak, bakstenen gevel, witte kozijnen en "
+              "donkere ramen aan de Zonnelaan in Hilversum",
+              "Hilversum-zonnelaan-231559.jpg", "Pim van Tend", *_BYSA4,
+              "https://commons.wikimedia.org/wiki/File:Hilversum-zonnelaan-231559.jpg", "5152 × 3864",
+              "Dubbel woonhuis uit 1928 aan de Zonnelaan in Hilversum, ontworpen door E.G. Middag."),
+    ],
+    "jaren70": [
+        _insp("jaren70-rijtjeshuizen-wold-lelystad",
+              "Rij laagbouwwoningen met een grijs pannendak, dakkapellen en lichte kozijnen in de wijk "
+              "Wold in Lelystad",
+              "Lelystad - P1040280.jpg", "Vmenkov", *_BYSA3,
+              "https://commons.wikimedia.org/wiki/File:Lelystad_-_P1040280.jpg", "2560 × 1920",
+              "Rijwoningen in de wijk Wold in Lelystad."),
+    ],
+    "villa": [
+        _insp("villa-landhuis-soestdijkerstraatweg-hilversum",
+              "Vrijstaand bakstenen landhuis uit 1911 met witte kozijnen, een rond bovenlicht boven de "
+              "voordeur en een geschilderde lijst onder de dakrand aan de Soestdijkerstraatweg in Hilversum",
+              "Soestdijkerstraatweg 27 Hilversum.jpg", "Dick van Aggelen", *_BYSA4,
+              "https://commons.wikimedia.org/wiki/File:Soestdijkerstraatweg_27_Hilversum.jpg", "4608 × 3456",
+              "Landhuis uit 1911 aan de Soestdijkerstraatweg in Hilversum, ontworpen door Philip A. Wormser."),
+        _insp("villa-landhuis-zuidereind-hilversum",
+              "Wit gepleisterd landhuis ’t Zuidereind uit 1911 met lichte luiken, een dakkapel en een "
+              "grindpad aan de Utrechtseweg in Hilversum",
+              "Utrechtseweg 63 Hilversum villa 't Zuidereind.jpg", "Dick van Aggelen", *_BYSA4,
+              "https://commons.wikimedia.org/wiki/File:Utrechtseweg_63_Hilversum_villa_%27t_Zuidereind.jpg",
+              "4520 × 3390",
+              "Landhuis ’t Zuidereind (1911) aan de Utrechtseweg in Hilversum, ontworpen door H.W. Leliman."),
+    ],
+    "polder": [
+        _insp("polder-wederopbouwboerderij-tollebeek",
+              "Wederopbouwboerderij in Tollebeek met een blauw geschilderde houten topgevel, een rood "
+              "pannendak en een groot grasveld",
+              "Tollebeek d 2 NOP GM Steenbankpad 16 Boerderij 15062020.jpg", "AcroniusZ", *_BYSA4,
+              "https://commons.wikimedia.org/wiki/File:Tollebeek_d_2_NOP_GM_Steenbankpad_16_Boerderij_15062020.jpg",
+              "4000 × 3000",
+              "Wederopbouwboerderij aan het Steenbankpad in Tollebeek (Noordoostpolder), gemeentelijk monument."),
+        _insp("polder-wederopbouwboerderij-emmeloord",
+              "Wederopbouwboerderij bij Emmeloord met een rood pannendak, groene staldeuren en een oprit "
+              "tussen geschoren hagen",
+              "Emmeloord S 2 NOP GM Bomenweg 22 Boerderij 03052020.jpg", "AcroniusZ", *_BYSA4,
+              "https://commons.wikimedia.org/wiki/File:Emmeloord_S_2_NOP_GM_Bomenweg_22_Boerderij_03052020.jpg",
+              "3456 × 2592",
+              "Wederopbouwboerderij aan de Bomenweg bij Emmeloord (Noordoostpolder), gemeentelijk monument."),
+    ],
+    "monument": [
+        _insp("monument-zuiderwalstraat-elburg",
+              "Historisch bakstenen pand in Elburg met witte kozijnen, zwarte luiken en een zwarte voordeur "
+              "achter een beukenhaag",
+              "Elburg- Zuiderwalstraat 19.JPG", "H.jalving", "CC BY-SA 3.0 NL",
+              "https://creativecommons.org/licenses/by-sa/3.0/nl/",
+              "https://commons.wikimedia.org/wiki/File:Elburg-_Zuiderwalstraat_19.JPG", "3840 × 2160",
+              "Zuiderwalstraat 19 in Elburg, rijksmonument 14908."),
+        _insp("monument-ijsselkade-kampen",
+              "Wit gepleisterd herenhuis aan de IJsselkade in Kampen met blauwgrijze ramen, ronde bovenramen "
+              "en een blauwe voordeur",
+              "Kampen - IJsselkade 37.jpg", "Basvb", *_BYSA3,
+              "https://commons.wikimedia.org/wiki/File:Kampen_-_IJsselkade_37.jpg", "2592 × 1944",
+              "IJsselkade 37 in Kampen, rijksmonument 23430."),
+    ],
+    "nieuwbouw": [
+        _insp("nieuwbouw-aresstraat-homeruskwartier-almere",
+              "Moderne woningen met grote ramen, donkere en gekleurde gevels en balkons aan het water in de "
+              "Aresstraat in Almere Poort",
+              "Almere.Aresstraat.03.jpg", "Leuk2", *_BYSA4,
+              "https://commons.wikimedia.org/wiki/File:Almere.Aresstraat.03.jpg", "4204 × 2899",
+              "Woningen aan de Aresstraat in het Homeruskwartier, Almere Poort."),
+        _insp("nieuwbouw-rijwoningen-homeruskwartier-almere",
+              "Rij nieuwe woningen in verschillende kleuren en vormen, onder meer grijs, rood en baksteen, in "
+              "het Homeruskwartier in Almere",
+              "Homeruskwartier Almere 10-05-2012 10.JPG", "Maurits90", "CC0",
+              "https://creativecommons.org/publicdomain/zero/1.0/",
+              "https://commons.wikimedia.org/wiki/File:Homeruskwartier_Almere_10-05-2012_10.JPG", "4752 × 3168",
+              "Nieuwe woningen in het Homeruskwartier in Almere, gefotografeerd in 2012."),
+    ],
+}
+# --- einde inspiratie-content ---
