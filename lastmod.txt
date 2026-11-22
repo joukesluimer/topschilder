@@ -1,5 +1,5 @@
 # pad	hash	datum (wordt door build.py bijgewerkt; zie lastmod.py)
-/	06df4a0006d6	2026-11-22
+/	87df0875ebbd	2026-11-22
 /contact/	842b38a06752	2026-11-22
 /cookies/	bb37b55d88c5	2026-11-22
 /fotoverantwoording/	280441ab32b5	2026-11-22
@@ -252,7 +252,7 @@
 /schilderwerk/houtrot-reparatie/	15fb258a81e8	2026-11-22
 /schilderwerk/spuitwerk/	b2509a4b3ad6	2026-11-22
 /schilderwerk/zakelijk-schilderwerk/	713ca24f7f34	2026-11-22
-/tools/	9665f8dd1bf0	2026-11-22
+/tools/	5ed7cc70b4dd	2026-11-22
 /voor-schilders/	2fe9d44005e6	2026-11-22
 /voorwaarden/	9c7c550f9ab4	2026-11-22
 /werkgebied/	42e4e07317b1	2026-11-22

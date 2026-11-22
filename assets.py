@@ -1743,11 +1743,16 @@ APP_JS += r'''
   var sticky = document.querySelector(".sticky-cta");
   if (sticky) {
     var zichtbaar = new Set();
-    var io = new IntersectionObserver(function (entries) {
+    var bij = function (entries) {
       entries.forEach(function (e) { if (e.isIntersecting) { zichtbaar.add(e.target); } else { zichtbaar.delete(e.target); } });
       sticky.classList.toggle("is-weg", zichtbaar.size > 0);
-    }, { threshold: 0.15 });
-    document.querySelectorAll(".formcard, .cta, .cta-midden, .prijskaart, .footer").forEach(function (el) { io.observe(el); });
+    };
+    var io = new IntersectionObserver(bij, { threshold: 0.15 });
+    document.querySelectorAll(".formcard, .cta, .cta-midden, .prijskaart").forEach(function (el) { io.observe(el); });
+    /* De footer is hoog: 15% zichtbaar is pas na ruim 200px. Zo lang zou de knop de bovenkant
+       van de footer bedekken. Daarom weg zodra de footer ook maar in beeld komt. */
+    var voet = document.querySelector(".footer");
+    if (voet) { new IntersectionObserver(bij, { threshold: 0 }).observe(voet); }
   }
 
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -2239,4 +2244,73 @@ APP_JS += r'''
     mo.observe(root, { subtree: true, childList: true, characterData: true });
   });
 })();
+'''
+
+
+# =========================================================================
+# UITLIJNING (ronde 5) — nagelopen op 375, 768, 1024 en 1440 px.
+# Los blok aan het eind, zodat het de eerdere regels gericht overschrijft.
+# =========================================================================
+
+STYLE_CSS += r'''
+/* ---------- Header 901-1120 px: menu paste niet op één regel ---------- */
+/* Logo kromp en menu-items braken af op twee regels; nu compacter en zonder afbreken. */
+.logo{flex:0 0 auto}
+.nav a{white-space:nowrap}
+@media(min-width:901px) and (max-width:1120px){
+  .header-in{gap:16px}
+  .nav{gap:2px}
+  .nav a{font-size:.9rem;padding:9px 9px}
+  .nav a:not(.btn)::after{left:9px;right:9px}
+  .nav .btn{margin-left:6px;padding:9px 14px}
+}
+
+/* ---------- Sticky CTA (mobiel): geen witte strook onder de footer ---------- */
+/* De ruimte voor de knop zat als padding op body, dus wit onder de donkere footer.
+   Nu zit die ruimte in de footer zelf. */
+@media(max-width:760px){
+  body{padding-bottom:0}
+  .footer{padding-bottom:calc(26px + 76px + env(safe-area-inset-bottom))}
+}
+
+/* ---------- Gecentreerde kop: penseelstreek ook gecentreerd ---------- */
+.center h1::after,h1.center::after{margin-left:auto;margin-right:auto}
+
+/* ---------- Tools: vast beeldvlak 16:11 (klaar voor renders als <img>) ---------- */
+.tool-beeld{height:auto;aspect-ratio:16/11;overflow:hidden}
+.tool-beeld img{width:100%;height:100%;object-fit:cover;display:block}
+.tool-beeld img{transition:transform .5s ease}
+.tool-kaart:hover .tool-beeld img{transform:scale(1.05)}
+@media (prefers-reduced-motion:reduce){.tool-beeld img{transition:none}.tool-kaart:hover .tool-beeld img{transform:none}}
+/* De huidige SVG-illustraties (viewBox 160x110 = 16:11) vullen het vlak, met lucht rondom
+   en bovenin ruimte voor het label. */
+.tool-beeld > svg{width:100%;height:100%;display:block;padding:46px 15% 22px}
+.tool-label{z-index:2}
+
+/* ---------- Voorbeeldberekeningen (calculator) mobiel: rijen in plaats van losse cellen ---------- */
+/* De tabelrijen worden op mobiel flexrijen; de zebra- en kopkleuren zaten op de cellen
+   en vielen daardoor als losse vlakken. Nu kleurt de hele rij. */
+@media(max-width:560px){
+  .hc-vb-tabel td,.hc-vb-tabel th,.hc-vb-tabel tbody tr:hover td{background:transparent}
+  .hc-vb-tabel tbody tr:nth-child(even){background:#fdfbf7}
+  .hc-vb-tabel tfoot tr{background:linear-gradient(180deg,#fbf3e6,#f7ecdb);border-bottom:0}
+  .hc-vb-tabel tfoot th{border:0}
+}
+
+/* ---------- Feitenblok met vier cijfers op tabletbreedte: 2x2 in plaats van 3+1 ---------- */
+@media(min-width:561px) and (max-width:900px){
+  .feiten:has(> .feit:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* ---------- Inspiratie-teaser in lopende tekst: kop sluit aan op de bovenrand ---------- */
+.prose .ip-teaser > h3:first-child{margin-top:0}
+
+/* ---------- Galerij: illustraties (16:11) niet afsnijden in het 3:2-vlak ---------- */
+.gl-illu .gl-open img.gl-svg{object-fit:contain}
+'''
+
+STYLE_CSS += r'''
+/* ---------- Kaarten met een 'Lees meer'-link (kennisbank): link onderaan op één lijn ---------- */
+.grid > div.card:has(> p:last-child > .go:only-child){display:flex;flex-direction:column}
+.grid > div.card > p:last-child:has(> .go:only-child){margin-top:auto;margin-bottom:0;padding-top:4px}
 '''

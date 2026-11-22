@@ -5,6 +5,8 @@ Een tool verschijnt alleen als zijn bouwfunctie in build.py bestaat (zie `beschi
 Zo komen er geen dode links naar pagina's die (nog) niet gebouwd worden.
 """
 
+import os
+
 from components import page, crumbs, cta_blok
 
 # Volgorde = volgorde op de site. 'bouwer' is de naam van de bouwfunctie in build.py.
@@ -25,6 +27,10 @@ TOOLS = [
      "titel": "Schilderweer", "kort": "Kun je deze week buiten schilderen?",
      "tekst": "Zie per dag of het droog en warm genoeg is om buiten te schilderen in jouw plaats.",
      "knop": "Bekijk het schilderweer", "label": "Per dag"},
+    {"slug": "offerte", "pad": "/offerte-vergelijken/", "bouwer": "build_offerte_vergelijken",
+     "titel": "Offertechecker", "kort": "Klopt de offerte van je schilder?",
+     "tekst": "Upload je offerte of plak de tekst. Je ziet per post hoe de prijs zich verhoudt tot de richtprijzen in je regio.",
+     "knop": "Check je offerte", "label": "Direct uitslag"},
     {"slug": "inspiratie", "pad": "/inspiratie/", "bouwer": "build_inspiratie",
      "titel": "Inspiratie", "kort": "Ideeën voor je gevel en interieur",
      "tekst": "Blader door voorbeelden van kleuren en schilderwerk en ontdek wat bij jouw huis past.",
@@ -43,13 +49,25 @@ _VISUALS = {
     "kleuren": '''<svg viewBox="0 0 160 110" aria-hidden="true"><g stroke="rgba(0,0,0,.15)" stroke-width="1"><circle cx="40" cy="30" r="15" fill="#efe6d2"/><circle cx="80" cy="30" r="15" fill="#1f3a2e"/><circle cx="120" cy="30" r="15" fill="#8e3a2b"/><circle cx="40" cy="70" r="15" fill="#3a3d40"/><circle cx="80" cy="70" r="19" fill="#f4820b" stroke="#fff" stroke-width="4"/><circle cx="120" cy="70" r="15" fill="#3b5068"/></g><circle cx="80" cy="70" r="24" fill="none" stroke="#f4820b" stroke-width="2.5"/><path d="M28 100h104" stroke="#d9c7a8" stroke-width="3" stroke-linecap="round"/></svg>''',
     "onderhoud": '''<svg viewBox="0 0 160 110" aria-hidden="true"><path d="M30 88a50 50 0 0 1 22-41" fill="none" stroke="#0f8a5f" stroke-width="14"/><path d="M56 44a50 50 0 0 1 48 0" fill="none" stroke="#e2a80c" stroke-width="14"/><path d="M108 47a50 50 0 0 1 22 41" fill="none" stroke="#c0392b" stroke-width="14"/><path d="M80 88 104 56" stroke="#3c290f" stroke-width="5" stroke-linecap="round"/><circle cx="80" cy="88" r="9" fill="#3c290f"/><circle cx="80" cy="88" r="3.5" fill="#fff"/></svg>''',
     "weer": '''<svg viewBox="0 0 160 110" aria-hidden="true"><circle cx="66" cy="44" r="20" fill="#f4b740"/><g stroke="#f4b740" stroke-width="4" stroke-linecap="round"><path d="M66 12v8M66 68v8M34 44h8M90 44h8M43 21l6 6M83 61l6 6M43 67l6-6M83 27l6-6"/></g><path d="M78 92h46a16 16 0 0 0 0-32 22 22 0 0 0-42 6 13 13 0 0 0-4 26z" fill="#fff" stroke="#6b5024" stroke-width="3" stroke-linejoin="round"/></svg>''',
+    "offerte": '''<svg viewBox="0 0 160 110" aria-hidden="true"><rect x="44" y="12" width="64" height="86" rx="5" fill="#fff" stroke="#6b5024" stroke-width="3"/><path d="M56 30h40M56 42h40M56 54h28M56 66h34" stroke="#d9c7a8" stroke-width="4" stroke-linecap="round"/><circle cx="108" cy="72" r="16" fill="none" stroke="#f4820b" stroke-width="5"/><path d="M120 84l14 14" stroke="#f4820b" stroke-width="6" stroke-linecap="round"/></svg>''',
     "inspiratie": '''<svg viewBox="0 0 160 110" aria-hidden="true"><rect x="18" y="18" width="58" height="44" rx="6" fill="#1f3a2e"/><rect x="84" y="18" width="58" height="30" rx="6" fill="#efe6d2" stroke="#d9c7a8" stroke-width="2"/><rect x="18" y="70" width="58" height="26" rx="6" fill="#f4820b"/><rect x="84" y="56" width="58" height="40" rx="6" fill="#8e3a2b"/><path d="M26 54l14-14 10 10 8-6 10 10" fill="none" stroke="#efe6d2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>''',
 }
 
 
+def _beeld(slug):
+    """Render uit fotos/renders/ als die er is, anders het lichte SVG-icoon."""
+    basis = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fotos", "renders", f"tool-{slug}")
+    if not all(os.path.exists(f"{basis}-{b}.webp") for b in (400, 800, 1600)):
+        return _VISUALS[slug]
+    pad = f"/assets/fotos/renders/tool-{slug}"
+    return (f'<img src="{pad}-800.webp" srcset="{pad}-400.webp 400w, {pad}-800.webp 800w, {pad}-1600.webp 1600w" '
+            f'sizes="(max-width: 700px) 92vw, (max-width: 1100px) 46vw, 380px" width="1600" height="1100" '
+            f'loading="lazy" decoding="async" alt="">')
+
+
 def _kaart(t, kop="h3"):
     return (f'<a class="tool-kaart tool-{t["slug"]} reveal" href="{t["pad"]}">'
-            f'<div class="tool-beeld">{_VISUALS[t["slug"]]}<span class="tool-label">{t["label"]}</span></div>'
+            f'<div class="tool-beeld">{_beeld(t["slug"])}<span class="tool-label">{t["label"]}</span></div>'
             f'<div class="tool-tekst"><{kop}>{t["titel"]}</{kop}><p class="tool-kort">{t["kort"]}</p>'
             f'<p>{t["tekst"]}</p><span class="tool-knop">{t["knop"]} <span aria-hidden="true">→</span></span></div></a>')
 
