@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Render · inspiratie</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<script type="module">
+import * as C from './a-common.js';
+import { buildSite } from './a-site.js';
+const { THREE } = C;
+C.pageStyle();
+
+// Inspiratie: rij van vier jaren-30 woningen, elk in een eigen kleurcombinatie
+// (crème, Gooiers groen, ossenbloedrood, antraciet).
+const { renderer, scene, camera } = C.setup({ sunDir: [-0.7, 0.62, 0.36], sun: 4.3, hemi: 0.55, shadowSize: 28, fov: 29 });
+
+const brick = C.brickMaterial({ hue: 9, sat: 42, light: 33, varL: 8, mortar: '#b9b3a7', seed: 4 });
+const units = [
+  { width: 5.6, door: 'L', frame: '#ece2cb', brick },
+  { width: 5.6, door: 'R', frame: '#2d4b3c', sash: '#ece2cb', doorColor: '#2d4b3c', brick },
+  { width: 5.6, door: 'L', frame: '#6b2420', sash: '#ece2cb', doorColor: '#6b2420', brick },
+  { width: 5.6, door: 'R', frame: '#383e42', brick },
+];
+const block = C.buildBlock({
+  units,
+  roofMat: C.roofMaterial({ hue: 15, sat: 58, light: 41, seed: 7 }),
+  fasciaHex: '#ece6d8',
+  chimneys: [-5.6, 5.6],
+});
+scene.add(block);
+buildSite(scene, block.userData, {
+  hedgeH: 0.6,
+  shrubs: [[-12.1, 1.0, 0.85], [12.1, 1.0, 0.8], [-8.6, 1.1, 0.45], [-2.7, 1.1, 0.5], [2.7, 1.1, 0.5], [8.6, 1.1, 0.45]],
+  trees: [[-17, -6, 10], [-13, -15, 11], [16, -8, 10.5], [4, -17, 12], [-4, -19, 11], [20, -3, 9]],
+});
+
+C.archCamera(camera, [-15, 2.2, 28.5], [0.1, 0, -3], 0.19);
+renderer.render(scene, camera);
+C.installExport(renderer, 'tool-inspiratie');
+window.ready = true;
+</script>
+</body>
+</html>

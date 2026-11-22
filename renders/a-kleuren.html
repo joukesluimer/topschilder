@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Render · kleurenkiezer</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<script type="module">
+import * as C from './a-common.js';
+import { buildSite } from './a-site.js';
+const { THREE } = C;
+C.pageStyle();
+
+// Kleurenkiezer: dezelfde jaren-30 woning, links kozijnen in RAL 6009 (dennengroen),
+// rechts in RAL 7016 (antraciet), met een uitgewaaierde kleurwaaier op een tuinpaal vooraan.
+const RAL6009 = '#27352a', RAL7016 = '#383e42';
+const { renderer, scene, camera } = C.setup({ sunDir: [-0.7, 0.62, 0.36], sun: 4.3, hemi: 0.55, shadowSize: 26, fov: 44 });
+
+const brick = C.brickMaterial({ hue: 9, sat: 42, light: 33, varL: 8, mortar: '#b9b3a7', seed: 4 });
+const block = C.buildBlock({
+  units: [
+    { width: 6.2, door: 'L', frame: RAL6009, doorColor: RAL6009, brick },
+    { width: 6.2, door: 'R', frame: RAL7016, doorColor: RAL7016, brick },
+  ],
+  roofMat: C.roofMaterial({ hue: 15, sat: 58, light: 41, seed: 7 }),
+  fasciaHex: '#ece6d8',
+});
+scene.add(block);
+buildSite(scene, block.userData, { hedgeH: 0.6 });
+
+// overkant van de straat: band, stoep en een laag tuinmuurtje met een gemetselde paal
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const zc = 13.2;
+const curb = C.concreteMaterial('#c9c4b8', 1.0, 21, 0.85);
+const tiles = C.pavingMaterial({ tile: 0.3, n: 4, hex: [158, 152, 142], seed: 13 });
+scene.add(C.box(80, 0.14, 0.15, curb, 0, 0.0, zc));
+scene.add(C.ground(tiles, 80, 1.8, 0, zc + 0.98, 0.06));
+scene.add(C.box(80, 0.08, 1.8, tiles, 0, 0.02, zc + 0.98, { cast: false, worldUV: false }));
+const grassOpp = C.grassMaterial(15);
+scene.add(C.ground(grassOpp, 80, 10, 0, zc + 6.9, 0.03));
+
+const camPos = V(-8.6, 1.36, 17.3), look = V(2.6, 0, -3.2);
+const fwd = look.clone().sub(camPos).setY(0).normalize();
+const right = new THREE.Vector3().crossVectors(fwd, V(0, 1, 0)).normalize();
+const postPos = camPos.clone().addScaledVector(fwd, 1.3).addScaledVector(right, 0.5).setY(0);
+const wallZ = postPos.z;
+const wallBrick = C.brickMaterial({ hue: 18, sat: 32, light: 30, varL: 9, mortar: '#a9a399', seed: 14 });
+const cap = C.concreteMaterial('#b8b2a7', 0.6, 31, 0.8);
+const postH = 1.12;
+const post = new THREE.Group();
+post.add(C.box(0.4, postH, 0.4, wallBrick, 0, postH / 2, 0));
+post.add(C.box(0.47, 0.06, 0.47, cap, 0, postH + 0.03, 0));
+post.add(C.box(4, 0.55, 0.22, wallBrick, -2.2, 0.275, 0));
+post.add(C.box(4.04, 0.05, 0.28, cap, -2.2, 0.575, 0));
+post.position.copy(postPos);
+post.rotation.y = Math.atan2(-fwd.x, -fwd.z);
+scene.add(post);
+
+// kleurwaaier: strookjes met vijf vlakjes van licht naar donker, scharnier onderaan
+const families = [
+  ['#f4efe2', '#ece2cb', '#e2d3b0', '#d6c290', '#c4ab6e'],
+  ['#e7d9b8', '#d3b77e', '#b8924e', '#8f6a33', '#6a4c25'],
+  ['#f7e9cc', '#f1d49a', '#e8b866', '#d99a3e', '#f4820b'],
+  ['#d9a59a', '#b96a5c', '#8e3a2b', '#6e2a24', '#4c1d1a'],
+  ['#c9d3c0', '#94a68a', '#5f7a5a', '#3b5442', '#2d4b3c'],
+  ['#b9c4b4', '#7f9480', '#4a6150', '#33443a', RAL6009],
+  ['#c8d0d6', '#93a2ae', '#5f7282', '#3b5068', '#28394a'],
+  ['#d7d8d6', '#a9acab', '#787d7f', '#53595c', RAL7016],
+  ['#cfcac2', '#9e978c', '#6f675d', '#4b4540', '#2e2a27'],
+];
+function stripTexture(colors) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 640;
+  const x = c.getContext('2d');
+  x.fillStyle = '#fbfaf6'; x.fillRect(0, 0, 128, 640);
+  const n = colors.length, ch = 108, gap = 10, top = 14;
+  colors.slice().reverse().forEach((col, i) => {
+    x.fillStyle = col;
+    x.fillRect(10, top + i * (ch + gap), 108, ch);
+  });
+  // klein grijs streepje als 'kleurcode', bewust onleesbaar
+  x.fillStyle = 'rgba(0,0,0,0.12)';
+  for (let i = 0; i < n; i++) x.fillRect(16, top + i * (ch + gap) + ch - 12, 30, 3);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return t;
+}
+const fan = new THREE.Group();
+const sw = 0.052, sl = 0.27;
+const n = families.length;
+families.forEach((fam, i) => {
+  const geo = new THREE.BoxGeometry(sw, sl, 0.0012);
+  geo.translate(0, sl / 2 - 0.02, 0);
+  const t = stripTexture(fam);
+  const front = new THREE.MeshStandardMaterial({ map: t, roughness: 0.55, envMapIntensity: 0.7 });
+  const edge = new THREE.MeshStandardMaterial({ color: '#f3f1ea', roughness: 0.8 });
+  const m = new THREE.Mesh(geo, [edge, edge, edge, edge, front, edge]);
+  const a = (i / (n - 1) - 0.5) * 1.75;
+  m.rotation.z = -a;
+  m.position.z = i * 0.0016;
+  m.castShadow = true; m.receiveShadow = true;
+  fan.add(m);
+});
+const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.03, 16), new THREE.MeshStandardMaterial({ color: '#b8bcc0', metalness: 1, roughness: 0.3 }));
+screw.rotation.x = Math.PI / 2; screw.position.z = n * 0.0008;
+fan.add(screw);
+// waaier rust schuin achterover op de paal
+fan.position.copy(postPos).add(V(0, postH + 0.065, 0));
+fan.rotation.order = 'YXZ';
+fan.rotation.y = Math.atan2(-fwd.x, -fwd.z) + 0.12;
+fan.rotation.x = -0.32;
+scene.add(fan);
+
+C.archCamera(camera, [camPos.x, camPos.y, camPos.z], [look.x, 0, look.z], 0.155);
+renderer.render(scene, camera);
+C.installExport(renderer, 'tool-kleuren');
+window.ready = true;
+</script>
+</body>
+</html>

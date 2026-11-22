@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Render · onderhoudscheck</title>
+<style>html,body{margin:0;background:#1b1b1b}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<script type="module">
+// Onderhoudscheck: close-up van een kozijnhoek met onderdorpel, verweerde witte lak,
+// kaal grijs hout, haarscheurtjes en beginnende houtrot. Gevel onscherp erachter.
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { W, H, Layer, fbm, noise, voronoi, clamp, mix, smooth, hex, mix3, brickLayer, remapUV,
+  makeRenderer, makeComposer, addSun, outdoorEnv, saveAll } from './b-common.js';
+
+const renderer = makeRenderer({ exposure: 1.05 });
+const scene = new THREE.Scene();
+const { env } = outdoorEnv(renderer, { sunAz: -0.7, sunEl: 0.8, ground: '#7c6b58', street: true });
+scene.environment = env;
+scene.background = new THREE.Color('#c9d6df');
+
+// ------------------------------------------------ verweerd geschilderd hout
+// Domein in meters: u = langs de nerf, v = dwars. bias(u,v) > 0 = meer afbladderen,
+// rot(u,v) = 0..1 sterkte houtrot.
+function paintedWood({ u0, u1, v0, v1, w, h, seed, bias, rot }) {
+  const L = new Layer(w, h);
+  const paint = hex('#f1eee6'), oldPaint = hex('#e2d8c0'), primer = hex('#c9b8a2');
+  const woodGrey = hex('#9a958b'), woodDark = hex('#5f5a52'), woodTan = hex('#b39a74');
+  const rotDark = hex('#211812'), rotBrown = hex('#4e3a2a');
+  L.fill((s, t, i) => {
+    const u = mix(u0, u1, s), v = mix(v0, v1, 1 - t);
+    // nerf: lange strepen langs u, licht kronkelend
+    const warp = fbm(u * 4, v * 25, seed + 1, 3) * 3;
+    const ring = Math.sin((v * 520 + warp * 6 + fbm(u * 1.5, v * 60, seed + 2, 2) * 8) * 2.2);
+    const fine = fbm(u * 18, v * 900, seed + 3, 3);
+    const groove = smooth(0.55, 1.0, ring) * 0.7 + smooth(0.6, 0.9, fine) * 0.5;
+    // verflaag
+    const b = bias(u, v);
+    const m = fbm(u * 22, v * 70, seed + 4, 5) + fbm(u * 120, v * 260, seed + 5, 3) * 0.18;
+    const thr = 0.38 + b;
+    const d = m - thr;             // >0 verf, <0 kaal
+    const d2 = m - (thr + 0.045);  // oudere laag zichtbaar tussen d en d2
+    // haarscheurtjes: celpatroon, uitgerekt langs de nerf
+    const [f1, f2] = voronoi(u * 90 + fbm(u * 40, v * 40, seed + 6, 2) * 0.6, v * 260, seed + 7);
+    // alleen craquelé waar de lak al slecht is
+    const crackZone = smooth(0.42, 0.62, fbm(u * 9, v * 22, seed + 14, 3) + b * 0.9);
+    const crack = (1 - smooth(0.0, 0.018, f2 - f1)) * crackZone;
+    const r = rot ? rot(u, v) : 0;
+    const dirt = fbm(u * 10, v * 30, seed + 8, 4);
+    let col, hgt, rough;
+    if (d > 0) {
+      const orange = (fbm(u * 300, v * 300, seed + 9, 2) - 0.5) * 0.04;
+      col = d2 > 0 ? paint : oldPaint;
+      // vergeeld en vuil op de rand, licht kalkend
+      col = mix3(col, hex('#d9d2c2'), smooth(0.4, 0.8, dirt) * 0.45);
+      col = mix3(col, hex('#a7a593'), smooth(0.15, 0.45, b) * smooth(0.5, 0.75, dirt) * 0.45);
+      // lichte opstaande rand van de schilfer
+      const lip = 1 - smooth(0.0, 0.02, d);
+      col = mix3(col, hex('#d8d3c6'), lip * 0.25);
+      // scheurtjes zijn donker (vuil erin)
+      col = mix3(col, hex('#6b665d'), crack * 0.7);
+      hgt = 1.0 + orange + lip * 0.6 - crack * 0.7 + (d2 > 0 ? 0.25 : 0);
+      rough = (d2 > 0 ? 0.42 : 0.55) + dirt * 0.15 + crack * 0.3;
+    } else {
+      // kaal, vergrijsd hout met diepe nerf
+      col = mix3(woodGrey, woodDark, groove * 0.5);
+      col = mix3(col, hex('#8b7d69'), smooth(0.4, 0.7, fbm(u * 6, v * 40, seed + 15, 3)) * 0.35);
+      col = col.map(x => x * (0.9 + 0.2 * fine));
+      // pas vrijgekomen hout bij de verfrand is nog wat warmer
+      const fresh = smooth(-0.07, 0.0, d);
+      col = mix3(col, woodTan, fresh * 0.45);
+      // grondverf-resten in de nerf
+      col = mix3(col, primer, smooth(0.8, 0.95, fine) * fresh * 0.6);
+      // schaduw onder de opgekrulde rand
+      col = mix3(col, hex('#3f3b35'), smooth(-0.02, 0.0, d) * 0.5);
+      hgt = -groove * 0.6 - smooth(-0.02, 0.0, d) * 0.3;
+      rough = 0.85 + 0.1 * groove;
+    }
+    if (r > 0.0) {
+      // bruinrot: donker, in blokjes gebarsten, ingezakt en dof
+      // blokvormige scheuren van bruinrot (onregelmatig celpatroon) en vezels langs de nerf
+      const [c1, c2] = voronoi(u * 180 + fbm(u * 90, v * 90, seed + 10, 2) * 0.8, v * 300, seed + 11);
+      const cub = 1 - smooth(0.0, 0.07 + 0.08 * r, c2 - c1);
+      const fib = fbm(u * 25, v * 900, seed + 12, 3);
+      const mott = fbm(u * 120, v * 160, seed + 16, 4);
+      let rc = mix3(hex('#6a5743'), rotBrown, smooth(0.15, 0.45, r));
+      rc = mix3(rc, rotDark, clamp(smooth(0.35, 0.9, r) * 0.7 + (mott - 0.5) * 0.6));
+      rc = mix3(rc, hex('#120d09'), cub * 0.85);
+      rc = rc.map(x => x * (0.8 + 0.4 * fib));
+      rc = mix3(rc, hex('#3d4a2f'), smooth(0.55, 0.8, fbm(u * 40, v * 40, seed + 13, 3)) * 0.35 * r); // algen
+      // verkleurde, sponzige zone rond de rotte plek
+      const halo = smooth(0.0, 0.12, r) * (1 - smooth(0.12, 0.2, r));
+      col = mix3(col, mix3(col, hex('#6f604c'), 0.6), halo * (d > 0 ? 0.35 : 0.8));
+      // hier en daar ligt er nog een opgebolde, gebarsten verfschilfer op
+      const island = d > 0 && fbm(u * 140, v * 140, seed + 17, 3) > 0.6 ? 1 : 0;
+      const k = smooth(0.1, 0.2, r) * (1 - island * 0.85);
+      col = mix3(col, rc, k);
+      hgt = mix(hgt, -0.8 - 1.4 * r - cub * 1.6 - fib * 0.6, k);
+      rough = mix(rough, 0.97, k);
+    }
+    L.set(i, col, hgt, rough);
+  });
+  return L;
+}
+
+// ------------------------------------------------ geometrie
+const STILE = { x0: -0.07, x1: 0, z0: -0.06, z1: 0.045, y1: 0.75 };
+
+// onderdorpel: profiel in (z, y), geëxtrudeerd langs x
+const prof = [
+  [-0.06, -0.07], [0.112, -0.07], [0.112, -0.016], [0.109, -0.0115], [0.104, -0.0105],
+  [0.04, 0.0], [-0.02, 0.0], [-0.02, 0.024], [-0.06, 0.024]
+];
+const shape = new THREE.Shape();
+prof.forEach(([z, y], k) => (k ? shape.lineTo(-z, y) : shape.moveTo(-z, y)));
+const SX0 = -0.2, SX1 = 0.75;
+let sillGeo = new THREE.ExtrudeGeometry(shape, { depth: SX1 - SX0, bevelEnabled: false });
+sillGeo.rotateY(Math.PI / 2);
+sillGeo.translate(SX0, 0, 0);
+// unwrap: u = x, v = z over de bovenkant en loopt door over de voorkant naar beneden
+sillGeo = remapUV(sillGeo, (P, N) => {
+  const u = (P.x - SX0) / (SX1 - SX0);
+  let vm = Math.abs(N.y) > Math.abs(N.z) ? P.z : 0.112 + (-0.0115 - P.y);
+  if (N.x !== 0 && Math.abs(N.x) > 0.5) vm = P.z;
+  return [u, (vm + 0.06) / 0.25];
+});
+const sillTex = paintedWood({
+  u0: SX0, u1: SX1, v0: -0.06, v1: 0.19, w: 2048, h: 540, seed: 21,
+  bias: (u, v) => {
+    // meer schade op de voorrand en vooral rond de hoek bij de stijl
+    const front = smooth(0.06, 0.13, v) * 0.18;
+    const corner = Math.exp(-Math.pow((u + 0.03) / 0.16, 2)) * 0.22;
+    return front + corner - 0.04 + (fbm(u * 3, v * 3, 4, 2) - 0.5) * 0.15;
+  },
+  rot: (u, v) => {
+    const dx = (u + 0.03) / 0.06, dv = (v - 0.066) / 0.03;
+    const r = 1 - Math.hypot(dx, dv) + (fbm(u * 45, v * 80, 31, 5) - 0.5) * 1.3;
+    return clamp(r * 1.4);
+  },
+}).toTextures(3.0);
+const sillMat = new THREE.MeshStandardMaterial({ ...sillTex, normalScale: new THREE.Vector2(1.2, 1.2) });
+const sill = new THREE.Mesh(sillGeo, sillMat);
+sill.castShadow = sill.receiveShadow = true;
+scene.add(sill);
+
+// stijl: u = y (langs nerf), v = x op voorvlak / z op zijvlakken
+let stileGeo = new RoundedBoxGeometry(STILE.x1 - STILE.x0, STILE.y1, STILE.z1 - STILE.z0, 3, 0.003);
+stileGeo.translate((STILE.x0 + STILE.x1) / 2, STILE.y1 / 2, (STILE.z0 + STILE.z1) / 2);
+stileGeo = remapUV(stileGeo, (P, N) => {
+  const u = P.y / STILE.y1;
+  let vm;
+  if (Math.abs(N.z) > 0.5) vm = P.x + 0.07;                 // voorvlak 0..0.07
+  else if (N.x < -0.5) vm = 0.07 + 0.003 + (STILE.z1 - P.z); // linkerzijde
+  else vm = 0.18 + (STILE.z1 - P.z);
+  return [u, vm / 0.3];
+});
+const stileTex = paintedWood({
+  u0: 0, u1: STILE.y1, v0: 0, v1: 0.3, w: 2048, h: 820, seed: 57,
+  bias: (u, v) => {
+    const bottom = Math.exp(-u / 0.07) * 0.28;
+    return bottom - 0.08 + (fbm(u * 4, v * 6, 8, 2) - 0.5) * 0.18;
+  },
+  rot: (u, v) => {
+    const dv = (v - 0.045) / 0.035, du = u / 0.04;
+    const r = 1 - Math.hypot(dv, du) + (fbm(u * 80, v * 50, 33, 5) - 0.5) * 1.3;
+    return clamp(r * 1.3);
+  },
+}).toTextures(3.0);
+const stileMat = new THREE.MeshStandardMaterial({ ...stileTex, normalScale: new THREE.Vector2(1.2, 1.2) });
+const stile = new THREE.Mesh(stileGeo, stileMat);
+stile.castShadow = stile.receiveShadow = true;
+scene.add(stile);
+
+// glas met glaslatten
+const glass = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.75, 0.006),
+  new THREE.MeshPhysicalMaterial({ color: '#e6efec', roughness: 0.02, metalness: 0, transmission: 1, thickness: 0.006, ior: 1.52, envMapIntensity: 1.3 }));
+glass.position.set(0.4, 0.375, 0.0);
+glass.receiveShadow = true;
+scene.add(glass);
+
+function bead(len, alongX) {
+  // driehoekig-afgeschuinde glaslat
+  const s = new THREE.Shape();
+  s.moveTo(0, 0); s.lineTo(0.026, 0); s.lineTo(0.026, 0.006); s.lineTo(0.008, 0.022); s.lineTo(0, 0.022); s.closePath();
+  let g = new THREE.ExtrudeGeometry(s, { depth: len, bevelEnabled: false });
+  return g;
+}
+const beadTex = paintedWood({
+  u0: 0, u1: 0.8, v0: 0, v1: 0.06, w: 1536, h: 128, seed: 77,
+  bias: (u, v) => Math.exp(-u / 0.12) * 0.15 - 0.1 + (fbm(u * 5, v * 5, 3, 2) - 0.5) * 0.2,
+}).toTextures(2.5);
+const beadMat = new THREE.MeshStandardMaterial({ ...beadTex });
+{
+  // onderste lat langs x
+  let g = bead(0.8);
+  g.rotateY(Math.PI / 2);          // extrusie langs +x, profiel x -> -z
+  g.rotateY(Math.PI);              // profielbreedte naar +z
+  g.translate(0.8, 0, 0);
+  g = remapUV(g, (P, N) => [P.x / 0.8, (Math.abs(N.y) > 0.3 ? P.z : 0.03 + P.y) / 0.06]);
+  const m = new THREE.Mesh(g, beadMat); m.position.set(0, 0, 0.003); m.castShadow = m.receiveShadow = true;
+  scene.add(m);
+}
+// verticale lat
+{
+  let g = new RoundedBoxGeometry(0.016, 0.75, 0.02, 2, 0.002);
+  g.translate(0.008, 0.375 + 0.008, 0.003 + 0.01);
+  g = remapUV(g, (P, N) => [P.y / 0.8, (Math.abs(N.z) > 0.5 ? P.x : 0.03 + P.z) / 0.06]);
+  const m = new THREE.Mesh(g, beadMat); m.castShadow = m.receiveShadow = true;
+  scene.add(m);
+}
+
+// gevel: bakstenen links van de stijl en onder de dorpel
+const brick = brickLayer({ widthM: 1.2, heightM: 0.9, px: 2048, seed: 9 }).toTextures(3, { repeat: [1, 1], wrap: true });
+const brickMat = new THREE.MeshStandardMaterial({ ...brick, normalScale: new THREE.Vector2(1.5, 1.5) });
+function wallPart(x0, x1, y0, y1, z) {
+  const g = new THREE.PlaneGeometry(x1 - x0, y1 - y0);
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) {
+    const px = mix(x0, x1, uv.getX(i)), py = mix(y0, y1, uv.getY(i));
+    uv.setXY(i, px / 1.2, py / 0.9);
+  }
+  const m = new THREE.Mesh(g, brickMat);
+  m.position.set((x0 + x1) / 2, (y0 + y1) / 2, z);
+  m.receiveShadow = true;
+  scene.add(m);
+}
+wallPart(-2.5, STILE.x0, -3, 1.6, 0.03);
+wallPart(STILE.x0, 1.5, -3, -0.07, 0.03);
+// dagkant achter de stijl (blijft grotendeels verborgen)
+{
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 2), brickMat);
+  m.rotation.y = Math.PI / 2; m.position.set(STILE.x0 - 0.0005, 0.6, -0.02); scene.add(m);
+}
+
+// interieur achter het glas: vitrage met verticale plooien, daarachter donker
+{
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 64;
+  const g = c.getContext('2d'); const img = g.createImageData(1024, 64);
+  for (let x = 0; x < 1024; x++) for (let y = 0; y < 64; y++) {
+    const f = 0.62 + 0.25 * Math.sin(x * 0.11 + Math.sin(x * 0.023) * 2) + 0.06 * noise(x * 0.5, y * 0.5, 2);
+    const k = (y * 1024 + x) * 4; img.data[k] = 205 * f; img.data[k + 1] = 203 * f; img.data[k + 2] = 196 * f; img.data[k + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), new THREE.MeshBasicMaterial({ map: t, color: '#8d8a84' }));
+  m.position.set(0.4, 0.4, -0.05); scene.add(m);
+}
+
+// losse verfschilfers op de dorpel
+const flakeMat = new THREE.MeshStandardMaterial({ color: '#e4e0d5', roughness: 0.6, side: THREE.DoubleSide });
+{
+  let seed = 1;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (let k = 0; k < 14; k++) {
+    const sw = 0.0025 + rnd() * 0.007, sh = 0.002 + rnd() * 0.004;
+    const g = new THREE.PlaneGeometry(sw, sh, 6, 3);
+    const p = g.attributes.position;
+    const curl = 0.6 + rnd() * 1.5;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i); const y = p.getY(i);
+      p.setZ(i, curl * (x * x) * 40 + (noise(x * 900, y * 900, k) - 0.5) * 0.0006);
+      p.setX(i, x * (1 + (noise(y * 500, k, 3) - 0.5) * 0.4));
+    }
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, flakeMat);
+    const x = 0.01 + Math.pow(rnd(), 0.8) * 0.22, z = 0.055 + rnd() * 0.05;
+    const y = -0.0105 * ((z - 0.04) / 0.064) + 0.0008;
+    m.position.set(x, y, z);
+    m.rotation.set(-Math.PI / 2 + 0.18, 0, rnd() * Math.PI * 2, 'XZY');
+    m.castShadow = true; m.receiveShadow = true;
+    scene.add(m);
+  }
+}
+
+// verfschraper met oranje handvat op de dorpel
+{
+  const grp = new THREE.Group();
+  const steel = new THREE.MeshStandardMaterial({ color: '#b9bcbf', metalness: 1, roughness: 0.42, envMapIntensity: 0.8 });
+  const bladeShape = new THREE.Shape();
+  bladeShape.moveTo(-0.026, 0); bladeShape.lineTo(0.026, 0); bladeShape.lineTo(0.012, 0.055); bladeShape.lineTo(-0.012, 0.055); bladeShape.closePath();
+  const blade = new THREE.Mesh(new THREE.ExtrudeGeometry(bladeShape, { depth: 0.0008, bevelEnabled: false }), steel);
+  blade.rotation.x = -Math.PI / 2; blade.castShadow = true; blade.receiveShadow = true;
+  grp.add(blade);
+  const ferrule = new THREE.Mesh(new RoundedBoxGeometry(0.026, 0.008, 0.016, 2, 0.002), steel);
+  ferrule.position.set(0, 0.0045, -0.06); ferrule.castShadow = true; grp.add(ferrule);
+  const handle = new THREE.Mesh(new RoundedBoxGeometry(0.024, 0.014, 0.095, 4, 0.006),
+    new THREE.MeshPhysicalMaterial({ color: '#f4820b', roughness: 0.38, clearcoat: 0.5, clearcoatRoughness: 0.3 }));
+  handle.position.set(0, 0.0072, -0.115); handle.castShadow = true; handle.receiveShadow = true; grp.add(handle);
+  // ligt schuin op het afschot van de dorpel, blad richting de hoek
+  grp.rotation.set(0, -1.75, -0.163, 'YZX');
+  grp.position.set(0.035, -0.0057 + 0.0003, 0.074);
+  scene.add(grp);
+}
+
+// ------------------------------------------------ licht en camera
+scene.add(new THREE.HemisphereLight('#cfe2f5', '#8a735a', 0.25));
+addSun(scene, { pos: [-1.3, 0.9, 0.75], target: [0, 0, 0.05], intensity: 4.4, size: 0.6, near: 0.2, far: 4, mapSize: 4096, color: '#ffdcae' });
+
+const camera = new THREE.PerspectiveCamera(36, W / H, 0.01, 20);
+camera.position.set(0.31, 0.17, 0.30);
+const look = new THREE.Vector3(-0.07, 0.025, 0.045);
+camera.lookAt(look);
+const focus = camera.position.distanceTo(new THREE.Vector3(-0.02, 0.0, 0.07));
+const { composer, bokehPass } = makeComposer(renderer, scene, camera, { focus, aperture: 0.075, maxblur: 0.022 });
+
+window.params = { camera, look, bokehPass, scene, renderer, composer, THREE };
+window.render = () => composer.render();
+window.save = () => saveAll(renderer.domElement, 'tool-onderhoud');
+composer.render();
+window.__done = true;
+</script>
+</body>
+</html>

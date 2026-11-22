@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Render · schilderweer</title>
+<style>html,body{margin:0;background:#1b1b1b}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<script type="module">
+// Schilderweer: Nederlandse bakstenen rijtjesgevel op een zonnige ochtend, een
+// aluminium ladder ertegen en een verfblik met kwast op de stoep.
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { W, H, Layer, fbm, noise, hash2, clamp, mix, smooth, hex, mix3, brickLayer, skyCanvas,
+  makeRenderer, makeComposer, addSun, outdoorEnv, saveAll } from './b-common.js';
+
+const renderer = makeRenderer({ exposure: 1.0 });
+const scene = new THREE.Scene();
+const { env } = outdoorEnv(renderer, { sunAz: -0.75, sunEl: 0.55, ground: '#8f8576' });
+scene.environment = env;
+
+// ------------------------------------------------ materialen
+const BR = 3; // baksteentextuur beslaat 3 x 3 m
+const brick = brickLayer({ widthM: BR, heightM: BR, px: 2048, seed: 14 }).toTextures(2.2, { wrap: true });
+for (const t of Object.values(brick)) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1 / BR, 1 / BR); }
+const brickMat = new THREE.MeshStandardMaterial({ ...brick, normalScale: new THREE.Vector2(1.4, 1.4) });
+const brick2 = brickLayer({ widthM: BR, heightM: BR, px: 2048, seed: 41,
+  palette: ['#874232', '#93503a', '#7a3d30', '#9b5b43', '#80473a', '#6c372d', '#a2654a', '#8c5240'] }).toTextures(2.2, { wrap: true });
+for (const t of Object.values(brick2)) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1 / BR, 1 / BR); }
+const brickMat2 = new THREE.MeshStandardMaterial({ ...brick2, normalScale: new THREE.Vector2(1.4, 1.4) });
+
+const framePaint = new THREE.MeshPhysicalMaterial({ color: '#f3f1ea', roughness: 0.32, clearcoat: 0.4, clearcoatRoughness: 0.25 });
+const sillStone = new THREE.MeshStandardMaterial({ color: '#3b4146', roughness: 0.35, metalness: 0 });
+const glassMat = new THREE.MeshPhysicalMaterial({ color: '#e8f0ee', roughness: 0.015, transmission: 1, thickness: 0.005, ior: 1.52, envMapIntensity: 2.6 });
+const zinc = new THREE.MeshStandardMaterial({ color: '#a9adb0', metalness: 0.9, roughness: 0.45 });
+
+// vitrage achter het glas
+const vitrage = (() => {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 512;
+  const g = c.getContext('2d'); const img = g.createImageData(512, 512);
+  for (let y = 0; y < 512; y++) for (let x = 0; x < 512; x++) {
+    const f = 0.6 + 0.1 * Math.sin(x * 0.2 + Math.sin(x * 0.03) * 2) + 0.05 * noise(x * 0.4, y * 0.4, 2) - 0.25 * smooth(0.6, 1, y / 512);
+    const k = (y * 512 + x) * 4; img.data[k] = 200 * f; img.data[k + 1] = 197 * f; img.data[k + 2] = 190 * f; img.data[k + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const interiorMat = new THREE.MeshBasicMaterial({ map: vitrage, color: '#5d5a55' });
+
+function uvFromWorld(geo, fn) {
+  const p = geo.attributes.position, uv = geo.attributes.uv;
+  for (let i = 0; i < p.count; i++) { const [u, v] = fn(p.getX(i), p.getY(i), p.getZ(i)); uv.setXY(i, u, v); }
+  uv.needsUpdate = true; return geo;
+}
+function box(w, h, d, mat, x, y, z, cast = true) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z); m.castShadow = cast; m.receiveShadow = true; scene.add(m); return m;
+}
+
+// ------------------------------------------------ gevel
+const HW = 5.6;                 // huisbreedte
+const EAVE = 5.75;              // goothoogte
+const openings = [];            // [x0, y0, w, h, type]
+function houseOpenings(ox, mirror) {
+  const L = (x0, w) => (mirror ? ox + HW / 2 - (x0 + w) : ox - HW / 2 + x0);
+  openings.push([L(0.45, 1.0), 0.0, 1.0, 2.35, 'door']);
+  openings.push([L(1.95, 3.15), 0.62, 3.15, 1.95, 'big']);
+  openings.push([L(0.55, 1.75), 3.35, 1.75, 1.65, 'win']);
+  openings.push([L(3.1, 1.75), 3.35, 1.75, 1.65, 'win']);
+}
+houseOpenings(0, false);
+houseOpenings(HW, true);
+
+function buildWall(x0, x1, mat) {
+  const s = new THREE.Shape();
+  s.moveTo(x0, -0.01); s.lineTo(x1, -0.01); s.lineTo(x1, EAVE + 0.4); s.lineTo(x0, EAVE + 0.4); s.closePath();
+  for (const [ox, oy, w, h] of openings) {
+    if (ox >= x0 - 0.01 && ox + w <= x1 + 0.01) {
+      const hole = new THREE.Path();
+      hole.moveTo(ox, Math.max(oy, 0)); hole.lineTo(ox, oy + h); hole.lineTo(ox + w, oy + h); hole.lineTo(ox + w, Math.max(oy, 0)); hole.closePath();
+      s.holes.push(hole);
+    }
+  }
+  const m = new THREE.Mesh(new THREE.ShapeGeometry(s), mat);
+  m.receiveShadow = true; m.castShadow = true; scene.add(m);
+}
+buildWall(-HW / 2, HW / 2, brickMat);
+buildWall(HW / 2, HW * 1.5, brickMat2);
+
+const REVEAL = 0.11;
+function reveal(x0, y0, w, h, mat) {
+  // dagkanten in baksteen
+  const parts = [
+    [w, REVEAL, x0 + w / 2, y0 + h, -REVEAL / 2, Math.PI / 2, 0],           // boven (naar beneden gericht)
+    [REVEAL, h, x0, y0 + h / 2, -REVEAL / 2, 0, Math.PI / 2],                 // links
+    [REVEAL, h, x0 + w, y0 + h / 2, -REVEAL / 2, 0, -Math.PI / 2],            // rechts
+  ];
+  for (const [pw, ph, x, y, z, rx, ry] of parts) {
+    const g = new THREE.PlaneGeometry(pw, ph);
+    const m = new THREE.Mesh(g, mat);
+    m.position.set(x, y, z); m.rotation.set(rx, ry, 0);
+    m.updateMatrixWorld();
+    uvFromWorld(g, (px, py, pz) => { const v = new THREE.Vector3(px, py, pz).applyMatrix4(m.matrixWorld); return [v.x + v.z, v.y + v.z]; });
+    m.receiveShadow = true; scene.add(m);
+  }
+}
+function frameRect(x0, y0, w, h, t, d, z) {
+  box(w, t, d, framePaint, x0 + w / 2, y0 + h - t / 2, z);
+  box(w, t, d, framePaint, x0 + w / 2, y0 + t / 2, z);
+  box(t, h, d, framePaint, x0 + t / 2, y0 + h / 2, z);
+  box(t, h, d, framePaint, x0 + w - t / 2, y0 + h / 2, z);
+}
+function pane(x0, y0, w, h, z) {
+  const g = new THREE.Mesh(new THREE.PlaneGeometry(w, h), glassMat);
+  g.position.set(x0 + w / 2, y0 + h / 2, z); scene.add(g);
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(w, h), interiorMat);
+  back.position.set(x0 + w / 2, y0 + h / 2, z - 0.25); scene.add(back);
+}
+const doorPaints = ['#2f4b3c', '#2c3e57', '#5a2f2b'];
+let houseIdx = 0;
+for (const [x0, y0, w, h, type] of openings) {
+  reveal(x0, y0, w, h, x0 > -HW / 2 - 0.01 && x0 < HW / 2 ? brickMat : brickMat2);
+  const zf = -0.05, t = 0.075, d = 0.09;
+  if (type === 'door') {
+    frameRect(x0, y0, w, h, t, d, zf);
+    const dw = w - 2 * t, dh = h - t - 0.45;
+    const doorCol = doorPaints[(houseIdx++) % 3];
+    const doorMat = new THREE.MeshPhysicalMaterial({ color: doorCol, roughness: 0.3, clearcoat: 0.6, clearcoatRoughness: 0.2 });
+    box(dw, dh, 0.05, doorMat, x0 + w / 2, dh / 2, zf - 0.01);
+    // panelen
+    box(dw * 0.62, dh * 0.32, 0.012, doorMat, x0 + w / 2, dh * 0.22, zf + 0.018);
+    box(dw * 0.62, dh * 0.38, 0.012, doorMat, x0 + w / 2, dh * 0.66, zf + 0.018);
+    box(0.03, 0.12, 0.03, zinc, x0 + w - t - 0.1, 1.05, zf + 0.03);
+    // bovenlicht
+    box(w, 0.07, d, framePaint, x0 + w / 2, dh + 0.035, zf);
+    pane(x0 + t, dh + 0.07, w - 2 * t, h - dh - 0.07 - t, zf - 0.02);
+    // stoep-stoepje
+    box(w + 0.1, 0.12, 0.3, sillStone, x0 + w / 2, 0.06, 0.15);
+  } else {
+    frameRect(x0, y0, w, h, t, d, zf);
+    const tr = type === 'big' ? h * 0.72 : h * 0.7;
+    box(w - 2 * t, 0.065, d, framePaint, x0 + w / 2, y0 + tr, zf);
+    const nV = type === 'big' ? 3 : 2;
+    for (let k = 1; k < nV; k++) box(0.065, h - 2 * t, d, framePaint, x0 + (w * k) / nV, y0 + h / 2, zf);
+    pane(x0 + t, y0 + t, w - 2 * t, h - 2 * t, zf - 0.015);
+    // roedes in het bovenlicht
+    const nTop = type === 'big' ? 6 : 4;
+    for (let k = 1; k < nTop; k++) box(0.03, h - tr - t, 0.04, framePaint, x0 + (w * k) / nTop, y0 + tr + (h - tr - t) / 2 + 0.03, zf + 0.01);
+    // raamdorpelsteen
+    box(w + 0.12, 0.07, 0.17, sillStone, x0 + w / 2, y0 - 0.035, 0.03);
+  }
+}
+// spekband / onderste rollaag
+const X0 = -HW / 2, X1 = HW * 1.5, XC = (X0 + X1) / 2, XW = X1 - X0;
+box(XW, 0.32, 0.03, new THREE.MeshStandardMaterial({ color: '#4a3f39', roughness: 0.9 }), XC, 0.16, 0.005, false);
+
+// boeideel, goot en dak
+box(XW + 0.3, 0.24, 0.04, framePaint, XC - 0.15, EAVE + 0.12, 0.32);
+box(XW + 0.3, 0.04, 0.34, framePaint, XC - 0.15, EAVE + 0.0, 0.16);
+{
+  const g = new THREE.CylinderGeometry(0.075, 0.075, XW + 0.3, 32, 1, true, Math.PI / 2, Math.PI);
+  const m = new THREE.Mesh(g, zinc); m.rotation.z = Math.PI / 2; m.position.set(XC - 0.15, EAVE + 0.2, 0.42);
+  m.material.side = THREE.DoubleSide; m.castShadow = true; scene.add(m);
+  for (const x of [HW / 2]) {
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, EAVE + 0.15, 24), zinc);
+    p.position.set(x, (EAVE + 0.15) / 2, 0.06); p.castShadow = true; p.receiveShadow = true; scene.add(p);
+  }
+}
+{
+  // pannendak in antraciet, 50 graden
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 1024;
+  const L = new Layer(1024, 1024);
+  L.fill((u, v, i) => {
+    const X = u * 3, Y = v * 3;
+    const row = Math.floor(Y / 0.3), ly = (Y / 0.3) % 1;
+    const wave = Math.sin((X / 0.3 + (row % 2) * 0.5) * Math.PI * 2);
+    const shade = 0.75 + 0.25 * wave - 0.35 * smooth(0.8, 1.0, ly);
+    const base = 48 + 14 * hash2(Math.floor(X / 0.3), row, 3) + 10 * fbm(X * 8, Y * 8, 1, 3);
+    const c0 = base * shade;
+    L.set(i, [c0 * 1.0, c0 * 0.98, c0 * 1.02], wave * 0.5 - smooth(0.85, 1.0, ly) * 1.2, 0.55);
+  });
+  const t = L.toTextures(4);
+  for (const k of Object.values(t)) { k.wrapS = k.wrapT = THREE.RepeatWrapping; k.repeat.set(HW, 3); }
+  const roofLen = 6.0;
+  const ang = THREE.MathUtils.degToRad(45);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(XW + 0.35, roofLen), new THREE.MeshStandardMaterial({ ...t }));
+  m.rotation.x = -ang;
+  m.position.set(XC - 0.17, EAVE + 0.25 + Math.sin(ang) * roofLen / 2, 0.4 - Math.cos(ang) * roofLen / 2);
+  m.castShadow = m.receiveShadow = true; scene.add(m);
+  // windveer langs de kopgevel
+  const wv = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.26, roofLen + 0.1), framePaint);
+  wv.rotation.x = ang; wv.position.set(X0 - 0.34, m.position.y - 0.05, m.position.z);
+  wv.castShadow = true; scene.add(wv);
+  // kopgevel (zijmuur) met dakdriehoek
+  const gs = new THREE.Shape();
+  const depth = 2 * Math.cos(ang) * roofLen;
+  gs.moveTo(0.0, 0); gs.lineTo(depth, 0); gs.lineTo(depth, EAVE + 0.25); gs.lineTo(depth / 2, EAVE + 0.25 + depth / 2); gs.lineTo(0, EAVE + 0.25); gs.closePath();
+  const gw = new THREE.Mesh(new THREE.ShapeGeometry(gs), brickMat);
+  gw.rotation.y = Math.PI / 2; gw.position.set(X0, 0, 0); gw.castShadow = gw.receiveShadow = true; scene.add(gw);
+  // achterdakvlak
+  const m2 = m.clone(); m2.rotation.x = ang; m2.rotation.y = Math.PI; m2.position.z = -depth - m.position.z + 0.8; scene.add(m2);
+}
+
+// ------------------------------------------------ stoep en straat
+{
+  const L = new Layer(2048, 2048), S = 6;
+  L.fill((u, v, i) => {
+    const X = u * S, Y = v * S;
+    const tx = Math.floor(X / 0.3), ty = Math.floor(Y / 0.3);
+    const lx = X - tx * 0.3, ly = Y - ty * 0.3;
+    const joint = Math.min(lx, 0.3 - lx, ly, 0.3 - ly);
+    const n = fbm(X * 20, Y * 20, 5, 4), n2 = noise(X * 300, Y * 300, 8);
+    const tone = 0.9 + 0.12 * hash2(tx, ty, 2);
+    let c = hex('#a9a69f').map(x => x * tone * (0.88 + 0.2 * n) * (0.95 + 0.1 * n2));
+    c = mix3(c, hex('#8a877f'), smooth(0.55, 0.8, fbm(X * 2, Y * 2, 9, 3)) * 0.3);
+    let hgt = 1 + 0.05 * n2;
+    if (joint < 0.006) { c = c.map(x => x * 0.55); hgt = 0.2; }
+    L.set(i, c, hgt, 0.85 + 0.1 * n);
+  });
+  const t = L.toTextures(3);
+  for (const k of Object.values(t)) { k.wrapS = k.wrapT = THREE.RepeatWrapping; k.repeat.set(200 / S, 3.2 / S); }
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(200, 3.2), new THREE.MeshStandardMaterial({ ...t }));
+  m.rotation.x = -Math.PI / 2; m.position.set(0, 0, 1.6); m.receiveShadow = true; scene.add(m);
+  // band en klinkerstraat
+  box(200, 0.12, 0.15, new THREE.MeshStandardMaterial({ color: '#9e9b94', roughness: 0.8 }), 0, 0.0, 3.25, false);
+  const K = new Layer(2048, 1024);
+  K.fill((u, v, i) => {
+    const X = u * 4, Y = v * 2;
+    const row = Math.floor(Y / 0.1), off = (row % 2) * 0.1;
+    const col = Math.floor((X + off) / 0.2);
+    const lx = (X + off) - col * 0.2, ly = Y - row * 0.1;
+    const j = Math.min(lx, 0.2 - lx, ly, 0.1 - ly);
+    const tone = 0.75 + 0.35 * hash2(col, row, 7);
+    let c = mix3(hex('#7b5d4d'), hex('#5a4a44'), hash2(col, row, 9)).map(x => x * tone * (0.9 + 0.15 * fbm(X * 30, Y * 30, 3, 3)));
+    let hgt = smooth(0, 0.012, j);
+    if (j < 0.004) c = hex('#6d6a63').map(x => x * 0.8);
+    K.set(i, c, hgt, 0.8);
+  });
+  const kt = K.toTextures(4);
+  for (const k of Object.values(kt)) { k.wrapS = k.wrapT = THREE.RepeatWrapping; k.repeat.set(200 / 4, 12 / 2); }
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(200, 12), new THREE.MeshStandardMaterial({ ...kt }));
+  s.rotation.x = -Math.PI / 2; s.position.set(0, -0.06, 3.3 + 6); s.receiveShadow = true; scene.add(s);
+}
+
+// ------------------------------------------------ haag in de zijtuin
+{
+  const L = new Layer(1024, 512);
+  L.fill((u, v, i) => {
+    const X = u * 6, Y = v * 3;
+    const [f1, f2, id] = (() => { let a = 9, b = 9, c = 0; const ix = Math.floor(X * 30), iy = Math.floor(Y * 30);
+      for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) { const cx = ix + k, cy = iy + j;
+        const d = Math.hypot(cx + hash2(cx, cy, 1) - X * 30, cy + hash2(cx, cy, 2) - Y * 30);
+        if (d < a) { b = a; a = d; c = hash2(cx, cy, 3); } else if (d < b) b = d; } return [a, b, c]; })();
+    const leaf = 1 - smooth(0.2, 0.75, f1);
+    const big = fbm(X * 2, Y * 2, 4, 4);
+    let c = mix3(hex('#2c4220'), hex('#5f7d35'), clamp(id * 0.5 + leaf * 0.4) * (0.4 + big));
+    c = mix3(c, hex('#1a2a14'), smooth(0.5, 0.25, big) * 0.4 + (1 - leaf) * 0.35);
+    L.set(i, c, leaf * 0.6 + big * 1.5, 0.95);
+  });
+  const t = L.toTextures(3);
+  for (const k of Object.values(t)) { k.wrapS = k.wrapT = THREE.RepeatWrapping; k.repeat.set(6, 0.6); }
+  const hedgeMat = new THREE.MeshStandardMaterial({ ...t, normalScale: new THREE.Vector2(2, 2), envMapIntensity: 0.4 });
+  const hg = new RoundedBoxGeometry(40, 1.7, 1.0, 24, 0.35);
+  const hp = hg.attributes.position;
+  hg.computeVertexNormals();
+  const hn = hg.attributes.normal;
+  for (let i = 0; i < hp.count; i++) {
+    const x = hp.getX(i), y = hp.getY(i), z = hp.getZ(i);
+    const n = (fbm(x * 1.2 + 9, y * 1.6 + z * 1.3, 6, 5) - 0.5) * 0.5;
+    hp.setXYZ(i, x + hn.getX(i) * n, y + hn.getY(i) * n, z + hn.getZ(i) * n);
+  }
+  hg.computeVertexNormals();
+  const hedge = new THREE.Mesh(hg, hedgeMat);
+  hedge.position.set(X0 - 20.15, 0.85, -0.9); hedge.castShadow = hedge.receiveShadow = true; scene.add(hedge);
+}
+
+// ------------------------------------------------ lucht
+{
+  const sky = skyCanvas({ w: 2400, h: 1200, seed: 12, cloudCover: 0.34, sunU: 0.3, sunV: 0.12, scaleX: 11, scaleY: 5.5 });
+  const t = new THREE.CanvasTexture(sky); t.colorSpace = THREE.SRGBColorSpace;
+  // groot vlak ver achter de scène, recht naar de camera gericht
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(300, 150), new THREE.MeshBasicMaterial({ map: t, fog: false }));
+  m.position.set(-75, 55, -80); m.lookAt(2.4, 20, 4.2);
+  scene.add(m);
+  scene.background = new THREE.Color('#8fbbe3');
+}
+
+// ------------------------------------------------ ladder
+const alu = (() => {
+  const L = new Layer(64, 1024);
+  L.fill((u, v, i) => {
+    const n = fbm(u * 4, v * 400, 3, 3);
+    const c = 196 + 20 * n;
+    L.set(i, [c, c + 2, c + 5], n, 0.28 + 0.2 * n);
+  });
+  const t = L.toTextures(1);
+  return new THREE.MeshStandardMaterial({ map: t.map, roughnessMap: t.roughnessMap, metalness: 1, roughness: 1, envMapIntensity: 1.1 });
+})();
+const ladder = new THREE.Group();
+{
+  const LEN = 4.6, SP = 0.44;
+  for (const s of [-1, 1]) {
+    const r = new THREE.Mesh(new RoundedBoxGeometry(0.028, LEN, 0.068, 2, 0.004), alu);
+    r.position.set(s * SP / 2, LEN / 2, 0); r.castShadow = r.receiveShadow = true; ladder.add(r);
+    const foot = new THREE.Mesh(new RoundedBoxGeometry(0.05, 0.07, 0.09, 3, 0.012), new THREE.MeshStandardMaterial({ color: '#222', roughness: 0.8 }));
+    foot.position.set(s * SP / 2, 0.03, 0); foot.castShadow = true; ladder.add(foot);
+    const cap = new THREE.Mesh(new RoundedBoxGeometry(0.036, 0.06, 0.075, 3, 0.01), new THREE.MeshStandardMaterial({ color: '#2a2a2a', roughness: 0.7 }));
+    cap.position.set(s * SP / 2, LEN - 0.02, 0); ladder.add(cap);
+  }
+  for (let y = 0.28; y < LEN - 0.1; y += 0.28) {
+    const g = new THREE.CylinderGeometry(0.016, 0.016, SP, 20);
+    g.scale(1, 1, 0.8);
+    const rung = new THREE.Mesh(g, alu);
+    rung.rotation.z = Math.PI / 2; rung.position.set(0, y, 0); rung.castShadow = true; rung.receiveShadow = true;
+    ladder.add(rung);
+  }
+  const ang = Math.asin(1.18 / LEN);
+  ladder.rotation.x = -ang;
+  ladder.position.set(0.1, 0.0, 1.22);
+  scene.add(ladder);
+}
+
+// ------------------------------------------------ verfblik met kwast
+{
+  const can = new THREE.Group();
+  const tin = new THREE.MeshStandardMaterial({ color: '#d4d2cc', metalness: 1, roughness: 0.28 });
+  const r = 0.09, hgt = 0.2;
+  const side = new THREE.Mesh(new THREE.CylinderGeometry(r, r, hgt, 64, 1, true), tin);
+  side.position.y = hgt / 2; side.castShadow = side.receiveShadow = true; can.add(side);
+  // ribbels bovenin en onderin
+  for (const y of [0.012, hgt - 0.012, 0.06, 0.14]) {
+    const t = new THREE.Mesh(new THREE.TorusGeometry(r, 0.0025, 8, 64), tin);
+    t.rotation.x = Math.PI / 2; t.position.y = y; can.add(t);
+  }
+  // effen wit etiket zonder tekst, met oranje bies als accent
+  const label = new THREE.Mesh(new THREE.CylinderGeometry(r + 0.0012, r + 0.0012, 0.085, 64, 1, true),
+    new THREE.MeshStandardMaterial({ color: '#f1efe9', roughness: 0.5 }));
+  label.position.y = 0.1; label.castShadow = true; can.add(label);
+  const stripe = new THREE.Mesh(new THREE.CylinderGeometry(r + 0.0016, r + 0.0016, 0.012, 64, 1, true),
+    new THREE.MeshStandardMaterial({ color: '#f4820b', roughness: 0.45 }));
+  stripe.position.y = 0.128; can.add(stripe);
+  const paint = new THREE.Mesh(new THREE.CircleGeometry(r - 0.002, 64),
+    new THREE.MeshPhysicalMaterial({ color: '#f6f4ee', roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05 }));
+  paint.rotation.x = -Math.PI / 2; paint.position.y = hgt - 0.018; can.add(paint);
+  // verfdruppel langs de rand
+  const drip = new THREE.Mesh(new THREE.CapsuleGeometry(0.006, 0.05, 6, 12),
+    new THREE.MeshPhysicalMaterial({ color: '#f6f4ee', roughness: 0.15, clearcoat: 1 }));
+  drip.position.set(r * Math.cos(-0.5), hgt - 0.03, r * Math.sin(-0.5) * -1); drip.scale.set(1, 1, 0.5);
+  drip.rotation.y = 0.5; can.add(drip);
+  can.position.set(0.95, 0, 1.55);
+  scene.add(can);
+  // deksel tegen het blik
+  const lid = new THREE.Mesh(new THREE.CylinderGeometry(r + 0.004, r + 0.004, 0.008, 64), tin);
+  lid.rotation.set(0.15, 0, 1.2); lid.position.set(0.95 - 0.16, 0.085, 1.58); lid.castShadow = true; scene.add(lid);
+  // kwast dwars over het blik, oranje steel
+  const brush = new THREE.Group();
+  const handle = new THREE.Mesh(new RoundedBoxGeometry(0.15, 0.022, 0.03, 4, 0.009),
+    new THREE.MeshPhysicalMaterial({ color: '#c98a4e', roughness: 0.45, clearcoat: 0.4 }));
+  handle.position.x = 0.1; handle.castShadow = true; brush.add(handle);
+  const ferrule = new THREE.Mesh(new RoundedBoxGeometry(0.045, 0.022, 0.06, 3, 0.006), tin);
+  ferrule.position.x = 0.0; ferrule.castShadow = true; brush.add(ferrule);
+  const bristle = new THREE.Mesh(new RoundedBoxGeometry(0.06, 0.018, 0.058, 3, 0.005),
+    new THREE.MeshStandardMaterial({ color: '#efe9dc', roughness: 0.8 }));
+  bristle.position.x = -0.05; bristle.castShadow = true; brush.add(bristle);
+  brush.position.set(0.95 + 0.0, 0.212, 1.55); brush.rotation.set(0, 0.6, 0);
+  scene.add(brush);
+}
+
+// ------------------------------------------------ licht en camera
+scene.add(new THREE.HemisphereLight('#bcd6f0', '#8a7a64', 0.3));
+addSun(scene, { pos: [-10, 10, 9], target: [0, 2, 0], intensity: 5.0, size: 9, near: 1, far: 45, color: '#ffdcae' });
+
+// waterpas kijken met verschoven beeldvlak (shift-lens), zodat verticale lijnen recht blijven
+const SHIFT = 1.5;
+const camera = new THREE.PerspectiveCamera(80, W / (H * SHIFT), 0.05, 400);
+camera.position.set(2.6, 0.7, 4.5);
+const look = new THREE.Vector3(-1.4, 0.7, 0);
+camera.lookAt(look);
+camera.setViewOffset(W, H * SHIFT, 0, 0, W, H);
+const focus = camera.position.distanceTo(new THREE.Vector3(0.9, 0.15, 1.75));
+const { composer, bokehPass } = makeComposer(renderer, scene, camera, { focus, aperture: 0.0006, maxblur: 0.004 });
+
+window.params = { camera, look, bokehPass, scene, renderer, composer, THREE };
+window.render = () => composer.render();
+window.save = () => saveAll(renderer.domElement, 'tool-weer');
+composer.render();
+window.__done = true;
+</script>
+</body>
+</html>
