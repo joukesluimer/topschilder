@@ -141,7 +141,7 @@ def footer():
   </div>
   <div class="footer-bot">
     <div>© {SITE['oprichting']}–2026 {SITE['naam']} · KvK {SITE['kvk']}</div>
-    <div><a href="/privacy/">Privacy</a> · <a href="/voorwaarden/">Algemene voorwaarden</a> · <a href="/cookies/">Cookies</a> · <a href="/fotoverantwoording/">Fotoverantwoording</a></div>
+    <div><a href="/privacy/">Privacy</a> · <a href="/voorwaarden/">Algemene voorwaarden</a> · <a href="/cookies/">Cookies</a> · <button type="button" class="cookie-instellingen">Cookie-instellingen</button> · <a href="/fotoverantwoording/">Fotoverantwoording</a></div>
   </div>
 </div>
 </footer>"""
@@ -152,7 +152,8 @@ def sticky_cta(label="Gratis offertes aanvragen"):
 
 
 def scripts():
-    return '<script src="/assets/js/config.js"></script><script src="/assets/js/app.js" defer></script>'
+    return ('<script src="/assets/js/config.js"></script><script src="/assets/js/toestemming.js" defer></script>'
+            '<script src="/assets/js/app.js" defer></script>')
 
 
 HONEYPOT = (

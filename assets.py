@@ -514,7 +514,11 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
     }).catch(function () { /* webhook mag nooit de bezoeker blokkeren */ });
   }
 
-  function fireConversion() {
+  function fireConversion(table) {
+    // Meta: alleen het feit dat er een aanvraag is verstuurd, zonder gegevens.
+    if (table === CFG.LEADS_TABLE && window.TS_TOESTEMMING && window.TS_TOESTEMMING.lead) {
+      window.TS_TOESTEMMING.lead();
+    }
     if (CFG.GOOGLE_ADS_ID && CFG.GOOGLE_ADS_LABEL && typeof window.gtag === "function") {
       window.gtag("event", "conversion", {
         send_to: CFG.GOOGLE_ADS_ID + "/" + CFG.GOOGLE_ADS_LABEL
@@ -645,7 +649,7 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
       postToSupabase(table, payload)
         .then(function () { return postToWebhook(table, payload); })
         .then(function () {
-          fireConversion();
+          fireConversion(table);
           var card = form.closest(".formcard") || form.parentNode;
           form.style.display = "none";
           var ok = card.querySelector(".success");
@@ -812,7 +816,13 @@ window.TS_CONFIG = {
   // Google Ads conversietracking. Vul in zodra je een conversieactie hebt
   // aangemaakt, dan telt elke ingestuurde offerteaanvraag als conversie.
   GOOGLE_ADS_ID: "",           // bv. "AW-123456789"
-  GOOGLE_ADS_LABEL: ""         // bv. "AbC-D_efG-h12_34-567"
+  GOOGLE_ADS_LABEL: "",        // bv. "AbC-D_efG-h12_34-567"
+
+  // Meta-pixel. Laat leeg zolang er geen pixel is: dan laadt er niets van Meta
+  // en verschijnt ook de cookiebanner niet. Vul het ID in (alleen cijfers, uit
+  // Meta Events Manager), dan vraagt de site eerst toestemming en laadt de
+  // pixel pas na "Accepteren".
+  META_PIXEL_ID: ""            // bv. "123456789012345"
 };
 '''
 
@@ -1242,3 +1252,119 @@ APP_JS += r"""
   reken();
 })();
 """
+
+
+STYLE_CSS += r'''
+/* Cookiebanner: onderin, blokkeert de pagina niet */
+.cookiebanner{position:fixed;left:16px;right:16px;bottom:16px;z-index:90;max-width:560px;margin-left:auto;background:#fff;color:var(--body);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:18px 20px}
+.cookiebanner[hidden]{display:none}
+.cookiebanner h2{font-size:1.05rem;margin:0 0 6px}
+.cookiebanner p{margin:0 0 14px;font-size:.93rem;line-height:1.5}
+.cookiebanner .knoppen{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cookiebanner button{font:inherit;font-weight:700;font-size:.95rem;padding:11px 14px;border-radius:10px;border:2px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
+.cookiebanner button:hover{background:var(--navy);color:#fff}
+.cookiebanner button:focus-visible,.cookie-instellingen:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.cookie-instellingen{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-decoration:none}
+.cookie-instellingen:hover{text-decoration:underline}
+@media(max-width:760px){.cookiebanner{left:10px;right:10px;bottom:10px;padding:16px}}
+'''
+
+TOESTEMMING_JS = r'''/* Topschilder.nl: cookietoestemming en Meta-pixel.
+   Zonder "Accepteren" wordt er niets van Meta geladen. De keuze staat alleen
+   in de lokale opslag van deze browser (sleutel ts_toestemming). */
+(function () {
+  var CFG = window.TS_CONFIG || {};
+  var ID = String(CFG.META_PIXEL_ID || "").replace(/\D/g, "");
+  var SLEUTEL = "ts_toestemming";
+  var GELDIG = 365 * 864e5;
+  var geladen = false;
+
+  function lees() {
+    try {
+      var k = JSON.parse(localStorage.getItem(SLEUTEL) || "null");
+      if (k && (k.keuze === "ja" || k.keuze === "nee") && Date.now() - k.t < GELDIG) return k.keuze;
+    } catch (e) {}
+    return null;
+  }
+  function bewaar(keuze) {
+    try { localStorage.setItem(SLEUTEL, JSON.stringify({ keuze: keuze, t: Date.now() })); } catch (e) {}
+  }
+  function wisMetaCookies() {
+    var host = location.hostname.replace(/^www\./, "");
+    ["_fbp", "_fbc"].forEach(function (n) {
+      ["", "; domain=" + host, "; domain=." + host].forEach(function (d) {
+        document.cookie = n + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/" + d;
+      });
+    });
+  }
+  function laadPixel() {
+    if (geladen || !ID) return;
+    geladen = true;
+    /* Standaardcode van Meta, zonder automatische gebeurtenissen of
+       automatische koppeling van formuliergegevens. */
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = "2.0"; n.queue = [];
+      t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
+    }(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+    window.fbq("set", "autoConfig", false, ID);
+    window.fbq("init", ID);
+    window.fbq("track", "PageView");
+  }
+
+  var banner = null;
+  function maakBanner() {
+    if (banner) return banner;
+    banner = document.createElement("section");
+    banner.className = "cookiebanner";
+    banner.setAttribute("aria-label", "Cookietoestemming");
+    banner.hidden = true;
+    banner.innerHTML =
+      '<h2>Mogen we advertenties meten?</h2>' +
+      '<p>Met jouw toestemming plaatst Meta (Facebook en Instagram) cookies om te meten welke advertenties bezoekers en aanvragen opleveren. ' +
+      'Weigeren heeft geen invloed op de site of het aanvraagformulier. Lees het <a href="/cookies/">cookiebeleid</a>.</p>' +
+      '<div class="knoppen"><button type="button" data-keuze="nee">Weigeren</button><button type="button" data-keuze="ja">Accepteren</button></div>';
+    banner.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-keuze]");
+      if (!b) return;
+      kies(b.getAttribute("data-keuze"));
+    });
+    document.body.appendChild(banner);
+    return banner;
+  }
+  function toonBanner() { maakBanner().hidden = false; }
+  function verbergBanner() { if (banner) banner.hidden = true; }
+
+  function kies(keuze) {
+    var was = lees();
+    bewaar(keuze);
+    verbergBanner();
+    if (keuze === "ja") {
+      laadPixel();
+    } else {
+      wisMetaCookies();
+      // Was de pixel al geladen, dan stopt die pas na herladen.
+      if (was === "ja" && geladen) location.reload();
+    }
+  }
+
+  window.TS_TOESTEMMING = {
+    keuze: lees,
+    open: toonBanner,
+    lead: function () {
+      if (lees() === "ja" && geladen && window.fbq) window.fbq("track", "Lead");
+    }
+  };
+
+  function start() {
+    document.querySelectorAll(".cookie-instellingen").forEach(function (k) {
+      k.addEventListener("click", function () { toonBanner(); var b = banner.querySelector("button"); if (b) b.focus(); });
+    });
+    var k = lees();
+    if (k === "ja") laadPixel();
+    else if (k === null && ID) toonBanner();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+  else start();
+})();
+'''

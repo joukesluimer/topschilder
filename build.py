@@ -1695,15 +1695,26 @@ def build_static_pages():
   <ul>
     <li><strong>Aanvraaggegevens:</strong> naam, e-mailadres, telefoonnummer, postcode, plaats, type pand en de omschrijving van je klus.</li>
     <li><strong>Technische gegevens:</strong> de pagina waarop je de aanvraag deed, de verwijzende website en eventuele campagneparameters (utm-tags, gclid).</li>
+    <li><strong>Advertentiemeting (alleen met toestemming):</strong> via de Meta-pixel de pagina's die je bekijkt, je IP-adres, browsergegevens en het feit dat je een aanvraag hebt verstuurd. Zie hieronder bij Meta.</li>
     <li><strong>Schildersgegevens:</strong> bedrijfsnaam, KvK-nummer, contactpersoon, e-mail, telefoon en werkgebied.</li>
   </ul>
 
   <h2>Waarom en op welke grondslag</h2>
-  <p>We verwerken je gegevens om je aanvraag door te sturen naar maximaal drie schildersbedrijven. De grondslag is de uitvoering van de overeenkomst die ontstaat op het moment dat je het formulier verstuurt. Voor het meten van websitegebruik en advertentie-effectiviteit is de grondslag ons gerechtvaardigd belang, dan wel je toestemming waar de wet die vereist.</p>
+  <p>We verwerken je gegevens om je aanvraag door te sturen naar maximaal drie schildersbedrijven. De grondslag is de uitvoering van de overeenkomst die ontstaat op het moment dat je het formulier verstuurt. Voor het meten van advertenties met de Meta-pixel is de grondslag je toestemming. Die kun je altijd intrekken.</p>
 
   <h2>Met wie delen we gegevens</h2>
-  <p>Je aanvraaggegevens gaan naar maximaal drie schildersbedrijven die in jouw regio werken. Deze bedrijven betalen ons een vergoeding om je aanvraag te ontvangen. Zij zijn zelfstandig verwerkingsverantwoordelijke voor wat zij daarna met je gegevens doen. <strong>Aan andere partijen geven of verkopen we je gegevens niet</strong> en we gebruiken ze niet voor ongevraagde reclame van derden.</p>
+  <p>Je aanvraaggegevens gaan naar maximaal drie schildersbedrijven die in jouw regio werken. Deze bedrijven betalen ons een vergoeding om je aanvraag te ontvangen. Zij zijn zelfstandig verwerkingsverantwoordelijke voor wat zij daarna met je gegevens doen. <strong>Je contactgegevens en de omschrijving van je klus geven of verkopen we niet aan andere partijen</strong>, en we gebruiken ze niet voor ongevraagde reclame van derden.</p>
   <p>Daarnaast maken we gebruik van verwerkers voor hosting en dataopslag. Met deze partijen zijn verwerkersovereenkomsten gesloten.</p>
+  <h2>Meta (Facebook en Instagram)</h2>
+  <p>We adverteren via Meta Platforms Ireland Ltd. Om te meten welke advertenties bezoekers en aanvragen opleveren, gebruiken we de Meta-pixel. Die laadt alleen als je in de cookiebanner op Accepteren klikt.</p>
+  <ul>
+    <li><strong>Wat Meta ontvangt:</strong> dat je een pagina bekijkt en, na een verstuurde offerteaanvraag, dat er een aanvraag is gedaan. Daarnaast technische gegevens zoals je IP-adres, browser en de bezochte pagina, en de cookies _fbp en _fbc.</li>
+    <li><strong>Wat Meta niet van ons ontvangt:</strong> je naam, e-mailadres, telefoonnummer, postcode of de omschrijving van je klus, ook niet versleuteld of gehasht.</li>
+    <li><strong>Verantwoordelijkheid:</strong> voor het verzamelen en doorsturen via de pixel zijn wij en Meta samen verantwoordelijk. Wat Meta daarna met de gegevens doet, valt onder het <a href="https://www.facebook.com/privacy/policy/" rel="nofollow noopener">privacybeleid van Meta</a>. Meta kan gegevens ook buiten de Europese Unie verwerken, onder meer in de Verenigde Staten.</li>
+    <li><strong>Intrekken:</strong> klik onderaan een pagina op Cookie-instellingen en kies Weigeren. Vanaf dat moment laadt de pixel niet meer en verwijderen we de cookies van Meta op deze site.</li>
+  </ul>
+  <p>Welke cookies dit precies zijn en hoelang ze blijven staan, lees je in onze <a href="/cookies/">cookieverklaring</a>.</p>
+
   <h2>Offertecheck</h2>
   <p>De directe offertecheck op onze site werkt helemaal in je browser. De offerte die je kiest of plakt, wordt niet naar ons of naar anderen verstuurd. Alleen als je je offerte via het formulier naar ons stuurt om hem door een mens te laten bekijken, ontvangen wij hem.</p>
 
@@ -1788,16 +1799,44 @@ def build_static_pages():
 <section class="section-sm"><div class="wrap narrow prose">
   <h1>Cookieverklaring</h1>
   <p><small>Laatst bijgewerkt: {TODAY}</small></p>
-  <h2>Wat we gebruiken</h2>
-  <p>Topschilder gebruikt zo min mogelijk cookies. Concreet:</p>
+  <p>Hier staat welke cookies en welke lokale opslag Topschilder gebruikt, waarvoor, van wie en hoelang. Cookies van Meta plaatsen we alleen als je daar toestemming voor geeft.</p>
+
+  <h2>Overzicht</h2>
+  <h3>ts_toestemming <small style="font-weight:400">(lokale opslag)</small></h3>
   <ul>
-    <li><strong>Functionele opslag.</strong> We bewaren in de lokale opslag van je browser de campagneparameters waarmee je op de site bent gekomen (bijvoorbeeld een gclid van Google Ads), zodat we kunnen meten welke advertentie tot een aanvraag heeft geleid. Deze gegevens worden na negentig dagen verwijderd en bevatten geen persoonsgegevens.</li>
-    <li><strong>Analytische en advertentiecookies.</strong> Als wij Google Analytics of Google Ads inzetten, plaatsen die diensten cookies. Deze worden pas geplaatst nadat je daarvoor toestemming hebt gegeven.</li>
+    <li><strong>Van:</strong> Topschilder</li>
+    <li><strong>Waarvoor:</strong> Onthoudt of je advertentiecookies hebt geaccepteerd of geweigerd, zodat we het niet bij elk bezoek opnieuw vragen.</li>
+    <li><strong>Hoelang:</strong> 12 maanden, daarna vragen we het opnieuw</li>
   </ul>
-  <h2>Cookies weigeren of verwijderen</h2>
-  <p>Je kunt cookies op elk moment verwijderen via de instellingen van je browser. Het weigeren van analytische of advertentiecookies heeft geen invloed op de werking van de aanvraagformulieren.</p>
+  <h3>ts_attr <small style="font-weight:400">(lokale opslag)</small></h3>
+  <ul>
+    <li><strong>Van:</strong> Topschilder</li>
+    <li><strong>Waarvoor:</strong> Bewaart de campagneparameters waarmee je op de site kwam (zoals utm-tags of een gclid van Google Ads). Bij een aanvraag sturen we die mee, zodat we zien via welke campagne de aanvraag binnenkwam. Dit gaat niet naar Meta.</li>
+    <li><strong>Hoelang:</strong> We gebruiken ze tot 90 dagen na je bezoek</li>
+  </ul>
+  <h3>_fbp <small style="font-weight:400">(cookie)</small></h3>
+  <ul>
+    <li><strong>Van:</strong> Meta</li>
+    <li><strong>Waarvoor:</strong> Herkent je browser, zodat Meta kan meten welke advertenties tot bezoeken en aanvragen leiden. Alleen na toestemming.</li>
+    <li><strong>Hoelang:</strong> 90 dagen</li>
+  </ul>
+  <h3>_fbc <small style="font-weight:400">(cookie)</small></h3>
+  <ul>
+    <li><strong>Van:</strong> Meta</li>
+    <li><strong>Waarvoor:</strong> Onthoudt dat je via een advertentie van Meta binnenkwam. Alleen na toestemming en alleen als je via zo'n advertentie kwam.</li>
+    <li><strong>Hoelang:</strong> 90 dagen</li>
+  </ul>
+  <p>De termijnen van Meta staan zo in de huidige code van de Meta-pixel; Meta kan ze wijzigen. Als je bent ingelogd bij Facebook of Instagram, kan Meta ook cookies van zijn eigen domeinen gebruiken. Daarover lees je meer in het <a href="https://www.facebook.com/privacy/policies/cookies/" rel="nofollow noopener">cookiebeleid van Meta</a>.</p>
+
+  <h2>Wat Meta van ons krijgt</h2>
+  <p>Na toestemming laadt de Meta-pixel. Die meldt aan Meta dat je een pagina bekijkt en, als je een offerteaanvraag verstuurt, dat er een aanvraag is gedaan. Je naam, e-mailadres, telefoonnummer en de omschrijving van je klus sturen we niet naar Meta, ook niet versleuteld of gehasht. Meta ontvangt wel technische gegevens zoals je IP-adres, je browser en de pagina die je bezoekt. Meer hierover staat in onze <a href="/privacy/">privacyverklaring</a>.</p>
+
+  <h2>Je keuze wijzigen of intrekken</h2>
+  <p>Je kiest bij je eerste bezoek. Wil je je keuze later wijzigen, klik dan onderaan elke pagina op <button type="button" class="cookie-instellingen" style="text-decoration:underline">Cookie-instellingen</button>. Weiger je na eerder accepteren, dan verwijderen we de cookies van Meta op deze site en laadt de pixel niet meer. Je kunt cookies en lokale opslag ook zelf wissen in de instellingen van je browser.</p>
+  <p>Weigeren heeft geen invloed op de werking van de site of de aanvraagformulieren.</p>
+
   <h2>Vragen</h2>
-  <p>Mail naar <a href="mailto:{SITE['email']}">{SITE['email']}</a>. Zie ook onze <a href="/privacy/">privacyverklaring</a>.</p>
+  <p>Mail naar <a href="mailto:{SITE['email']}">{SITE['email']}</a>.</p>
 </div></section>"""
     write("/cookies/", page("Cookieverklaring | Topschilder",
                             "Welke cookies en lokale opslag Topschilder gebruikt, waarvoor we campagneparameters bewaren "
@@ -1836,12 +1875,13 @@ def build_static_pages():
 
 def build_assets():
     """Schrijft CSS, JS en favicon vanuit assets.py naar site/assets/."""
-    from assets import STYLE_CSS, APP_JS, CONFIG_JS, FAVICON_SVG
+    from assets import STYLE_CSS, APP_JS, CONFIG_JS, FAVICON_SVG, TOESTEMMING_JS
 
     bestanden = {
         "css/style.css":  STYLE_CSS,
         "js/app.js":      APP_JS,
         "js/config.js":   CONFIG_JS,
+        "js/toestemming.js": TOESTEMMING_JS,
         "img/favicon.svg": FAVICON_SVG,
     }
     for pad, inhoud in bestanden.items():
