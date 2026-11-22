@@ -240,6 +240,7 @@ th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line)}
 th{background:var(--bg-soft);font-weight:700;color:var(--ink);white-space:nowrap}
 tbody tr:last-child td{border-bottom:0}
 td.num{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:650;color:var(--ink)}
+.deel{margin:28px 0;border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;background:#fff}.deel summary{cursor:pointer;font-weight:650}.deel textarea{width:100%;font:13px/1.4 ui-monospace,monospace;margin:8px 0;padding:8px;border:1px solid var(--line);border-radius:6px;resize:vertical}
 @media(max-width:560px){td.num{white-space:normal}th,td{padding-left:10px;padding-right:10px}}
 
 /* ---------- FAQ ---------- */
@@ -375,6 +376,144 @@ a.card:hover::after{transform:scaleX(1)}
 }
 
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+/* =========================================================================
+   Visuele upgrade 2 — hero met foto, stappen, kaarten, tabellen, callouts
+   (alleen aanvullingen en overrides; eerdere regels blijven staan)
+   ========================================================================= */
+
+/* ---------- Sectieritme ---------- */
+@media(min-width:900px){.section{padding:84px 0}}
+.section .center > h2::after{content:"";display:block;width:52px;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--accent),#ffb15c);margin:16px auto 0}
+.soft{background:linear-gradient(180deg,#faf6ee 0%,var(--bg-soft) 100%)}
+.badge{box-shadow:inset 0 0 0 1px rgba(217,111,0,.18)}
+.badge-dark{box-shadow:inset 0 0 0 1px rgba(255,217,171,.22)}
+
+/* ---------- Hero met foto ---------- */
+.hero-foto{background:#241906;isolation:isolate}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:62% 40%;z-index:-2;max-width:none}
+.hero-foto::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(100deg,rgba(28,19,5,.93) 0%,rgba(28,19,5,.80) 40%,rgba(28,19,5,.42) 68%,rgba(28,19,5,.28) 100%),
+             linear-gradient(0deg,rgba(28,19,5,.55),transparent 40%)}
+.hero-foto::after{z-index:-1}
+.hero-foto .hero-in{z-index:auto;padding-top:84px;padding-bottom:96px}
+.hero-foto h1{font-size:clamp(2rem,4.6vw,3.35rem);text-shadow:0 2px 24px rgba(0,0,0,.25)}
+.hero-foto p.lead{color:#eadfcd}
+.hero-foto .hero-usps li{color:#f6efe4}
+.hero-foto .check{background:rgba(126,226,176,.16);box-shadow:inset 0 0 0 1px rgba(126,226,176,.35)}
+.hero-tags{list-style:none;padding:0;margin:4px 0 0;display:flex;flex-wrap:wrap;gap:8px}
+.hero-tags li{margin:0;font-size:.85rem;font-weight:600;color:#f3e7d6;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);padding:6px 12px;border-radius:99px;backdrop-filter:blur(4px)}
+.hero .formcard{border-top:4px solid var(--accent);box-shadow:0 30px 70px rgba(0,0,0,.35),0 2px 6px rgba(0,0,0,.12)}
+@media(max-width:920px){
+  .hero-foto::before{background:linear-gradient(180deg,rgba(28,19,5,.80) 0%,rgba(28,19,5,.90) 45%,rgba(28,19,5,.97) 100%)}
+  .hero-bg{height:620px;object-position:60% 30%}
+  .hero-foto .hero-in{padding-top:44px;padding-bottom:52px}
+}
+@media(max-width:560px){.hero-tags{display:none}}
+
+/* ---------- Vertrouwensbalk ---------- */
+.trustbar{background:#fff;border-bottom:1px solid var(--line);box-shadow:0 6px 24px rgba(60,41,15,.05);position:relative;z-index:3}
+.trustbar ul{list-style:none;margin:0;padding:18px 0;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.trustbar li{display:flex;align-items:center;gap:11px;margin:0;font-size:.93rem;color:var(--body);line-height:1.35}
+.trustbar li strong{color:var(--ink)}
+.trustbar svg{flex:0 0 38px;width:38px;height:38px;padding:9px;border-radius:10px;background:var(--accent-soft);color:var(--accent-dark)}
+@media(max-width:900px){.trustbar ul{grid-template-columns:repeat(2,1fr);gap:14px 18px}}
+@media(max-width:420px){.trustbar li{font-size:.86rem}.trustbar svg{flex-basis:34px;width:34px;height:34px;padding:8px}}
+
+/* ---------- Zo werkt het ---------- */
+.steps3{gap:22px;position:relative}
+.steps3 li{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:30px 26px 26px;box-shadow:var(--shadow);position:relative;z-index:1}
+.steps3 li::before{left:auto;right:22px;top:22px;width:34px;height:34px;font-size:.92rem;background:var(--accent-soft);color:var(--accent-dark);box-shadow:inset 0 0 0 1px rgba(217,111,0,.2)}
+.step-ic{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;margin-bottom:18px;color:#fff;
+  background:linear-gradient(140deg,var(--accent) 0%,var(--accent-dark) 100%);box-shadow:0 10px 22px rgba(217,111,0,.28)}
+.steps3 h3{font-size:1.2rem;margin-bottom:.4em}
+@media(min-width:761px) and (max-width:980px){.steps3{gap:14px}.steps3 li{padding:24px 18px 20px}.steps3 h3{font-size:1.06rem}.step-ic{width:50px;height:50px;border-radius:14px}}
+@media(min-width:761px){
+  .steps3::before{content:"";position:absolute;top:58px;left:12%;right:12%;border-top:2px dashed #e7cba6;z-index:0}
+}
+/* zonder icoon (oudere markup) blijft de nummerbol links staan */
+.steps3 li:not(:has(.step-ic)){padding-left:76px}
+.steps3 li:not(:has(.step-ic))::before{left:24px;right:auto;top:28px}
+
+/* ---------- Kaarten ---------- */
+.card{border-radius:var(--radius-lg)}
+.card .ic{width:52px;height:52px;border-radius:14px;background:linear-gradient(140deg,#fff1df,#ffe2bf);box-shadow:inset 0 0 0 1px rgba(217,111,0,.15)}
+.card .ic svg{width:25px;height:25px}
+.g4 > .card{box-shadow:0 1px 2px rgba(60,41,15,.04)}
+.g4 > .card:hover{box-shadow:var(--shadow);border-color:#e3d3bb}
+a.card{display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(60,41,15,.05)}
+a.card:hover{box-shadow:var(--shadow-lg);transform:translateY(-4px);border-color:#ecd9bd}
+a.card > .foto{margin:-24px -24px 18px;overflow:hidden;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+a.card > .foto img{border-radius:0;aspect-ratio:3/2;object-fit:cover;transition:transform .5s ease}
+a.card:hover > .foto img{transform:scale(1.05)}
+a.card > .illu{margin:-24px -24px 18px;width:calc(100% + 48px);max-width:none;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+a.card .price{display:inline-block;align-self:flex-start;background:var(--bg-soft);border:1px solid var(--line);color:var(--ink);padding:4px 11px;border-radius:99px;font-size:.84rem;margin-top:auto}
+a.card .go{display:inline-flex;align-items:center;gap:6px}
+a.card .go{color:#a65300}
+a.card:hover .go{color:#8a4500}
+.footer-bot{color:#c2b39b}
+
+/* ---------- Chips ---------- */
+.chips a{transition:border-color .15s,color .15s,transform .15s,box-shadow .15s}
+.chips a:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(60,41,15,.08)}
+
+/* ---------- Tabellen ---------- */
+.tablewrap{border-radius:var(--radius-lg);box-shadow:0 1px 2px rgba(60,41,15,.05),0 10px 30px rgba(60,41,15,.06)}
+th{background:linear-gradient(180deg,#fbf3e6,#f7ecdb);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:#5a3d12;border-bottom:2px solid #efdcc0}
+tbody tr:nth-child(even) td{background:#fdfbf7}
+tbody tr{transition:background .15s}
+tbody tr:hover td{background:#fff7ec}
+td.num{color:#8a4700}
+td:first-child{font-weight:600;color:var(--ink)}
+td:first-child small{font-weight:400}
+
+/* ---------- Callouts en lijsten ---------- */
+.callout{position:relative;background:linear-gradient(135deg,#fff6ea 0%,#fff1df 100%);border:1px solid #f6d9b2;border-left:5px solid var(--accent);border-radius:var(--radius);padding:20px 24px 20px 64px;box-shadow:0 6px 20px rgba(217,111,0,.07)}
+.callout::before{content:"i";font-family:Georgia,serif;font-style:italic;position:absolute;left:18px;top:18px;width:32px;height:32px;border-radius:50%;background:var(--accent-dark);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.95rem}
+.callout-prijs::before{content:"€";font-family:var(--font);font-style:normal}
+@media(max-width:520px){.callout{padding:18px 18px 18px 56px}.callout::before{left:14px}}
+.checklist li{padding-left:34px}
+.checklist li::before{content:"";top:3px;width:22px;height:22px;border-radius:50%;background:#e4f4ec url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f8a5f' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12 4 4 8-9'/%3E%3C/svg%3E") center/13px no-repeat}
+.prose ol{counter-reset:po;list-style:none;padding-left:0}
+.prose ol > li{counter-increment:po;position:relative;padding-left:44px;margin-bottom:.9em}
+.prose ol > li::before{content:counter(po);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent-dark);font-weight:800;font-size:.9rem;display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(217,111,0,.22)}
+.prose h2{position:relative;padding-left:18px}
+.prose h2::before{content:"";position:absolute;left:0;top:.18em;bottom:.18em;width:5px;border-radius:5px;background:linear-gradient(180deg,var(--accent),#ffb15c)}
+.prose .foto img{box-shadow:var(--shadow)}
+
+/* ---------- FAQ ---------- */
+.faq details{transition:border-color .15s,box-shadow .15s}
+.faq details:hover{border-color:#e7cfae}
+.faq details[open]{border-color:#efd3ad;box-shadow:0 6px 20px rgba(60,41,15,.06)}
+.faq summary::after{width:28px;height:28px;flex:0 0 28px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;font-size:1.1rem}
+
+/* ---------- CTA en donkere secties ---------- */
+.cta{position:relative;overflow:hidden;isolation:isolate;padding:56px 44px}
+.cta::before{content:"";position:absolute;width:520px;height:520px;right:-160px;top:-260px;border-radius:50%;background:radial-gradient(closest-side,rgba(244,130,11,.32),transparent);z-index:-1}
+.cta::after{content:"";position:absolute;width:420px;height:420px;left:-160px;bottom:-240px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,177,92,.16),transparent);z-index:-1}
+.cta p{color:#e3d6c2}
+.section.dark{position:relative;overflow:hidden;isolation:isolate}
+.section.dark::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(600px 300px at 85% 0%,rgba(244,130,11,.18),transparent),radial-gradient(500px 260px at 0% 100%,rgba(255,177,92,.10),transparent)}
+
+/* ---------- Knoppen: subtiele glans ---------- */
+.btn-primary{position:relative;overflow:hidden}
+.btn-primary::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-18deg);transition:left .6s ease;pointer-events:none}
+.btn-primary:hover::after{left:120%}
+.btn:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #ffb15c;outline-offset:2px}
+
+/* ---------- Pagina-intro met formulier (diensten, plaatsen, checken) ---------- */
+.section-sm:has(.g2 .formcard){background:radial-gradient(700px 440px at 88% 46%,#fff0dc 0%,rgba(255,240,220,0) 70%)}
+.section-sm:has(.g2 .formcard) .g2 .foto img{aspect-ratio:16/9;object-fit:cover}
+.g2 .formcard{border-top:4px solid var(--accent)}
+@media(min-width:981px){.g2 > div:has(> .formcard){position:sticky;top:94px;align-self:start}}
+input[type=file]::file-selector-button{font:inherit;font-weight:650;font-size:.88rem;border:0;border-radius:8px;background:var(--navy);color:#fff;padding:8px 14px;margin-right:12px;cursor:pointer}
+input[type=file]::file-selector-button:hover{background:var(--navy-700)}
+
+@media(prefers-reduced-motion:reduce){
+  .btn-primary::after{display:none}
+  a.card,a.card > .foto img,.chips a,tbody tr{transition:none}
+  a.card:hover,a.card:hover > .foto img,.chips a:hover{transform:none}
+}
 '''
 
 APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzending. */
@@ -382,6 +521,16 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
   "use strict";
 
   var CFG = window.TS_CONFIG || {};
+
+  /* --------------------------------------------- prijsoverzicht kopiëren */
+  document.querySelectorAll("[data-kopieer]").forEach(function (knop) {
+    knop.addEventListener("click", function () {
+      var veld = knop.parentNode.querySelector("textarea");
+      var klaar = function () { knop.textContent = "Gekopieerd"; setTimeout(function () { knop.textContent = "Kopieer code"; }, 2000); };
+      if (navigator.clipboard) { navigator.clipboard.writeText(veld.value).then(klaar, function () { veld.select(); }); }
+      else { veld.select(); document.execCommand("copy"); klaar(); }
+    });
+  });
 
   /* ---------------------------------------------------------------- menu */
   var burger = document.querySelector(".burger");
@@ -1368,3 +1517,185 @@ TOESTEMMING_JS = r'''/* Topschilder.nl: cookietoestemming en Meta-pixel.
   else start();
 })();
 '''
+
+
+# =========================================================================
+# Visuele ronde 2 — tools, prijskaart, CTA halverwege, afwerking
+# (aanvullingen aan het eind, zodat samenvoegen met andere branches makkelijk blijft)
+# =========================================================================
+
+STYLE_CSS += r'''
+/* ---------- Tools-sectie (home en /tools/) ---------- */
+.tools-sectie{background:linear-gradient(160deg,#3c290f 0%,#241906 70%);color:#e3d6c2;position:relative;overflow:hidden;isolation:isolate}
+.tools-sectie::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(640px 320px at 12% 0%,rgba(244,130,11,.22),transparent),radial-gradient(560px 300px at 100% 100%,rgba(255,177,92,.12),transparent)}
+.tools-sectie h2{color:#fff}
+.tools-sectie .lead{color:#e3d6c2}
+.tools-sectie .center > h2::after{background:linear-gradient(90deg,var(--accent),#ffcf94)}
+.tools-pagina{padding-top:56px}
+.tools-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:22px}
+.tool-kaart{flex:1 1 300px;max-width:372px;display:flex;flex-direction:column;background:#fff;border-radius:var(--radius-lg);overflow:hidden;color:var(--body);box-shadow:0 1px 2px rgba(0,0,0,.2),0 18px 40px rgba(0,0,0,.25);transition:transform .25s ease,box-shadow .25s ease}
+.tool-kaart:hover{text-decoration:none;transform:translateY(-6px);box-shadow:0 2px 4px rgba(0,0,0,.2),0 28px 60px rgba(0,0,0,.35)}
+.tool-beeld{position:relative;height:150px;display:grid;place-items:center;background:linear-gradient(140deg,#fff6ea,#ffe7c8)}
+.tool-kleuren .tool-beeld{background:linear-gradient(140deg,#eef4ef,#dfeadf)}
+.tool-onderhoud .tool-beeld{background:linear-gradient(140deg,#f7f3ea,#ece3d1)}
+.tool-weer .tool-beeld{background:linear-gradient(140deg,#eaf3fb,#d8e8f6)}
+.tool-inspiratie .tool-beeld{background:linear-gradient(140deg,#f8efe9,#f0dfd3)}
+.tool-beeld svg{width:170px;height:auto;transition:transform .35s ease}
+.tool-kaart:hover .tool-beeld svg{transform:scale(1.06) rotate(-1.5deg)}
+.tool-label{position:absolute;top:12px;left:12px;font-size:.74rem;font-weight:750;letter-spacing:.04em;text-transform:uppercase;color:#7a3f00;background:rgba(255,255,255,.85);padding:4px 10px;border-radius:99px}
+.tool-tekst{padding:22px 24px 24px;display:flex;flex-direction:column;flex:1}
+.tool-tekst h2,.tool-tekst h3{font-size:1.25rem;margin:0 0 .2em;color:var(--ink)}
+.tool-kort{font-weight:650;color:var(--ink);margin:0 0 .5em}
+.tool-tekst p{font-size:.95rem}
+.tool-knop{margin-top:auto;display:inline-flex;align-items:center;gap:8px;align-self:flex-start;font-weight:750;color:#fff;background:var(--navy);padding:10px 16px;border-radius:10px;transition:background .2s}
+.tool-knop span{transition:transform .2s}
+.tool-kaart:hover .tool-knop{background:var(--navy-700)}
+.tool-kaart:hover .tool-knop span{transform:translateX(4px)}
+.tools-alle{color:#ffd9ab;font-weight:700}
+.tool-hero{background:radial-gradient(700px 360px at 85% 55%,#fff0dc 0%,rgba(255,240,220,0) 70%)}
+.tools-pagina{background:linear-gradient(180deg,#faf6ee,#f6efe2)}
+.tools-pagina::before{display:none}
+.tools-pagina .tool-kaart{box-shadow:var(--shadow);border:1px solid var(--line)}
+.tools-pagina .tool-kaart:hover{box-shadow:var(--shadow-lg)}
+
+/* ---------- Kostenpagina: bovenkant met prijskaart ---------- */
+.kosten-kop{background:radial-gradient(700px 440px at 88% 50%,#fff0dc 0%,rgba(255,240,220,0) 70%)}
+.kosten-kop-in{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.8fr);gap:52px;align-items:center}
+.kosten-kop-in h1{font-size:clamp(1.9rem,4vw,2.8rem)}
+@media(max-width:900px){.kosten-kop-in{grid-template-columns:minmax(0,1fr);gap:26px}}
+.kosten-inhoud{padding-top:12px}
+.kop-feiten{list-style:none;padding:0;margin:4px 0 0;display:flex;flex-wrap:wrap;gap:8px}
+.kop-feiten li{margin:0;font-size:.86rem;font-weight:650;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 12px 6px 30px;position:relative}
+.kop-feiten li::before{content:"";position:absolute;left:10px;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:#e4f4ec url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f8a5f' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12 4 4 8-9'/%3E%3C/svg%3E") center/9px no-repeat}
+.prijskaart{background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);border:1px solid var(--line);border-top:4px solid var(--accent);overflow:hidden}
+.prijskaart > .foto{margin:0}
+.prijskaart > .foto img{border-radius:0;aspect-ratio:16/8;object-fit:cover}
+.prijskaart-in{padding:22px 24px 24px}
+.prijskaart-kop{font-size:.78rem;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:#a35200;margin:0 0 2px}
+.prijskaart-bedrag{font-size:clamp(2rem,4vw,2.6rem);font-weight:800;color:var(--ink);letter-spacing:-.03em;line-height:1.1;margin:0;font-variant-numeric:tabular-nums}
+.prijskaart-bedrag span{color:var(--accent-dark);font-weight:700}
+.prijskaart-eenheid{font-weight:650;color:var(--ink);margin:2px 0 8px}
+.prijskaart-noot{font-size:.88rem;color:var(--muted);margin:0 0 16px;line-height:1.5}
+.prijskaart-link{display:block;text-align:center;margin-top:12px;font-weight:650;font-size:.93rem}
+@media(max-width:900px){.prijskaart > .foto{display:none}.kosten-kop .lead{font-size:1.05rem}}
+
+/* ---------- Dienstkaarten compact op mobiel ---------- */
+@media(max-width:600px){
+  .grid > a.card:has(> .foto){display:grid;grid-template-columns:92px minmax(0,1fr);column-gap:14px;padding:12px 14px 12px 12px;align-items:start}
+  .grid > a.card > .foto{grid-row:1/span 4;margin:0;border-radius:12px;height:100%;align-self:stretch}
+  .grid > a.card > .foto img{aspect-ratio:auto;height:100%;min-height:124px;border-radius:12px}
+  .grid > a.card:has(> .foto) h3{font-size:1.04rem;margin:2px 0 .15em}
+  .grid > a.card:has(> .foto) p{font-size:.87rem;margin-bottom:.45em;line-height:1.45}
+  .grid > a.card:has(> .foto) .price{font-size:.76rem;padding:3px 9px}
+  .grid > a.card:has(> .foto) p:last-child{margin:6px 0 0!important}
+  .grid > a.card:has(> .foto) .go{font-size:.82rem;white-space:nowrap}
+  .g4 > .card:has(> .ic){display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:14px;padding:18px}
+  .g4 > .card > .ic{grid-row:1/span 2;width:44px;height:44px;margin:0}
+  .g4 > .card:has(> .ic) h3{font-size:1.05rem;margin:2px 0 .25em}
+  .g4 > .card:has(> .ic) p{margin:0;font-size:.9rem}
+  .g4:has(> .card > .ic){gap:12px}
+  .steps3{gap:12px}
+  .steps3 li:has(.step-ic){display:grid;grid-template-columns:48px minmax(0,1fr);column-gap:14px;padding:18px 52px 18px 18px}
+  .steps3 li > .step-ic{grid-row:1/span 2;width:48px;height:48px;border-radius:14px;margin:0}
+  .steps3 li > .step-ic svg{width:22px;height:22px}
+  .steps3 li:has(.step-ic) h3{font-size:1.05rem;margin:2px 0 .2em}
+  .steps3 li::before{top:16px;right:14px;width:28px;height:28px;font-size:.82rem}
+  .grid.g3:has(> a.card > .foto){gap:12px}
+}
+
+@media(max-width:980px){.plaats-foto{display:none}}
+
+/* ---------- CTA halverwege ---------- */
+.cta-midden{display:flex;align-items:center;gap:22px;margin:34px 0;padding:22px 26px;border-radius:var(--radius-lg);background:linear-gradient(135deg,#3c290f,#241906);color:#e3d6c2;position:relative;overflow:hidden;isolation:isolate;box-shadow:0 14px 34px rgba(60,41,15,.18)}
+.cta-midden::before{content:"";position:absolute;width:300px;height:300px;right:-90px;top:-150px;border-radius:50%;background:radial-gradient(closest-side,rgba(244,130,11,.35),transparent);z-index:-1}
+.cta-midden-tekst{flex:1;min-width:0}
+.cta-midden-titel{color:#fff;font-weight:750;font-size:1.12rem;margin:0 0 .2em;letter-spacing:-.01em}
+.cta-midden p:not(.cta-midden-titel){margin:0;font-size:.95rem}
+.cta-midden .btn{flex:0 0 auto;white-space:nowrap}
+@media(max-width:620px){.cta-midden{flex-direction:column;align-items:stretch;padding:20px}.cta-midden .btn{white-space:normal}}
+
+/* ---------- FAQ ---------- */
+.faq summary{transition:color .15s,background .15s}
+.faq summary:hover{color:#8a4500;background:#fffaf3}
+.faq details[open]{border-left:4px solid var(--accent)}
+.faq details[open] .a{animation:fade .25s ease}
+.faq summary::after{transition:transform .25s ease,background .2s}
+.faq details[open] summary::after{transform:rotate(180deg);background:var(--accent);color:#fff}
+
+/* ---------- Formulier: afwerking ---------- */
+.steps div{transition:background .35s ease}
+.choice label{transition:border-color .15s,background .15s,box-shadow .15s,transform .1s}
+.choice label:active{transform:scale(.985)}
+.choice label:has(input:checked){box-shadow:0 0 0 3px rgba(244,130,11,.15)}
+.choice label:has(input:focus-visible){outline:3px solid #ffb15c;outline-offset:2px}
+.choice input:checked{animation:vink .25s ease}
+@keyframes vink{0%{transform:scale(.6)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+input:hover:not(:focus),select:hover:not(:focus),textarea:hover:not(:focus){border-color:#d8c9b0}
+.formcard .formnav .btn-ghost:hover{background:var(--bg-soft)}
+
+/* ---------- Header en mobiele sticky CTA ---------- */
+.header{transition:box-shadow .2s ease}
+.header.is-gescrold{box-shadow:0 6px 20px rgba(60,41,15,.08)}
+.nav a:not(.btn){position:relative}
+.nav a:not(.btn)::after{content:"";position:absolute;left:13px;right:13px;bottom:4px;height:2px;border-radius:2px;background:var(--accent);transform:scaleX(0);transition:transform .2s ease}
+.nav a:not(.btn):hover::after{transform:scaleX(1)}
+@media(max-width:900px){.nav a:not(.btn)::after{display:none}}
+@media(max-width:760px){
+  .sticky-cta{background:transparent;border-top:0;box-shadow:none;padding:10px 14px calc(10px + env(safe-area-inset-bottom));transition:transform .3s ease,opacity .3s ease;pointer-events:none}
+  .sticky-cta .btn{pointer-events:auto;box-shadow:0 3px 0 var(--accent-dark),0 10px 28px rgba(60,41,15,.28);border-radius:12px}
+  .sticky-cta.is-weg{transform:translateY(120%);opacity:0}
+}
+
+/* ---------- Scroll-onthulling via JS (alleen onder de vouw) ---------- */
+.rv{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+.rv.rv-in{opacity:1;transform:none}
+
+@media(prefers-reduced-motion:reduce){
+  .tool-kaart,.tool-beeld svg,.tool-knop span,.faq summary::after,.sticky-cta,.header{transition:none}
+  .tool-kaart:hover,.tool-kaart:hover .tool-beeld svg{transform:none}
+  .choice input:checked,.faq details[open] .a{animation:none}
+  .rv{opacity:1;transform:none;transition:none}
+}
+'''
+
+APP_JS += r'''
+/* ---------- Visuele ronde 2: header, sticky CTA en onthulling ---------- */
+(function () {
+  "use strict";
+  var header = document.querySelector(".header");
+  if (header) {
+    var zet = function () { header.classList.toggle("is-gescrold", window.scrollY > 8); };
+    zet();
+    window.addEventListener("scroll", zet, { passive: true });
+  }
+  if (!("IntersectionObserver" in window)) return;
+
+  /* De mobiele knop verdwijnt zolang er al een formulier of eind-CTA in beeld is. */
+  var sticky = document.querySelector(".sticky-cta");
+  if (sticky) {
+    var zichtbaar = new Set();
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { zichtbaar.add(e.target); } else { zichtbaar.delete(e.target); } });
+      sticky.classList.toggle("is-weg", zichtbaar.size > 0);
+    }, { threshold: 0.15 });
+    document.querySelectorAll(".formcard, .cta, .cta-midden, .prijskaart, .footer").forEach(function (el) { io.observe(el); });
+  }
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var doel = [].slice.call(document.querySelectorAll(".tablewrap, .faq details, .prose > .callout, .prose > .foto, .prijskaart, .kk-teaser, .hc-teaser"))
+    .filter(function (el) { return !el.closest(".reveal") && el.getBoundingClientRect().top > window.innerHeight; });
+  var io2 = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("rv-in"); io2.unobserve(e.target); } });
+  }, { rootMargin: "0px 0px -6% 0px", threshold: 0.05 });
+  doel.forEach(function (el, i) { el.classList.add("rv"); io2.observe(el); });
+})();
+'''
+
+
+def css_klein(css):
+    """Lichte verkleining voor de build: commentaar en overbodige witruimte eruit."""
+    import re
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    css = re.sub(r"\s+", " ", css)
+    css = re.sub(r"\s*([{};,])\s*", r"\1", css)
+    return css.replace(";}", "}").strip()

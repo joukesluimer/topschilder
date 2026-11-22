@@ -26,7 +26,16 @@ ICONS = {
     "clock": '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     "euro": '<path d="M17 6.5A6.5 6.5 0 0 0 7.2 10M17 17.5A6.5 6.5 0 0 1 7.2 14"/><path d="M4 10h8M4 14h8"/>',
     "users": '<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16.5 5.5a3.2 3.2 0 0 1 0 5.6M17 14.6A6 6 0 0 1 21 20"/>',
+    "form": '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="M9 11h6M9 15h4"/>',
+    "match": '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/><path d="m8.5 11 1.8 1.8 3.4-3.6"/>',
 }
+
+
+def _klein(n):
+    """Kleine 400px-variant in de srcset, als die bestaat (scheelt veel op mobiel)."""
+    import os
+    pad = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fotos", f"{n}-400.webp")
+    return f"/assets/fotos/{n}-400.webp 400w, " if os.path.exists(pad) else ""
 
 
 def foto(f, sizes, boven_vouw=False):
@@ -35,7 +44,7 @@ def foto(f, sizes, boven_vouw=False):
     laden = 'loading="eager" fetchpriority="high"' if boven_vouw else 'loading="lazy"'
     alt = f["alt"].replace("&", "&amp;").replace('"', "&quot;")
     return (f'<figure class="foto"><img src="/assets/fotos/{n}-800.webp" '
-            f'srcset="/assets/fotos/{n}-800.webp 800w, /assets/fotos/{n}-1600.webp 1600w" '
+            f'srcset="{_klein(n)}/assets/fotos/{n}-800.webp 800w, /assets/fotos/{n}-1600.webp 1600w" '
             f'sizes="{sizes}" width="{f["w"]}" height="{f["h"]}" alt="{alt}" {laden} decoding="async"></figure>')
 
 
@@ -125,6 +134,7 @@ def footer():
         <li><a href="/kosten/">Kosten per klus</a></li>
         <li><a href="/gids/">Gids</a></li>
         <li><a href="/offerte-vergelijken/">Offerte laten checken</a></li>
+        <li><a href="/tools/">Gratis tools</a></li>
         <li><a href="/werkgebied/">Alle plaatsen</a></li>
         <li><a href="/over-ons/">Over Topschilder</a></li>
         <li><a href="/contact/">Contact</a></li>
@@ -342,15 +352,18 @@ def hoe_werkt_het(plaats=None):
     <p class="lead">Eén aanvraag, meerdere prijzen. Je hoeft niet zelf bedrijf voor bedrijf af te bellen.</p>
   </div>
   <ol class="steps3">
-    <li>
+    <li class="reveal">
+      <span class="step-ic">{icon('form', 26)}</span>
       <h3>Vertel wat je nodig hebt</h3>
       <p>Vier korte vragen over de klus, het pand en de planning. Klaar in ongeveer een minuut.</p>
     </li>
-    <li>
+    <li class="reveal reveal-d1">
+      <span class="step-ic">{icon('match', 26)}</span>
       <h3>Wij zoeken de match</h3>
       <p>We koppelen je aanvraag aan maximaal drie schilders{waar} die dit type werk daadwerkelijk doen en op dit moment ruimte hebben.</p>
     </li>
-    <li>
+    <li class="reveal reveal-d2">
+      <span class="step-ic">{icon('check', 26)}</span>
       <h3>Vergelijk en kies zelf</h3>
       <p>Je ontvangt de offertes rechtstreeks van de schilders. Bevalt het niet? Dan zeg je gewoon nee — je zit nergens aan vast.</p>
     </li>
@@ -377,6 +390,7 @@ def waarom_blok():
     return f"""<section class="section">
 <div class="wrap">
   <div class="center" style="max-width:620px;margin:0 auto 40px">
+    <span class="badge">Waarom wij</span>
     <h2>Waarom via Topschilder</h2>
     <p class="lead">Omdat één offerte je geen idee geeft of je een goede prijs betaalt.</p>
   </div>
@@ -394,7 +408,7 @@ def dienst_cards(plaats_slug=None, plaats_naam=None, exclude=None):
         titel = f"{d.get('naam_lang', d['naam'])}{' in ' + plaats_naam if plaats_naam else ''}"
         out.append(
             f'<a class="card reveal" href="{url}">'
-            f'{foto(FOTOS[d["slug"]]["hero"], "(max-width:600px) calc(100vw - 40px), (max-width:900px) 45vw, 340px") if d["slug"] in FOTOS else illustratie(d["slug"])}'
+            f'{foto(FOTOS[d["slug"]]["hero"], "(max-width:600px) 92px, (max-width:900px) 45vw, 340px") if d["slug"] in FOTOS else illustratie(d["slug"])}'
             f"<h3>{titel}</h3><p>{d['kort']}</p>"
             f'<div class="price">Vanaf {eur(d["prijs_van"])} {d["prijs_eenheid"]}</div>'
             f'<p style="margin:10px 0 0"><span class="go">Bekijk &amp; vraag offertes aan →</span></p></a>'
@@ -534,4 +548,31 @@ def werkgebied_kaart():
     </aside>
   </div>
   <p class="kaart-bron">Kaart: provinciegrenzen en woonplaatsen van <a href="https://www.pdok.nl/" rel="nofollow noopener">PDOK</a> (CBS en Kadaster), <a href="https://creativecommons.org/licenses/by/4.0/deed.nl" rel="nofollow noopener license">CC BY 4.0</a>, vereenvoudigd. Liever een lijst? Alle plaatsen staan hieronder.</p>
+</div>"""
+
+
+# ---------------------------------------------------------------------------
+# Prijskaart en CTA halverwege (kosten-, plaats- en plaats-dienstpagina's)
+# ---------------------------------------------------------------------------
+
+def prijskaart(van, tot, eenheid, noot, beeld="", knop="Vergelijk offertes", extra=""):
+    """Opvallende kaart met de richtprijs, optioneel met foto bovenaan."""
+    return f"""<aside class="prijskaart" aria-label="Richtprijs">
+  {beeld}
+  <div class="prijskaart-in">
+    <p class="prijskaart-kop">Richtprijs</p>
+    <p class="prijskaart-bedrag">{eur(van)} <span>–</span> {eur(tot)}</p>
+    <p class="prijskaart-eenheid">{eenheid}</p>
+    <p class="prijskaart-noot">{noot}</p>
+    <a class="btn btn-primary btn-block" href="/offerte-aanvragen/">{knop}</a>
+    {extra}
+  </div>
+</aside>"""
+
+
+def cta_midden(titel, tekst, knop="Gratis offertes aanvragen", href="/offerte-aanvragen/"):
+    """Compacte oproep halverwege een lange pagina."""
+    return f"""<div class="cta-midden reveal">
+  <div class="cta-midden-tekst"><p class="cta-midden-titel">{titel}</p><p>{tekst}</p></div>
+  <a class="btn btn-primary" href="{href}">{knop}</a>
 </div>"""

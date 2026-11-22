@@ -18,7 +18,14 @@ from illustraties import illustratie, voor_na
 from foto_data import FOTOS, FOTO_HOME, FOTOS_PAGINA
 from kosten_data import KOSTEN, PRIJSBANDEN
 from wijk_data import WIJKEN
+from huiscalculator import build_huiscalculator, teaser_blok
 import json
+from kleuren_kiezer import (build_kleurenkiezer, kleuren_teaser, kleuren_home_sectie,
+                            KOSTEN_MET_KLEUR)
+from onderhoudscheck import build_onderhoudscheck, teaser_home, teaser_kort
+from inspiratie import build_inspiratie, inspiratie_teaser, inspiratie_home_sectie
+from tools import beschikbare_tools, tools_sectie, build_tools_pagina
+from components import prijskaart, cta_midden
 from components import (
     page, crumbs, offerte_form, hoe_werkt_het, waarom_blok, dienst_cards,
     faq_blok, cta_blok, prijstabel, icon, eur, title, desc, calculator, foto, werkgebied_kaart,
@@ -52,7 +59,9 @@ def build_home():
     kern = [p for p in PLAATSEN if p["prio"] == 1]
     chips = "".join(f'<li><a href="/schilder/{p["slug"]}/">Schilder {p["naam"]}</a></li>' for p in kern)
 
-    hero = f"""<section class="hero">
+    hero_bg = FOTOS["buitenschilderwerk"]["hero"]["naam"]
+    hero = f"""<section class="hero hero-foto">
+<img class="hero-bg" src="/assets/fotos/{hero_bg}-640.webp" srcset="/assets/fotos/{hero_bg}-640.webp 640w, /assets/fotos/{hero_bg}-1600.webp 1600w" sizes="(max-width:920px) 50vw, 100vw" width="1600" height="1067" alt="" loading="eager" fetchpriority="high" decoding="async">
 <div class="wrap hero-in">
   <div>
     <span class="badge badge-dark badge-live"><i></i>Gratis &amp; vrijblijvend</span>
@@ -63,20 +72,26 @@ def build_home():
       <li><span class="check">{icon('check',12)}</span><span>Alleen bedrijven met KvK-inschrijving en verzekering</span></li>
       <li><span class="check">{icon('check',12)}</span><span>Je zit nergens aan vast en betaalt niets</span></li>
     </ul>
-    <div class="hero-proof">
-      <span>Binnen- en buitenschilderwerk</span><span>·</span>
-      <span>Houtrot &amp; spuitwerk</span><span>·</span>
-      <span>Particulier en zakelijk</span>
-    </div>
-    <div style="margin-top:30px;max-width:460px">{foto(FOTO_HOME, "(max-width:500px) calc(100vw - 40px), 460px", boven_vouw=True)}</div>
+    <ul class="hero-tags">
+      <li>Binnen- en buitenschilderwerk</li>
+      <li>Houtrot &amp; spuitwerk</li>
+      <li>Particulier en zakelijk</li>
+    </ul>
   </div>
   <div>{offerte_form()}</div>
 </div>
-</section>"""
+</section>
+<div class="trustbar"><div class="wrap"><ul>
+  <li>{icon('euro',20)}<span><strong>Gratis</strong> en vrijblijvend</span></li>
+  <li>{icon('users',20)}<span><strong>Maximaal 3</strong> schilders</span></li>
+  <li>{icon('clock',20)}<span>Meestal <strong>binnen 1 werkdag</strong> reactie</span></li>
+  <li>{icon('house',20)}<span>Actief in <strong>{len(PLAATSEN)} plaatsen</strong></span></li>
+</ul></div></div>"""
 
-    diensten_sec = f"""<section class="section">
+    diensten_sec = f"""<section class="section soft">
 <div class="wrap">
   <div class="center" style="max-width:620px;margin:0 auto 40px">
+    <span class="badge">Diensten</span>
     <h2>Waar heb je een schilder voor nodig?</h2>
     <p class="lead">Per klus zie je wat het ongeveer kost, waar de prijs door bepaald wordt en waar je op moet letten in een offerte.</p>
   </div>
@@ -84,12 +99,13 @@ def build_home():
 </div>
 </section>"""
 
-    prijs_sec = f"""<section class="section soft">
+    prijs_sec = f"""<section class="section">
 <div class="wrap narrow">
   <span class="badge">Richtprijzen 2026</span>
   <h2>Wat kost een schilder?</h2>
   <p class="lead">Een schilder rekent gemiddeld €45 tot €65 per uur exclusief btw. Maar bijna niemand koopt uren — je koopt een afgewerkte muur of een kozijn dat weer tien jaar meekan. Daarom rekenen de meeste bedrijven per vierkante meter of per stuk.</p>
   {prijstabel()}
+  <div style="margin-top:26px">{teaser_blok()}</div>
   <p style="margin-top:22px"><a class="btn btn-ghost" href="/prijzen/">Volledig prijzenoverzicht bekijken</a></p>
   <p style="margin-top:14px;font-size:.95rem">Prijzen per klus: {" · ".join(f'<a href="/kosten/{k["slug"]}/">{k["klus"]}</a>' for k in KOSTEN)}.</p>
 </div>
@@ -179,8 +195,8 @@ def build_home():
         "publisher": {"@id": SITE["url"] + "/#organization"},
     }
 
-    body = (hero + waarom_blok() + diensten_sec + hoe_werkt_het() + prijs_sec
-            + vergelijk_sec + regio_sec + faq_html + schilders_sec + cta_blok())
+    body = (hero + hoe_werkt_het() + waarom_blok() + diensten_sec
+            + tools_sectie(beschikbare_tools(globals())) + prijs_sec + vergelijk_sec + regio_sec + faq_html + schilders_sec + cta_blok())
 
     write("/", page(
         "Schilder nodig? Vergelijk gratis 3 offertes | Topschilder.nl",
@@ -253,7 +269,9 @@ def dienst_body(d, plaats=None):
         '<h2>Het verschil, in beeld</h2>'
         '<p>Sleep de streep opzij. Links een gevel die vier jaar te lang heeft gewacht, '
         'rechts dezelfde gevel na een beurt. Het gaat niet alleen om hoe het oogt: die '
-        'verflaag houdt het water uit je houtwerk.</p>' + voor_na())
+        'verflaag houdt het water uit je houtwerk.</p>' + voor_na() + teaser_kort())
+    if d["slug"] == "buitenschilderwerk":
+        vn_blok += kleuren_teaser() + inspiratie_teaser()
     wat = "".join(f"<li>{x}</li>" for x in d["wat"])
     werk = "".join(
         f"<li><h3>{t}</h3><p>{p}</p></li>" for t, p in
@@ -288,7 +306,7 @@ def dienst_body(d, plaats=None):
       <h1>{h1}</h1>
       <p class="lead">{d['intro']}</p>
       {intro_extra}
-      <div class="callout">
+      <div class="callout callout-prijs">
         <p><strong>Richtprijs{inplaats}:</strong> {eur(p_van)} – {eur(p_tot)} {d['prijs_eenheid']}{'' if 'excl' in d['prijs_eenheid'] else ', inclusief materiaal en btw'}.{prijsnoot}</p>
         <p style="font-size:.93rem;margin-top:8px">{d['prijs_extra']}</p>
         {kosten_links(d)}
@@ -459,6 +477,8 @@ def build_plaats_pages():
         <li>Gecontroleerd op KvK-inschrijving en aansprakelijkheidsverzekering</li>
         <li>Gratis vergelijken, geen abonnement, geen verplichtingen</li>
       </ul>
+      <div class="callout callout-prijs"><p><strong>Richtprijs in {p['naam']}:</strong> {eur(int(round(45 * PRIJSINDEX.get(p["provincie"], 1.0))))} – {eur(int(round(65 * PRIJSINDEX.get(p["provincie"], 1.0))))} per uur exclusief btw. De prijzen per klus zie je <a href="#prijzen">hieronder</a>.</p></div>
+      <div class="plaats-foto">{foto(FOTOS_PAGINA["diensten"], "536px")}</div>
     </div>
     <div>{offerte_form(f"Offertes van schilders in {p['naam']}", "Vier korte vragen · gratis en vrijblijvend")}</div>
   </div>
@@ -498,10 +518,12 @@ def build_plaats_pages():
             blok_b = f"""<h3>Wachttijden in {p['gemeente']}</h3>
   <p>Buiten het hoogseizoen kun je in {p['naam']} meestal binnen twee tot vier weken terecht. Tussen april en september loopt dat op tot zes weken of meer, zeker voor buitenwerk. Ben je flexibel in je planning, zeg dat er dan bij: schilders vullen graag gaten tussen twee grote klussen en zijn daar vaak scherper voor geprijsd dan voor een klus die op een vaste datum moet vallen.</p>"""
 
-        prijs_sec = f"""<section class="section"><div class="wrap narrow prose">
+        prijs_sec = f"""<section class="section" id="prijzen"><div class="wrap narrow prose">
   <h2>Wat kost een schilder in {p['naam']}?</h2>
   <p>Schilders in {p['gemeente']} rekenen doorgaans <strong>{eur(uur_van)} tot {eur(uur_tot)} per uur exclusief btw</strong>. {INDEX_TOELICHTING.get(p['provincie'], '')} In de praktijk zie je dat uurtarief zelden terug op een offerte: het meeste werk wordt aangeboden per vierkante meter of per stuk, omdat je dan vooraf weet waar je aan toe bent.</p>
   {prijstabel(plaats=p)}
+
+  {cta_midden(f"Prijzen van schilders in {p['naam']} vergelijken?", "Eén aanvraag, maximaal drie offertes van schilders die in " + p['naam'] + " werken.")}
 
   <h3>De woningvoorraad van {p['naam']}</h3>
   <p>Het gros van de woningen in {p['naam']} is gebouwd {p['bouwperiode']}. Het gaat overwegend om {p['woningmix']}. Dat is relevant voor je offerte, want het bepaalt hoeveel kozijnen er zijn, hoe hoog er gewerkt moet worden en of er een steiger nodig is. Bij {'ruime, vrijstaande bouw loopt het aantal te schilderen kozijnen snel op' if 'vrijstaande' in p['woningmix'] or 'villa' in p['woningmix'] else 'rijwoningen blijft het aantal kozijnen beperkt, maar is de bereikbaarheid van de achtergevel soms lastig'}.</p>
@@ -682,6 +704,8 @@ def build_plaats_dienst_pages():
   <p>Ligt een offerte daar duidelijk boven, vraag dan om een specificatie per onderdeel. Ligt hij er ver ónder, wees dan juist alert: dat verschil zit meestal niet in de marge maar in het aantal lagen of in voorbereiding die stilzwijgend wordt overgeslagen.</p>
 
   {voorbeeld}
+
+  {cta_midden(f"Offertes voor {d['naam'].lower()} in {p['naam']}?", "Vraag gratis prijzen aan bij maximaal drie schilders uit de buurt. Je zit nergens aan vast.")}
   {advies}
   {kostenlink}
 
@@ -1111,6 +1135,31 @@ def kosten_links(d):
     return f'<p style="font-size:.93rem;margin-top:8px">{links}</p>'
 
 
+def deelblok(k):
+    """Kant-en-klaar prijsoverzicht met bronlink dat andere sites mogen overnemen."""
+    url = f"{SITE['url']}/kosten/{k['slug']}/"
+    rijen = "".join(
+        f'<tr><td style="padding:6px 10px;border-top:1px solid #e5ddd0">{lab}</td>'
+        f'<td style="padding:6px 10px;border-top:1px solid #e5ddd0">'
+        f'{(eur(n * k["van"]) + " – " + eur(n * k["tot"])) if n is not None else uitleg.split(". ")[0]}</td></tr>'
+        for lab, n, uitleg in k["voorbeelden"])
+    btw = "exclusief btw" if k.get("excl_btw") else "inclusief materiaal en btw"
+    snippet = (
+        f'<div style="font-family:sans-serif;max-width:520px;border:1px solid #e5ddd0;border-radius:8px;padding:14px">'
+        f'<p style="margin:0 0 8px"><strong>Wat kost {k["klus"]} in {TODAY[:4]}?</strong><br>'
+        f'Richtprijs: {eur(k["van"])} – {eur(k["tot"])} {k["eenheid"]}, {btw}.</p>'
+        f'<table style="border-collapse:collapse;width:100%;font-size:14px">{rijen}</table>'
+        f'<p style="margin:8px 0 0;font-size:13px">Bron: <a href="{url}">{k["klus"].removeprefix("een ").capitalize()} kosten – Topschilder</a></p></div>')
+    return f"""<details class="deel">
+    <summary>Deze prijzen op je eigen site gebruiken?</summary>
+    <p>Schrijf je over {k['klus'].removeprefix('een ')}, bijvoorbeeld op een blog of klussite? Je mag dit overzicht overnemen, als de bronlink blijft staan. Kopieer de code en plak hem in je pagina.</p>
+    <textarea readonly rows="5" aria-label="HTML-code van het prijsoverzicht">{htmllib.escape(snippet)}</textarea>
+    <button type="button" class="btn btn-ghost" data-kopieer>Kopieer code</button>
+    <p><small>Zo ziet het eruit:</small></p>
+    <div style="overflow-x:auto">{snippet}</div>
+  </details>"""
+
+
 # Plaatsen per provincie die we in de regiotabel van een kostenpagina tonen.
 KOSTEN_REGIO = ["almere", "zwolle", "harderwijk", "amersfoort", "hilversum"]
 
@@ -1152,15 +1201,26 @@ def build_kosten():
         beeld = foto(fotos["sectie"], "(max-width:760px) calc(100vw - 40px), 720px") if fotos else ""
         faq_html, faq_ld = faq_blok(k["faq"], f"Veelgestelde vragen over {k['klus']}")
 
+        kopfoto = foto(fotos["hero"], "(max-width:900px) calc(100vw - 40px), 400px") if fotos else ""
+        kaart = prijskaart(k['van'], k['tot'], k['eenheid'],
+                           f"{'Exclusief btw' if k.get('excl_btw') else 'Inclusief materiaal en btw'}. Gemiddeld over Nederland; per regio zie je hieronder het verschil.",
+                           beeld=kopfoto, knop="Vraag gratis offertes aan",
+                           extra='<a class="prijskaart-link" href="/kosten/calculator/">Of bereken je hele huis →</a>' if callable(globals().get("build_huiscalculator")) else "")
         body = f"""{cr}
-<section class="section-sm"><div class="wrap narrow prose">
-  <span class="badge">Richtprijzen {TODAY[:4]}</span>
-  <h1>{k['h1']}</h1>
-  <p class="lead">{k['intro']}</p>
-  <div class="callout">
-    <p><strong>Richtprijs:</strong> {eur(k['van'])} – {eur(k['tot'])} {k['eenheid']}, {'exclusief btw' if k.get('excl_btw') else 'inclusief materiaal en btw'}. Gemiddeld over Nederland; per regio zie je hieronder het verschil.</p>
+<section class="section-sm kosten-kop"><div class="wrap"><div class="kosten-kop-in">
+  <div>
+    <span class="badge">Richtprijzen {TODAY[:4]}</span>
+    <h1>{k['h1']}</h1>
+    <p class="lead">{k['intro']}</p>
+    <ul class="kop-feiten">
+      <li>{len(k['voorbeelden'])} rekenvoorbeelden</li>
+      <li>Prijs per regio</li>
+      <li>Btw uitgelegd</li>
+    </ul>
   </div>
-
+  {kaart}
+</div></div></section>
+<section class="section-sm kosten-inhoud"><div class="wrap narrow prose">
   <h2>Rekenvoorbeelden</h2>
   <div class="tablewrap"><table>
     <thead><tr><th>Situatie</th><th>Indicatie</th></tr></thead>
@@ -1176,7 +1236,10 @@ def build_kosten():
   <h2>Wat bepaalt de prijs?</h2>
   <ul>{fact}</ul>
 
+  {cta_midden(f"Wat kost {k['klus']} bij jou?", "Vraag in een minuut gratis offertes aan bij maximaal drie schilders uit je regio.")}
+
   {beeld}
+  {kleuren_teaser() if k['slug'] in KOSTEN_MET_KLEUR else ''}
   {uitleg}
 
   <h2>Prijs per regio</h2>
@@ -1196,6 +1259,7 @@ def build_kosten():
 
   <h2>Heb je al een offerte?</h2>
   <p>Leg hem naast deze richtprijzen, of <a href="/offerte-vergelijken/">laat je offerte checken</a>. Meer prijzen vind je op <a href="/prijzen/">wat kost een schilder</a> en op de pagina over <a href="/schilderwerk/{d['slug']}/">{d['naam'].lower()}</a>.</p>
+  {deelblok(k)}
   <p><small>Ook handig: {andere} · <a href="/gids/btw-schilderwerk/">btw op schilderwerk</a>{' · <a href="/gids/wanneer-buiten-schilderen/">wanneer buiten schilderen</a>' if d['slug'] in ('buitenschilderwerk', 'houtrot-reparatie') else ''}{' · <a href="/gids/verf-berekenen/">hoeveel verf heb je nodig</a>' if d['slug'] in ('binnenschilderwerk', 'spuitwerk') else ''}</small></p>
 </div></section>
 {faq_html}
@@ -1218,6 +1282,7 @@ def build_kosten():
   <div class="narrow prose">
     <h1>Wat kost schilderwerk per klus?</h1>
     <p class="lead">Richtprijzen voor de klussen waar het meest naar wordt gevraagd, met rekenvoorbeelden, prijs per regio en wat er vaak bij komt. De prijzen zijn inclusief materiaal en btw, behalve het uurtarief.</p>
+    {teaser_blok("margin:6px 0 10px")}
     <h2>Alle prijzen op een rij</h2>
     <div class="tablewrap"><table>
       <thead><tr><th>Klus</th><th>Richtprijs</th></tr></thead>
@@ -1374,7 +1439,7 @@ def build_gidsen():
     <li>Woningen aan <strong>open water of in de polder</strong> vangen meer wind en vocht.</li>
     <li><strong>Dakkapellen en boeidelen</strong> zitten hoog en hebben vaak eerder een beurt nodig.</li>
   </ul>
-  <p>Twijfel je of het tijd is? Krassen met je nagel in de verf, afbladderende hoeken en grijs, kaal hout zijn duidelijke signalen. Lees ook <a href="/kosten/kozijnen-schilderen/">wat kozijnen schilderen kost</a> en <a href="/kosten/huis-schilderen/">wat een huis schilderen kost</a>.</p>
+  <p>Twijfel je of het tijd is? Doe de <a href="/onderhoudscheck/">onderhoudscheck</a>: in acht korte vragen zie je of je schilderwerk aan de beurt is. Krassen met je nagel in de verf, afbladderende hoeken en grijs, kaal hout zijn duidelijke signalen. Lees ook <a href="/kosten/kozijnen-schilderen/">wat kozijnen schilderen kost</a> en <a href="/kosten/huis-schilderen/">wat een huis schilderen kost</a>.</p>
 
   <h2>Op tijd plannen</h2>
   <p>Wil je in het voorjaar een schilder, vraag dan in januari of februari al offertes aan. Voor het najaar is juni of juli een goed moment. Wie op het laatste moment belt, staat achteraan in de rij.</p>
@@ -1532,6 +1597,8 @@ def build_prijzen():
   Nederland hiervoor rekenen — geen offerte, wel een ijkpunt waarmee je weet of een
   prijs redelijk is.</p>
   {calculator()}
+  <p style="margin-top:22px">Wil je weten wat je hele huis kost, binnen en buiten tegelijk?</p>
+  {teaser_blok()}
 
   <h2>Richtprijzen per type schilderwerk</h2>
   {prijstabel()}
@@ -1738,7 +1805,7 @@ def build_static_pages():
     cr, cr_ld = crumbs([("Home", "/"), ("Fotoverantwoording", None)])
     e = htmllib.escape
     blokken = ""
-    groepen = [("Homepage", [FOTO_HOME]), ("Diensten-overzicht", [FOTOS_PAGINA["diensten"]]), ("Werkgebied", [FOTOS_PAGINA["werkgebied"]]), ("Wat kost het?", [FOTOS_PAGINA["prijzen"]]), ("Offerte laten checken", [FOTOS_PAGINA["checken"]]), ("Voor schilders", [FOTOS_PAGINA["schilders"]])] + [(d["naam"], list(FOTOS[d["slug"]].values())) for d in DIENSTEN if d["slug"] in FOTOS]
+    groepen = [("Homepage", [FOTOS["buitenschilderwerk"]["hero"]]), ("Diensten-overzicht", [FOTOS_PAGINA["diensten"]]), ("Werkgebied", [FOTOS_PAGINA["werkgebied"]]), ("Wat kost het?", [FOTOS_PAGINA["prijzen"]]), ("Offerte laten checken", [FOTOS_PAGINA["checken"]]), ("Voor schilders", [FOTOS_PAGINA["schilders"]])] + [(d["naam"], list(FOTOS[d["slug"]].values())) for d in DIENSTEN if d["slug"] in FOTOS]
     for naam, lijst in groepen:
         blokken += f"<h2>{naam}</h2>"
         for f in lijst:
@@ -1875,10 +1942,10 @@ def build_static_pages():
 
 def build_assets():
     """Schrijft CSS, JS en favicon vanuit assets.py naar site/assets/."""
-    from assets import STYLE_CSS, APP_JS, CONFIG_JS, FAVICON_SVG, TOESTEMMING_JS
+    from assets import STYLE_CSS, APP_JS, CONFIG_JS, FAVICON_SVG, TOESTEMMING_JS, css_klein
 
     bestanden = {
-        "css/style.css":  STYLE_CSS,
+        "css/style.css":  css_klein(STYLE_CSS),
         "js/app.js":      APP_JS,
         "js/config.js":   CONFIG_JS,
         "js/toestemming.js": TOESTEMMING_JS,
@@ -1988,7 +2055,12 @@ def main():
     build_voor_schilders()
     build_prijzen()
     build_kosten()
+    build_huiscalculator(write, OUT)
     build_gidsen()
+    build_kleurenkiezer(write, OUT)
+    build_inspiratie(write, OUT)
+    build_onderhoudscheck(write)
+    build_tools_pagina(write, beschikbare_tools(globals()))
     build_static_pages()
     build_assets()
     build_sitemap()
