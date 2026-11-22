@@ -269,22 +269,10 @@ def dienst_body(d, plaats=None):
              f'<div class="reveal" style="margin-top:24px">{illustratie(d["slug"])}</div>')
     sectiefoto = foto(fotos["sectie"], "(max-width:760px) calc(100vw - 40px), 720px") if fotos else ""
     latex_blok = ("" if d["slug"] != "spuitwerk" else """
-  <h2>Latex spuiten of spuitwerk: wat is het verschil?</h2>
-  <p>Latex spuiten is de naam die je tegenkomt bij muren en plafonds. De schilder brengt de muurverf dan aan met een verfspuit, meestal airless. Het is een vorm van spuitwerk. Spuitwerk is de bredere term: ook deuren, kozijnen, keukenfronten en metaal kunnen worden gespoten.</p>
-  <h3>Wanneer past latex spuiten?</h3>
-  <ul class="checklist">
-    <li><strong>Egale muren en plafonds.</strong> De verf komt verneveld op het oppervlak, zonder rolbanen of strepen. Dat zie je vooral op plafonds en bij strijklicht.</li>
-    <li><strong>Veel oppervlak in een lege ruimte.</strong> Dan weegt het afdekken op tegen de tijd die spuiten scheelt.</li>
-  </ul>
-  <h3>Waar je rekening mee houdt</h3>
-  <ul>
-    <li>Verfnevel verspreidt zich. Alles wat niet geverfd wordt moet worden afgedekt, en dat is een flink deel van het werk.</li>
-    <li>Spuiten maskeert niets. Gaten, scheuren en andere oneffenheden moeten eerst worden gerepareerd.</li>
-  </ul>
-  <h3>Wat kost latex spuiten?</h3>
-  <p>De richtprijs bovenaan deze pagina gaat over het spuiten van deuren. Voor latex spuiten noemen andere Nederlandse sites deze indicaties per m²: <a href="https://www.homedeal.nl/schilderwerk/latex-spuiten/" rel="nofollow noopener">Homedeal</a> gemiddeld €6 tot €12, <a href="https://trustoo.nl/kennisbank/schilder/latex-spuiten/" rel="nofollow noopener">Trustoo</a> gemiddeld €5 tot €15 en <a href="https://slimster.nl/schilder/schilderwerk-prijzen/kosten-latex-spuiten/" rel="nofollow noopener">Slimster</a> €5 tot €20. Dit zijn indicaties van die sites (geraadpleegd in november 2026), geen prijzen van Topschilder. Je echte prijs hangt af van de ruimte, de ondergrond en het afdekwerk.</p>
-  <p>De Belastingdienst noemt schilderen van woningen ouder dan twee jaar onder het 9%-tarief, maar noemt spuiten niet apart. Kijk daarom op de offerte welk tarief er staat en vraag ernaar als het je niet duidelijk is.</p>
+  <h2>Latex spuiten van muren en plafonds</h2>
+  <p>Muren en plafonds kunnen ook gespoten worden, met muurverf in plaats van lak. Dat heet latex spuiten. Het loont vooral bij grote, lege ruimtes, zoals nieuwbouw of een verbouwing. Wat het kost per m², hoeveel verf je nodig hebt en wanneer het goedkoper is dan rollen, lees je op de pagina over <a href="/kosten/latex-spuiten/">latex spuiten</a>.</p>
 """)
+
     btw_extra = {
         "houtrot-reparatie": "<li>Houtwerk apart benoemd: inzetstukken en nieuwe onderdorpels vallen onder 21% btw, het schilderwerk eromheen onder 9%</li>",
         "behangen": "<li>Het behang apart benoemd: de levering van behang valt onder 21% btw, het behangen zelf en de lijm onder 9%</li>",
@@ -681,8 +669,9 @@ def build_plaats_dienst_pages():
             advies = lokaal_advies(d, p)
             advies = f"<h3>Waar je in {p['naam']} op let</h3>{advies}" if advies else ""
             ks = [k for k in KOSTEN if k["dienst"] == d["slug"]]
-            kostenlink = (f"<p>Specifiek prijzen nodig? Lees ook " + " en ".join(
-                f'<a href="/kosten/{k["slug"]}/">wat {k["klus"]} kost</a>' for k in ks) + ".</p>") if ks else ""
+            kl = [f'<a href="/kosten/{k["slug"]}/">wat {k["klus"]} kost</a>' for k in ks]
+            kostenlink = (f"<p>Specifiek prijzen nodig? Lees ook "
+                          + (", ".join(kl[:-1]) + " en " + kl[-1] if len(kl) > 1 else kl[0]) + ".</p>") if ks else ""
 
             lokaal = f"""<section class="section"><div class="wrap narrow prose">
   <h2>{d['naam']} in {p['naam']}: wat je moet weten</h2>
@@ -956,15 +945,15 @@ def build_voor_schilders():
     )
     faqs = [
         ("Zit ik vast aan een contract?",
-         "Nee. Je betaalt per lead, niet per maand. Wil je een maand pauzeren omdat je agenda vol zit, dan zet je je account op pauze."),
+         "Nee. Je betaalt per lead, niet per maand. Zit je agenda vol en wil je een tijdje geen aanvragen, dan laat je het ons weten en pauzeren we tot je weer ruimte hebt."),
         ("Wat als een lead niet deugt?",
          "Verkeerd nummer, dubbele aanvraag of iemand die duidelijk buiten je werkgebied zit: melden binnen vijf werkdagen en je krijgt de lead gecrediteerd. We houden geen ingewikkelde discussie over 'hij nam niet op' — daar hebben we allebei geen zin in."),
         ("Hoeveel schilders krijgen dezelfde lead?",
          "Maximaal drie, inclusief jij. Bij een exclusieve lead ben jij de enige."),
         ("Kan ik mijn werkgebied begrenzen?",
-         "Ja, op plaats- of postcodeniveau. Je kunt ook een maximum instellen op het aantal leads per maand, zodat je niet overspoeld wordt."),
+         "Ja. Je geeft door in welke plaatsen je werkt en hoeveel aanvragen je per maand maximaal wilt. Daar houden we ons aan, zodat je niet overspoeld wordt."),
         ("Hoe snel krijg ik een lead binnen?",
-         "Direct per e-mail en sms zodra de aanvraag binnenkomt. Snelheid van reageren is in dit spel het verschil tussen wel en niet de opdracht krijgen."),
+         "Per e-mail. We bekijken elke aanvraag eerst kort op echtheid en sturen hem dan door, op werkdagen meestal dezelfde dag. Snel reageren is daarna aan jou: wie als eerste belt, heeft een flinke voorsprong."),
     ]
     faq_html, faq_ld = faq_blok(faqs, "Vragen van schilders")
 
@@ -978,7 +967,7 @@ def build_voor_schilders():
       <ul class="checklist">
         <li>Aanvragen uit jouw eigen plaats en omliggende gemeenten</li>
         <li>Maximaal drie schilders per aanvraag — of exclusief, als je dat wilt</li>
-        <li>Direct per mail en sms, zodat je als eerste kunt bellen</li>
+        <li>Elke aanvraag eerst gecontroleerd, daarna per e-mail naar jou</li>
         <li>Ongeldige leads worden gecrediteerd</li>
         <li>Opzeggen of pauzeren kan per direct</li>
       </ul>
@@ -1156,6 +1145,7 @@ def build_kosten():
         fact = "".join(f"<li>{x}</li>" for x in k["prijsfactoren"])
         tips = "".join(f"<li>{x}</li>" for x in k["tips"])
         uitleg = "".join(f"<h2>{t}</h2><p>{p}</p>" for t, p in k["uitleg"])
+        uitleg += "".join(f"<h2>{t}</h2>{h}" for t, h in k.get("verdieping", []))
         andere = " · ".join(f'<a href="/kosten/{x["slug"]}/">Wat kost {x["klus"]}?</a>'
                             for x in KOSTEN if x is not k)
         fotos = FOTOS.get(d["slug"], {})
@@ -1221,11 +1211,18 @@ def build_kosten():
     <p>{k['description'].split('. ')[1] if k['description'].count('. ') > 1 else ''}</p>
     <p><a href="/kosten/{k['slug']}/">Bekijk de prijzen →</a></p>
   </div>""" for k in KOSTEN)
+    tabel = "".join(f'<tr><td><a href="/kosten/{k["slug"]}/">{(k.get("kruimel") or k["klus"].removeprefix("een ")).capitalize()}</a></td>'
+                    f'<td class="num">{k["kort"]}</td></tr>' for k in KOSTEN)
     body = f"""{cr}
 <section class="section-sm"><div class="wrap">
   <div class="narrow prose">
     <h1>Wat kost schilderwerk per klus?</h1>
-    <p class="lead">Richtprijzen voor de klussen waar het meest naar wordt gevraagd, met rekenvoorbeelden, prijs per regio en wat er vaak bij komt. Alle prijzen zijn inclusief materiaal en btw.</p>
+    <p class="lead">Richtprijzen voor de klussen waar het meest naar wordt gevraagd, met rekenvoorbeelden, prijs per regio en wat er vaak bij komt. De prijzen zijn inclusief materiaal en btw, behalve het uurtarief.</p>
+    <h2>Alle prijzen op een rij</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Klus</th><th>Richtprijs</th></tr></thead>
+      <tbody>{tabel}</tbody>
+    </table></div>
   </div>
   <div class="grid g3" style="margin-top:28px">{kaarten}</div>
   <div class="narrow prose" style="margin-top:32px">
@@ -1234,7 +1231,7 @@ def build_kosten():
 </div></section>
 {cta_blok()}"""
     write("/kosten/", page(title("Wat kost schilderwerk? Prijzen per klus"),
-          "Richtprijzen per klus: keuken spuiten, trap schilderen en kozijnen schilderen. Met rekenvoorbeelden, prijs per regio en btw-regels.",
+          "Richtprijzen per klus: huis schilderen, keuken en deuren spuiten, latex spuiten, kozijnen, plafond en uurtarief. Met rekenvoorbeelden en prijs per regio.",
           "/kosten/", body, [cr_ld]), prio=0.8)
 
 

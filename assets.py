@@ -240,6 +240,7 @@ th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line)}
 th{background:var(--bg-soft);font-weight:700;color:var(--ink);white-space:nowrap}
 tbody tr:last-child td{border-bottom:0}
 td.num{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:650;color:var(--ink)}
+@media(max-width:560px){td.num{white-space:normal}th,td{padding-left:10px;padding-right:10px}}
 
 /* ---------- FAQ ---------- */
 .faq details{border:1px solid var(--line);border-radius:var(--radius);background:#fff;margin-bottom:10px;overflow:hidden}

@@ -559,3 +559,138 @@ PRIJSBANDEN = {
     "uurloon": {"naam": "Uurloon", "van": 45, "tot": 68, "eenheid": "per uur", "excl_btw": True},
     "steiger": {"naam": "Steiger of hoogwerker", "van": 300, "tot": 900, "eenheid": "per gevel"},
 }
+
+
+# ---------------------------------------------------------------------------
+# Verdieping voor de kostenpagina's met de meeste vertoningen in Search Console
+# (november 2026). Zo beantwoordt één pagina de hele zoekvraag rond de klus,
+# en hoeven plaats- en dienstpagina's daar niet mee te concurreren.
+# ---------------------------------------------------------------------------
+
+UITBREIDING = {
+    "keuken-spuiten": {
+        "h1": "Keuken laten spuiten: wat kost het en hoe gaat het?",
+        "title": "Keuken laten spuiten: kosten per front en werkwijze",
+        "description": "Een keuken laten spuiten kost €45 tot €95 per front, voor een gemiddelde keuken €720 tot €1.520. Ook hoogglans, kunststof en spuiten tegenover nieuwe fronten.",
+        "verdieping": [
+            ("Zo verloopt het spuiten van je keuken",
+             "<ol><li><strong>Opname.</strong> De schilder telt de fronten, kijkt naar het materiaal en test of de oude laag goed vastzit.</li>"
+             "<li><strong>Demonteren.</strong> Fronten en laden gaan eraf, grepen en scharnieren worden genummerd bewaard.</li>"
+             "<li><strong>Voorwerk.</strong> Ontvetten, schuren en waar nodig beschadigingen vullen. Op kunststof en folie komt een hechtprimer.</li>"
+             "<li><strong>Spuiten.</strong> Meestal in de werkplaats: een grondlaag en twee lagen lak, met tussendoor licht schuren.</li>"
+             "<li><strong>Terugplaatsen.</strong> Na het uitharden gaan de fronten terug en worden de scharnieren afgesteld.</li></ol>"
+             "<p>Tussen opname en oplevering zitten meestal drie tot vijf werkdagen. Zonder deurtjes koken kan gewoon, alleen staat alles even open.</p>"),
+            ("Hoogglans keuken spuiten",
+             "<p>Een hoogglans keuken kan opnieuw in hoogglans worden gespoten, of juist in zijdeglans of mat. Hoogglans is het lastigst: elk stofje en elke oneffenheid blijft zichtbaar. Daarom vraagt het meer schuurwerk, vaak een extra laag en een stofvrije spuitruimte. Reken op een prijs aan de bovenkant van de richtprijs per front.</p>"
+             "<p>Veel hoogglans keukens hebben folie of een kunststof toplaag. Zit die nog goed vast, dan kan er met een hechtprimer overheen worden gespoten. Laat de folie bij de randen los, dan moet die er eerst helemaal af, en dat kost extra tijd.</p>"),
+            ("Spuiten, wrappen of nieuwe fronten?",
+             "<div class=\"tablewrap\"><table><thead><tr><th>Keuze</th><th>Wanneer het past</th><th>Let op</th></tr></thead><tbody>"
+             "<tr><td><strong>Spuiten</strong></td><td>De kasten zijn goed, je wilt een andere kleur of glans.</td><td>Elke kleur kan en beschadigingen zijn later bij te werken.</td></tr>"
+             "<tr><td><strong>Wrappen (folie)</strong></td><td>Je wilt snel iets anders, bijvoorbeeld een houtlook.</td><td>Bij hitte en op randen kan folie loslaten.</td></tr>"
+             "<tr><td><strong>Nieuwe fronten</strong></td><td>De fronten zijn beschadigd of je wilt een ander model.</td><td>Meestal het duurst, en de maten moeten precies passen.</td></tr>"
+             "</tbody></table></div>"),
+            ("Keukenkastjes zelf verven of laten spuiten?",
+             "<p>Zelf verven kan, als je de tijd neemt voor het voorwerk: grondig ontvetten, schuren en een hechtprimer. Met kwast en roller zie je wel de structuur in de lak, vooral als het licht schuin op de fronten valt. Spuiten geeft een gladde laag die meer op een nieuwe keuken lijkt. Wie zelf verft, betaalt vooral in tijd: een keuken met zestien fronten kost al snel meerdere weekenden.</p>"),
+        ],
+        "faq_extra": [
+            ("Wat kost hoogglans keuken spuiten?",
+             "Ook hier reken je per front, maar hoogglans zit aan de bovenkant van de richtprijs van €45 tot €95 per front, omdat het meer schuurwerk en vaak een extra laag vraagt."),
+            ("Kan ik keukenkastjes zelf verven?",
+             "Ja, met goed voorwerk: ontvetten, schuren en een hechtprimer. Het resultaat is minder glad dan spuiten, omdat je de structuur van kwast of roller ziet."),
+            ("Moet het werkblad eruit als de keuken gespoten wordt?",
+             "Nee. Meestal worden alleen de fronten en laden gespoten. Moet de ombouw ook, dan plakt de schilder het werkblad en de apparaten af."),
+        ],
+    },
+    "latex-spuiten": {
+        "h1": "Latex spuiten: kosten per m², verbruik en werkwijze",
+        "title": "Latex spuiten: kosten per m², verbruik en werkwijze",
+        "description": "Latex spuiten kost gemiddeld €6 tot €15 per m². Hoeveel latex je nodig hebt per m², welke verf geschikt is en wanneer spuiten goedkoper is dan rollen.",
+        "verdieping": [
+            ("Hoeveel latex heb je nodig per m²?",
+             "<p>Met een roller kom je met een liter muurverf grofweg 8 tot 10 m² ver per laag. Het precieze getal staat op het blik. Bij spuiten gaat er meer verloren aan nevel en overspray, dus reken dan op wat extra verf.</p>"
+             "<p><strong>Voorbeeld:</strong> 100 m² muur in twee lagen is 200 m² verfwerk. Met de roller is dat zo'n 20 tot 25 liter, met de spuit iets meer. Op kaal stucwerk komt er een voorstrijklaag bij. Reken het voor jouw kamer uit met de <a href=\"/gids/verf-berekenen/\">verfcalculator</a>.</p>"),
+            ("Welke latex is geschikt om te spuiten?",
+             "<p>Latex is in Nederland de gangbare naam voor watergedragen muurverf. Niet elke muurverf is gemaakt om met een airless spuit te verwerken: kijk op het blik of de fabrikant spuiten noemt, en hoeveel je mag verdunnen. Een schilder werkt meestal met emmers spuitlatex in mat of zijdemat. Mat verbergt kleine oneffenheden beter, zijdemat is beter afwasbaar.</p>"),
+            ("Zo gaat een schilder te werk",
+             "<ol><li><strong>Leeghalen en afdekken.</strong> Vloeren, kozijnen, ramen en stopcontacten gaan onder folie en tape.</li>"
+             "<li><strong>Repareren.</strong> Gaten en scheuren vullen en schuren, want spuitwerk laat elke oneffenheid zien.</li>"
+             "<li><strong>Voorstrijken.</strong> Kaal of zuigend stucwerk krijgt eerst een voorstrijklaag.</li>"
+             "<li><strong>Spuiten.</strong> Meestal twee lagen, in banen die elkaar overlappen.</li>"
+             "<li><strong>Opruimen.</strong> Tape en folie eraf zolang de verf nog niet volledig hard is, zodat de randen strak blijven.</li></ol>"),
+            ("Zelf latex spuiten of uitbesteden?",
+             "<p>Een airless spuit kun je huren, maar het afdekken en het gelijkmatig spuiten vragen ervaring. Te veel verf geeft druipers, te weinig een vlekkerig resultaat. Voor één kamer is zelf rollen vaak handiger. Gaat het om een hele woning of hoge plafonds, dan verdient een schilder met eigen materiaal zich snel terug.</p>"),
+            ("Latex spuiten bij jou in de buurt",
+             "<p>Onze schilders werken in Flevoland, het Gooi, de Veluwe, Overijssel en rond Amersfoort. Zoek je iemand voor latex spuiten, kijk dan bij <a href=\"/schilder/almere/spuitwerk/\">Almere</a>, <a href=\"/schilder/zwolle/spuitwerk/\">Zwolle</a>, <a href=\"/schilder/amersfoort/spuitwerk/\">Amersfoort</a>, <a href=\"/schilder/hilversum/spuitwerk/\">Hilversum</a> of <a href=\"/werkgebied/\">alle plaatsen</a>.</p>"),
+        ],
+        "faq_extra": [
+            ("Hoeveel latex heb je nodig per m²?",
+             "Met een roller ongeveer een liter per 8 tot 10 m² per laag; het precieze getal staat op het blik. Bij spuiten verbruik je iets meer door nevel en overspray."),
+            ("Mag je latex verdunnen om te spuiten?",
+             "Alleen zoveel als de fabrikant op het blik aangeeft. Te veel verdunnen geeft een slechtere dekking en druipers."),
+            ("Hoe lang moet latex drogen?",
+             "Muurverf is meestal binnen een paar uur droog genoeg voor een tweede laag. Kijk voor de precieze tijden op het blik; bij kou en vocht duurt het langer."),
+        ],
+    },
+    "huis-schilderen": {
+        "h1": "Wat kost een huis of woning laten schilderen in 2026?",
+        "title": "Huis laten schilderen: kosten buiten en binnen 2026",
+        "description": "Een huis buiten laten schilderen kost €1.500 tot €7.000, afhankelijk van het woningtype. Met prijzen voor tussenwoning, hoekwoning en vrijstaand, en binnen.",
+        "verdieping": [
+            ("En binnen?",
+             "<p>Binnen reken je per onderdeel. Muren en plafonds kosten €10 tot €22 per m² (<a href=\"/kosten/schilderen-per-m2/\">schilderen per m²</a>), een plafond apart zie je bij <a href=\"/kosten/plafond-schilderen/\">plafond schilderen</a> en binnendeuren bij <a href=\"/kosten/deuren-spuiten/\">deuren spuiten</a>. Voor een hele woning met zo'n 250 m² muren en plafonds kom je op €2.500 tot €5.500. Buiten liever per kozijn rekenen? Kijk bij <a href=\"/kosten/kozijnen-schilderen/\">kozijnen schilderen</a>.</p>"),
+            ("Zo laat je je huis schilderen, stap voor stap",
+             "<ol><li><strong>Bekijk de staat.</strong> Loop rond je huis en let op afbladderende verf, open naden en zacht hout bij dorpels en hoeken.</li>"
+             "<li><strong>Vraag offertes aan.</strong> Liefst drie, met alle onderdelen apart: kozijnen, deuren, boeidelen, steiger en houtrot.</li>"
+             "<li><strong>Vergelijk per onderdeel.</strong> Niet alleen het totaal. <a href=\"/offerte-vergelijken/\">Leg je offerte naast de richtprijzen.</a></li>"
+             "<li><strong>Plan op tijd.</strong> Buitenwerk kan van maart tot en met oktober; in het voorjaar zitten schilders snel vol. Lees <a href=\"/gids/wanneer-buiten-schilderen/\">wanneer je buiten kunt schilderen</a>.</li>"
+             "<li><strong>Oplevering.</strong> Loop samen rond, controleer de hoeken en randen en vraag wat er onder de garantie valt.</li></ol>"),
+            ("Moet de gevel ook geschilderd worden?",
+             "<p>Een gevel van schoon metselwerk wordt meestal niet geschilderd. Wel kan het voegwerk of een impregneerlaag aan de beurt zijn, maar dat is ander werk. Is je gevel al eerder geschilderd of gepleisterd, dan moet die laag wel onderhouden worden. Vraag daar een aparte prijs voor, want dat wordt per m² gerekend en niet per kozijn.</p>"),
+            ("Zelf schilderen of laten doen?",
+             "<p>Binnen een kamer verven doen veel mensen zelf. Buiten ligt dat anders: werken op hoogte, het voorwerk aan oude verflagen en houtrot herkennen vragen ervaring. Een schilder werkt ook sneller, zodat je huis korter in de steigers staat. Twijfel je, laat dan alleen het buitenwerk doen en verf binnen zelf.</p>"),
+        ],
+        "faq_extra": [
+            ("Wat kost een rijtjeshuis buiten schilderen?",
+             "Voor een tussenwoning reken je op €1.500 tot €3.500 voor de buitenkant, inclusief materiaal en btw. Houtrotherstel en een dakkapel komen er apart bij."),
+            ("Wat kost de buitenkant van een vrijstaand huis schilderen?",
+             "Reken op €3.000 tot €7.000. Het verschil zit in de hoeveelheid kozijnen, de hoogte en hoeveel steigerwerk er nodig is."),
+        ],
+    },
+    "deuren-spuiten": {
+        "title": "Deuren laten spuiten: kosten per deur 2026",
+        "verdieping": [
+            ("Opdekdeur of stompe deur: maakt het uit?",
+             "<p>Een opdekdeur valt met een rand over het kozijn, een stompe deur ligt vlak in het kozijn. Voor het spuiten maakt het weinig uit: beide gaan uit de scharnieren en worden rondom gelakt. Bij een opdekdeur let de schilder extra op de sponning, omdat de rand daar tegen het kozijn slijt. Wil je van opdek naar stomp, dan moet het kozijn worden aangepast. Dat is timmerwerk en geen spuitwerk.</p>"),
+            ("Binnendeuren en kozijnen samen laten doen",
+             "<p>Nieuwe witte deuren in vergeelde kozijnen vallen op. Laat de kozijnen daarom in dezelfde ronde meenemen. De deuren gaan meestal naar de werkplaats, de kozijnen worden op locatie gelakt of gespoten. Een deurkozijn binnen kost €45 tot €95. Op de offerte horen deuren en kozijnen als aparte posten te staan.</p>"),
+            ("En de voordeur?",
+             "<p>Een voordeur krijgt zon, regen en veel handen te verduren. Daarom krijgt hij een buitenlak die tegen weer en slijtage kan. Spuiten op locatie is lastig, dus vaak gaat de deur een dag of twee naar de werkplaats en zet de schilder er tijdelijk een noodvoorziening in. Vraag hoe dat geregeld wordt voordat je tekent.</p>"),
+        ],
+        "faq_extra": [
+            ("Kun je een opdekdeur laten spuiten?",
+             "Ja. Een opdekdeur wordt net als een stompe deur uit de scharnieren gehaald en rondom gespoten. De schilder let extra op de rand die tegen het kozijn valt."),
+        ],
+    },
+    "dakkapel-schilderen": {
+        "verdieping": [
+            ("Dakkapel schilderen met een hoogwerker of steiger?",
+             "<p>Aan de achterkant kan een schilder vaak via het dak werken, met een dakladder en valbeveiliging. Aan de straatkant, of bij een hoog dak, is een steiger of hoogwerker nodig. Een hoogwerker staat er alleen op de dagen dat er gewerkt wordt en is snel opgebouwd. Een steiger blijft staan en is handiger als er ook houtrot hersteld of meerdere dagen gewerkt moet worden. Los kost een steiger of hoogwerker meestal €300 tot €900 per gevel, afhankelijk van de hoogte en hoe lang hij nodig is.</p>"
+             "<p>Vraag of de steiger of hoogwerker in de prijs zit, en zo niet, wat hij apart kost. Laat de dakkapel bij voorkeur meenemen met de rest van het buitenschilderwerk: de steiger staat er dan toch.</p>"),
+            ("Waar zit bij een dakkapel vaak houtrot?",
+             "<p>In de onderdorpel van het kozijn, in de hoeken van de boeidelen en waar de zijwangen op het dak aansluiten. Daar blijft water het langst staan. Een schilder prikt bij de opname met een priem in het hout om te voelen of het zacht is. Reken houtrot per plek: €85 tot €275 per reparatieplek.</p>"),
+        ],
+        "faq_extra": [
+            ("Wat kost een dakkapel schilderen met een hoogwerker?",
+             "De hoogwerker zit bij een dakkapel vaak in de prijs van €400 tot €950. Komt hij er apart bij, vraag dan om een vaste prijs voor het aantal dagen dat hij nodig is."),
+        ],
+    },
+}
+
+for _k in KOSTEN:
+    _u = UITBREIDING.get(_k["slug"])
+    if _u:
+        for _veld in ("h1", "title", "description"):
+            if _veld in _u:
+                _k[_veld] = _u[_veld]
+        _k["verdieping"] = _u["verdieping"]
+        _k["faq"] = list(_k["faq"]) + _u["faq_extra"]

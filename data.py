@@ -182,18 +182,18 @@ DIENSTEN = [
         "slug": "spuitwerk",
         "naam": "Spuitwerk",
         "naam_kort": "Spuiten",
-        "naam_lang": "Latex spuiten en spuitwerk",
-        "seo_titel": "Latex spuiten en spuitwerk: kosten en offertes",
+        "naam_lang": "Spuitwerk",
+        "seo_titel": "Spuitwerk: deuren, keukens en kozijnen laten spuiten",
         "kort": "Deuren, kozijnen, keukenkastjes en meubels strak spuiten",
         "icon": "spray",
         "prijs_van": 95,
         "prijs_tot": 185,
         "prijs_eenheid": "per deur",
-        "prijs_extra": "Een complete keuken laten spuiten ligt meestal tussen €900 en €2.500, afhankelijk van het aantal fronten en of het in de werkplaats of op locatie gebeurt.",
+        "prijs_extra": "Een keuken laten spuiten kost €45 tot €95 per front. Voor een gemiddelde keuken met 16 fronten is dat €720 tot €1.520, afhankelijk van het materiaal en of het in de werkplaats of op locatie gebeurt.",
         "meta_title": "Spuitwerk kosten: deuren, kozijnen en keuken | {plaats}",
         "intro": (
-            "Latex spuiten is spuitwerk voor muren en plafonds. Spuitwerk is de bredere term, en "
-            "daar vallen ook deuren, kozijnen en keukenfronten onder. Spuiten geeft een egale laag "
+            "Bij spuitwerk brengt de schilder lak of verf aan met een spuit in plaats van met kwast "
+            "of roller. Denk aan binnendeuren, kozijnen, keukenfronten en trappen. Spuiten geeft een egale laag "
             "zonder kwaststrepen of rolbanen. Het verschil zit in de voorbereiding: de spuitlaag "
             "verbergt niets, dus de ondergrond moet goed zijn."
         ),
