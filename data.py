@@ -76,6 +76,8 @@ DIENSTEN = [
     },
     {
         "slug": "buitenschilderwerk",
+        # seo-ronde 4: geen "per kozijn" in de titel, dat zoekwoord hoort bij /kosten/kozijnen-schilderen/
+        "seo_titel": "Buitenschilderwerk laten doen: kosten en werkwijze",
         "naam": "Buitenschilderwerk",
         "naam_kort": "Buiten schilderen",
         "kort": "Kozijnen, gevels, boeidelen, dakkapellen en houtwerk buiten",

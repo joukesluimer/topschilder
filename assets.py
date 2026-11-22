@@ -166,11 +166,33 @@ textarea{min-height:110px;resize:vertical}
 .oc-plak summary{cursor:pointer;color:var(--navy);font-weight:600;margin-bottom:10px}
 input[type=file]{width:100%;padding:12px;border:1.5px dashed var(--line);border-radius:10px;background:#faf8f5;font-size:.93rem}
 .oc-melding{font-size:.85rem;color:var(--muted);margin:6px 0 0}
-.oc-rij{display:grid;grid-template-columns:minmax(0,1fr) 72px 104px 34px;gap:6px;align-items:center;margin-bottom:8px}
-.oc-rij select,.oc-rij input{padding:9px 8px;font-size:.9rem}
-.oc-rij .oc-weg{border:0;background:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1}
-.oc-kop{display:grid;grid-template-columns:minmax(0,1fr) 72px 104px 34px;gap:6px;font-size:.78rem;color:var(--muted);font-weight:600;margin-bottom:4px}
-@media(max-width:560px){.oc-kop{display:none}.oc-rij{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 28px;padding-bottom:10px;border-bottom:1px solid var(--line)}.oc-rij select{grid-column:1/-1}}
+.oc-rij{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px 8px;align-items:end;padding:10px 0 12px;border-bottom:1px solid var(--line)}
+.oc-rij select,.oc-rij input[type=text]{padding:7px 8px;font-size:.88rem;height:38px;box-sizing:border-box}
+.oc-rij .oc-oms{grid-column:1/-1;font-weight:600;width:calc(100% - 34px)}
+.oc-rij .oc-weg{position:absolute;right:0;top:14px;border:0;background:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;align-self:center}
+.oc-veld{display:flex;flex-direction:column;gap:2px;margin:0;font-weight:400;min-width:0}
+.oc-veld span{font-size:.74rem;color:var(--muted);font-weight:600}
+.oc-veld-type{grid-column:1/-1}
+.oc-mee{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:.84rem;font-weight:400;margin:2px 0 0}
+.oc-mee input{accent-color:var(--accent);width:16px;height:16px}
+.oc-label{grid-column:1/-1;color:#8a5200;font-size:.8rem}
+@media(max-width:560px){.oc-rij{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.oc-totalen{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:6px}
+.oc-totalen .field{margin:0}
+.oc-totalen label{font-size:.8rem}
+.oc-totalen input,.oc-totalen select{padding:8px;font-size:.9rem}
+@media(max-width:420px){.oc-totalen{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.oc-totalen .field:nth-child(2){grid-column:1/-1;order:3}}
+.oc-controle{font-size:.86rem;margin:6px 0 10px;padding:0}
+.oc-controle.oc-ok{color:#1e6b3a;background:#e7f5ec;padding:8px 10px;border-radius:8px}
+.oc-controle.oc-let,.oc-gevonden .oc-let{color:#8a3b00;background:#fff4e6;padding:8px 10px;border-radius:8px}
+.oc-gevonden{background:var(--bg-soft);border-radius:10px;padding:12px 14px;margin:12px 0 4px;font-size:.86rem}
+.oc-gevonden h4{font-size:.92rem;margin:0 0 6px}
+.oc-gevonden dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:3px 12px;margin:0}
+.oc-gevonden dt{color:var(--muted);font-weight:600}
+.oc-gevonden dd{margin:0;overflow-wrap:anywhere}
+.oc-vraag{font-size:.84rem;margin:4px 0 0;color:var(--body)}
+.oc-vraag::before{content:"Vraag: ";font-weight:700}
+.oc-vragen li{margin-bottom:5px;font-size:.92rem}
 .oc-btw{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;margin:8px 0 4px}
 .oc-btw label{white-space:nowrap}
 .oc-btw label,.oc-lijst label{display:flex;gap:8px;align-items:center;font-weight:400;margin:0}
@@ -547,7 +569,7 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
   // zien welke advertentie een betaalde lead heeft opgeleverd.
   function captureAttribution() {
     var qs = new URLSearchParams(location.search);
-    var keys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid"];
+    var keys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid", "gbraid", "wbraid", "fbclid"];
     var found = {};
     var any = false;
     keys.forEach(function (k) {
@@ -786,8 +808,9 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
 
       var attr = getAttribution();
       payload.bron_url = location.pathname;
-      payload.utm_source = attr.utm_source || "";
-      payload.utm_medium = attr.utm_medium || "";
+      // Klik vanaf Facebook/Instagram zonder utm-tags: toch herkenbaar als Meta.
+      payload.utm_source = attr.utm_source || (attr.fbclid ? "facebook" : "");
+      payload.utm_medium = attr.utm_medium || (attr.fbclid ? "fbclid" : "");
       payload.utm_campaign = attr.utm_campaign || "";
       payload.gclid = attr.gclid || attr.gbraid || attr.wbraid || "";
       payload.referrer = attr._referrer || document.referrer || "";
@@ -1093,9 +1116,11 @@ APP_JS += r'''
 APP_JS += r"""
 /* ------------------------------------------------- offertecheck in de browser */
 // Alles gebeurt hier in de browser: de offerte wordt nergens naartoe gestuurd.
+// Het uitlezen zelf staat in /assets/js/offerte-parser.js (window.TSOfferte).
 (function () {
   var box = document.querySelector("[data-offertecheck]");
-  if (!box) return;
+  if (!box || !window.TSOfferte) return;
+  var O = window.TSOfferte;
   var BANDEN = window.TS_PRIJSBANDEN || {};
   var hand = document.querySelector("[data-handcheck]");
   document.querySelectorAll("[data-check-uit]").forEach(function (e) { e.hidden = true; });
@@ -1104,117 +1129,164 @@ APP_JS += r"""
   if (hand) hand.hidden = true;
   box.querySelector("[data-oc-hand]").addEventListener("click", function () { if (hand) hand.hidden = false; });
 
-  var rijen = box.querySelector("[data-oc-rijen]");
-  var melding = box.querySelector("[data-oc-melding]");
-  var fout = box.querySelector("[data-oc-fout]");
-  var uitslag = box.querySelector("[data-oc-uitslag]");
-  var plaats = box.querySelector("[name=plaats]");
-  var opties = Object.keys(BANDEN).map(function (k) {
-    return "<option value='" + k + "'>" + BANDEN[k].naam + " (" + BANDEN[k].eenheid + ")</option>";
-  }).join("") + "<option value='anders'>Iets anders</option>";
+  var $ = function (s) { return box.querySelector(s); };
+  var rijen = $("[data-oc-rijen]"), melding = $("[data-oc-melding]"), fout = $("[data-oc-fout]");
+  var uitslag = $("[data-oc-uitslag]"), plaats = $("[name=plaats]"), gevonden = $("[data-oc-gevonden]");
+  var vTex = $("[data-oc-tex]"), vTin = $("[data-oc-tin]"), vTarief = $("[data-oc-tarief]"), ctrl = $("[data-oc-controle]");
+  var gelezen = null; // laatste uitleesresultaat, voor de extra gegevens
 
   function esc(t) {
     return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-  function euro(n) { return "€" + Math.round(n).toLocaleString("nl-NL"); }
-  function getal(t) {
-    // Nederlandse notatie: 1.250,50 -> 1250.5
-    t = String(t || "").replace(/[€\s]/g, "").replace(/,-$/, "");
-    if (!t) return null;
-    if (/,\d{1,2}$/.test(t)) t = t.replace(/\./g, "").replace(",", ".");
-    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");
-    else t = t.replace(",", ".");
-    var n = parseFloat(t);
-    return isNaN(n) ? null : n;
-  }
+  var euro = O.euro, getal = O.getal;
+  function nl(n) { return n == null ? "" : String(Math.round(n * 100) / 100).replace(".", ","); }
+  function basis() { return box.querySelector("[name=btwsoort]:checked").value; }
 
+  var typeOpties = Object.keys(O.TYPES).map(function (k) {
+    return "<option value='" + k + "'>" + O.TYPES[k].naam + "</option>";
+  }).join("");
+  var eenheidOpties = "<option value=''>–</option>" + Object.keys(O.EENHEDEN).map(function (k) {
+    return "<option value='" + k + "'>" + O.EENHEDEN[k] + "</option>";
+  }).join("");
+
+  /* --------------------------- posten (bewerkbaar) */
   function voegRijToe(p) {
     p = p || {};
     var r = document.createElement("div");
     r.className = "oc-rij";
-    r.innerHTML = "<select aria-label='Soort werk'>" + opties + "</select>" +
-      "<input type='text' inputmode='decimal' aria-label='Aantal' placeholder='Aantal'>" +
-      "<input type='text' inputmode='decimal' aria-label='Bedrag' placeholder='€'>" +
-      "<button type='button' class='oc-weg' aria-label='Post verwijderen'>×</button>";
-    var v = r.querySelectorAll("select,input");
-    v[0].value = p.categorie || "buitenkozijn";
-    if (p.hoeveelheid != null) v[1].value = String(p.hoeveelheid).replace(".", ",");
-    if (p.bedrag != null) v[2].value = String(p.bedrag).replace(".", ",");
-    r.querySelector(".oc-weg").addEventListener("click", function () { r.remove(); });
+    var labels = [];
+    if (p.berekend && p.eenheidsprijs != null) labels.push("berekend: " + nl(p.aantal) + " × " + euro(p.eenheidsprijs));
+    if (p.stelpost) labels.push("stelpost");
+    if (p.optie) labels.push(p.variant ? "andere variant" : "optie, niet in het totaal");
+    else if (p.naTotaal) labels.push("staat na het totaal");
+    if (p.alleenTarief) labels.push("alleen een prijs per eenheid");
+    r.innerHTML =
+      "<input type='text' class='oc-oms' aria-label='Omschrijving' placeholder='Omschrijving'>" +
+      "<button type='button' class='oc-weg' aria-label='Post verwijderen'>×</button>" +
+      "<label class='oc-veld oc-veld-type'><span>Soort werk</span><select class='oc-type'>" + typeOpties + "</select></label>" +
+      "<label class='oc-veld'><span>Aantal</span><input type='text' inputmode='decimal' class='oc-aantal'></label>" +
+      "<label class='oc-veld'><span>Eenheid</span><select class='oc-eenheid'>" + eenheidOpties + "</select></label>" +
+      "<label class='oc-veld'><span>Bedrag</span><input type='text' inputmode='decimal' class='oc-bedrag' placeholder='€'></label>" +
+      "<label class='oc-veld'><span>Btw</span><select class='oc-btwp'><option value=''>–</option><option value='9'>9%</option><option value='21'>21%</option></select></label>" +
+      "<label class='oc-mee'><input type='checkbox' class='oc-tel'> telt mee in het totaal</label>" +
+      (labels.length ? "<small class='oc-label'>" + esc(labels.join(" · ")) + "</small>" : "");
+    var q = function (s) { return r.querySelector(s); };
+    q(".oc-oms").value = p.omschrijving || "";
+    q(".oc-type").value = p.type || "wanden";
+    if (p.aantal != null) q(".oc-aantal").value = nl(p.aantal);
+    q(".oc-eenheid").value = p.eenheid || (p.type ? "" : O.TYPES.wanden.eenheid);
+    var bedrag = p.bedrag != null ? p.bedrag : (p.alleenTarief ? null : null);
+    if (bedrag != null) q(".oc-bedrag").value = nl(bedrag);
+    else if (p.alleenTarief && p.eenheidsprijs != null) q(".oc-bedrag").placeholder = euro(p.eenheidsprijs) + " per " + (O.EENHEDEN[p.eenheid] || "eenheid");
+    q(".oc-btwp").value = p.btw != null ? String(p.btw) : "";
+    q(".oc-tel").checked = p.meetellen !== false;
+    r._post = p;
+    q(".oc-type").addEventListener("change", function () {
+      var t = O.TYPES[this.value];
+      if (t && t.eenheid && !q(".oc-eenheid").value) q(".oc-eenheid").value = t.eenheid;
+      if (this.value === "korting") { var b = getal(q(".oc-bedrag").value); if (b > 0) q(".oc-bedrag").value = nl(-b); }
+    });
+    q(".oc-weg").addEventListener("click", function () { r.remove(); werkControleBij(); });
     rijen.appendChild(r);
   }
-  box.querySelector("[data-oc-plus]").addEventListener("click", function () { voegRijToe(); });
-  voegRijToe();
-
-  /* --------------------------- tekst uitlezen */
-  var WOORDEN = [
-    ["keukenfront", /keuken|front|kastdeur|\blade|\bladen/],
-    ["trap", /\btrap/],
-    ["houtrot_plek", /houtrot|inzetstuk|rotte|epoxy/],
-    ["behang_m2", /behang/],
-    ["steiger", /steiger|hoogwerker/],
-    ["binnenkozijn", /binnenkozijn|deurkozijn|kozijnen? binnen|binnen.*kozijn/],
-    ["buitenkozijn", /kozijn|raam|ramen|dakkapel|boeiboord/],
-    ["deur", /\bdeur/],
-    ["uurloon", /\bper uur|uurloon|uurtarief|regie|\buren\b/],
-    ["muren_plafonds_m2", /muur|muren|wand|plafond|latex|m2|m²/]
-  ];
-  var EENHEID = /(\d+(?:[.,]\d+)?)\s*(?:x\s*)?(m2|m²|stuks?|st\.?|kozijnen|kozijn|deuren|deur|fronten|front|trappen|trap|uren|uur|plekken|plek|keer)\b/i;
-  var BEDRAG = /(?:€|\beur\b)\s*(\d{1,3}(?:\.\d{3})*(?:,(?:\d{1,2}|-))?|\d+(?:,(?:\d{1,2}|-))?)|(\d{1,3}(?:\.\d{3})*,(?:\d{2}|-))(?!\s*%)/gi;
-  var MERKEN = /sikkens|sigma|flexa|histor|wijzonol|trimetal|boss|drost|rambo|herbol|caparol|alpina|koopmans|osmo|ralston|jotun|tikkurila|levis|copagro/i;
-
-  function leesTekst(tekst) {
-    var t = tekst.toLowerCase();
-    var posten = [], totaal = null;
-    tekst.split(/\r?\n/).forEach(function (regel) {
-      var r = regel.toLowerCase();
-      var bedragen = [], m;
-      BEDRAG.lastIndex = 0;
-      while ((m = BEDRAG.exec(regel))) bedragen.push(getal(m[1] || m[2]));
-      bedragen = bedragen.filter(function (b) { return b != null && b > 0; });
-      if (!bedragen.length) return;
-      var bedrag = bedragen[bedragen.length - 1];
-      if (/totaal|te betalen|eindbedrag/.test(r) && !/sub/.test(r)) { totaal = bedrag; return; }
-      if (/subtotaal|\bbtw\b|korting/.test(r)) return;
-      var cat = "anders";
-      for (var i = 0; i < WOORDEN.length; i++) { if (WOORDEN[i][1].test(r)) { cat = WOORDEN[i][0]; break; } }
-      var q = null, e = r.match(EENHEID);
-      if (e && !/keer/.test(e[2])) q = getal(e[1]);
-      if (cat === "steiger" || cat === "trap") q = q || 1;
-      posten.push({ categorie: cat, hoeveelheid: q, bedrag: bedrag });
+  function leesRijen() {
+    return [].slice.call(rijen.children).map(function (r) {
+      var q = function (s) { return r.querySelector(s); };
+      var oud = r._post || {};
+      var bedrag = getal(q(".oc-bedrag").value);
+      var type = q(".oc-type").value;
+      if (type === "korting" && bedrag > 0) bedrag = -bedrag;
+      return {
+        omschrijving: q(".oc-oms").value.trim(), type: type, aantal: getal(q(".oc-aantal").value),
+        eenheid: q(".oc-eenheid").value || null, bedrag: bedrag, btw: q(".oc-btwp").value ? parseInt(q(".oc-btwp").value, 10) : null,
+        meetellen: q(".oc-tel").checked, stelpost: !!oud.stelpost, optie: !!oud.optie,
+        alleenTarief: bedrag == null && !!oud.alleenTarief, eenheidsprijs: bedrag == null ? oud.eenheidsprijs : null
+      };
     });
-    var btw = /\b21\s*%/.test(t) ? 21 : /\b9\s*%/.test(t) ? 9 : null;
-    var excl = /excl\.?\w*\s*(btw|b\.t\.w)/.test(t) ? true : /incl\.?\w*\s*(btw|b\.t\.w)/.test(t) ? false
-      : /excl/.test(t) ? true : null;
-    var lijst = {
-      lagen: /\d\s*(x|keer|lagen|laags)\b|grondlaag|aflak|grondverf|voorlak/.test(t),
-      merk: MERKEN.test(t),
-      voorbereiding: /schuren|ontvet|plamu|kitten|reinig|afplak/.test(t),
-      steiger: /steiger|hoogwerker|ladder/.test(t),
-      houtrot: /houtrot/.test(t),
-      garantie: /garantie/.test(t),
-      btw: btw != null,
-      planning: /planning|uitvoering|week|startdatum|oplever/.test(t)
-    };
-    return { posten: posten, totaal: totaal, btw: btw, excl: excl, lijst: lijst };
+  }
+  $("[data-oc-plus]").addEventListener("click", function () { voegRijToe({ type: "wanden", eenheid: "m2" }); });
+  rijen.addEventListener("input", werkControleBij);
+  rijen.addEventListener("change", werkControleBij);
+  [vTex, vTin, vTarief].forEach(function (e) { e.addEventListener("input", werkControleBij); });
+  box.querySelectorAll("[name=btwsoort]").forEach(function (e) { e.addEventListener("change", werkControleBij); });
+  voegRijToe({ type: "wanden", eenheid: "m2" });
+
+  /* --------------------------- tellen ze op? */
+  function controle() {
+    var posten = leesRijen().filter(function (p) { return p.meetellen && p.bedrag != null; });
+    var som = posten.reduce(function (s, p) { return s + p.bedrag; }, 0);
+    var b = basis(), tex = getal(vTex.value), tin = getal(vTin.value);
+    var tegen = b === "incl" ? tin : tex;
+    return { n: posten.length, som: Math.round(som * 100) / 100, tegen: tegen, basis: b,
+      klopt: tegen == null || !posten.length ? null : Math.abs(som - tegen) <= Math.max(1.5, tegen * 0.003) };
+  }
+  function werkControleBij() {
+    var c = controle(), b = c.basis === "incl" ? "incl. btw" : "excl. btw";
+    ctrl.className = "oc-controle";
+    if (!c.n) { ctrl.textContent = ""; return; }
+    if (c.klopt === true) {
+      ctrl.classList.add("oc-ok");
+      ctrl.textContent = "De posten tellen op tot " + euro(c.som) + " " + b + ". Dat is gelijk aan het totaal op de offerte.";
+    } else if (c.klopt === false) {
+      ctrl.classList.add("oc-let");
+      ctrl.textContent = "Let op: de posten tellen op tot " + euro(c.som) + " " + b + ", maar het totaal is " + euro(c.tegen) +
+        " (verschil " + euro(c.tegen - c.som) + "). Mist er een post, staat er een dubbel, of klopt incl./excl. btw niet? Pas het hieronder aan.";
+    } else {
+      ctrl.textContent = "De posten tellen op tot " + euro(c.som) + " " + b + ". Vul het totaal van de offerte in om te controleren of alles is gevonden.";
+    }
   }
 
+  /* --------------------------- uitlezen en invullen */
   function vulIn(res) {
+    gelezen = res;
     rijen.innerHTML = "";
     res.posten.forEach(voegRijToe);
-    if (!res.posten.length) voegRijToe();
-    if (res.excl != null) box.querySelector("[name=btwsoort][value=" + (res.excl ? "excl" : "incl") + "]").checked = true;
+    if (!res.posten.length) voegRijToe({ type: "wanden", eenheid: "m2" });
+    box.querySelector("[name=btwsoort][value=" + (res.basis === "incl" ? "incl" : "excl") + "]").checked = true;
+    vTex.value = nl(res.totaal.excl); vTin.value = nl(res.totaal.incl);
+    var t = res.btwTarieven || [];
+    vTarief.value = t.length > 1 ? "gemengd" : t.length ? String(t[0]) : "";
+    if (res.totaal.twijfel != null && res.totaal.incl == null && res.totaal.excl == null) vTin.value = nl(res.totaal.twijfel);
     Object.keys(res.lijst).forEach(function (k) {
       var c = box.querySelector("[name=lijst][value=" + k + "]");
       if (c) c.checked = res.lijst[k];
     });
-    box.dataset.totaal = res.totaal || "";
-    box.dataset.btw = res.btw || "";
-    melding.textContent = res.posten.length
-      ? res.posten.length + " post(en) gevonden. Controleer ze hieronder: het uitlezen is automatisch en kan zich vergissen."
-      : "We vonden geen posten met een bedrag. Vul ze hieronder zelf in.";
+
+    // Wat we lazen, zodat je het kunt nalopen.
+    var bron = function (k) {
+      var b = res.totaal.bron[k];
+      return b === "berekend" ? " (berekend)" : b === "posten" ? " (opgeteld uit de posten)" : b === "betalingsschema" ? " (uit het betalingsschema)" : "";
+    };
+    var regels = [];
+    if (res.totaal.excl != null) regels.push(["Totaal excl. btw", euro(res.totaal.excl) + bron("excl")]);
+    if (res.totaal.btw != null && res.totaal.btw > 0) regels.push(["Btw", euro(res.totaal.btw) + (t.length ? " (" + t.join("% en ") + "%)" : "")]);
+    if (res.totaal.incl != null) regels.push(["Totaal incl. btw", euro(res.totaal.incl) + bron("incl")]);
+    if (res.totaal.twijfel != null && res.totaal.incl == null && res.totaal.excl == null)
+      regels.push(["Totaal", euro(res.totaal.twijfel) + ". Er staat niet bij of dit incl. of excl. btw is. We hebben het als incl. btw ingevuld: pas het aan als dat niet klopt."]);
+    if (res.varianten.length > 1) regels.push(["Varianten", res.varianten.map(function (v) { return v.naam + ": " + euro(v.totaal) + " " + v.soort + "."; }).join(" · ")]);
+    if (res.merken.length) regels.push(["Verf", res.merken.join(", ")]);
+    if (res.lagen.tekst) regels.push(["Lagen", res.lagen.tekst]);
+    if (res.uurloon) regels.push(["Uurloon", euro(res.uurloon)]);
+    if (res.garantie) regels.push(["Garantie", res.garantie]);
+    if (res.geldigheid) regels.push(["Geldig", res.geldigheid]);
+    if (res.termijnen.length) regels.push(["Betaling", res.termijnen.map(function (x) { return (x.procent != null ? x.procent + "% " : "") + x.omschrijving.toLowerCase() + " (" + euro(x.bedrag) + ")"; }).join(", ")]);
+    if (res.betaaltermijn) regels.push(["Betaaltermijn", res.betaaltermijn]);
+    if (res.doorlooptijd) regels.push(["Doorlooptijd", res.doorlooptijd]);
+    gevonden.innerHTML = regels.length ? "<h4>Dit hebben we gelezen</h4><dl>" + regels.map(function (r) {
+      return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>";
+    }).join("") + "</dl>" + res.meldingen.map(function (m) { return "<p class='oc-let'>" + esc(m) + "</p>"; }).join("") : "";
+    gevonden.hidden = !regels.length;
+
+    var n = res.posten.length;
+    melding.textContent = n
+      ? n + (n === 1 ? " post" : " posten") + " gevonden. Loop ze hieronder na: klopt een bedrag of soort werk niet, pas het dan aan."
+      : res.totaal.twijfel != null || res.totaal.incl != null || res.totaal.excl != null
+        ? "We vonden een totaal maar geen losse posten. Vul de posten zelf in als je ze per stuk wilt vergelijken."
+        : "We vonden geen posten met een bedrag. Vul ze hieronder zelf in.";
+    werkControleBij();
+    $("[data-oc-stap2]").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   var pdfjs = null;
@@ -1237,127 +1309,124 @@ APP_JS += r"""
       return x[0].getDocument({ data: x[1] }).promise;
     }).then(function (doc) {
       var paginas = [];
-      for (var i = 1; i <= Math.min(doc.numPages, 10); i++) paginas.push(doc.getPage(i));
-      return Promise.all(paginas.map(function (p) {
-        return p.then(function (pg) { return pg.getTextContent(); }).then(function (c) {
-          // Groepeer tekst per regel op basis van de hoogte op de pagina.
-          var regels = {};
-          c.items.forEach(function (it) {
-            var y = Math.round(it.transform[5] / 3);
-            (regels[y] = regels[y] || []).push(it);
-          });
-          return Object.keys(regels).sort(function (a, b) { return b - a; }).map(function (y) {
-            return regels[y].sort(function (a, b) { return a.transform[4] - b.transform[4]; })
-              .map(function (it) { return it.str; }).join(" ");
-          }).join("\n");
-        });
-      }));
-    }).then(function (p) { return p.join("\n"); });
+      for (var i = 1; i <= Math.min(doc.numPages, 10); i++) paginas.push(doc.getPage(i).then(function (pg) { return pg.getTextContent(); }));
+      return Promise.all(paginas);
+    }).then(function (inh) {
+      return inh.map(function (c) { return O.regelsUitItems(c.items); }).join("\n");
+    });
   }
 
-  box.querySelector("[data-oc-lees]").addEventListener("click", function () {
-    var bestand = box.querySelector("[name=bestand]").files[0];
-    var tekst = box.querySelector("[name=tekst]").value;
+  $("[data-oc-lees]").addEventListener("click", function () {
+    var bestand = $("[name=bestand]").files[0];
+    var tekst = $("[name=tekst]").value;
     melding.textContent = "";
     if (bestand) {
-      if (bestand.type !== "application/pdf") { melding.textContent = "Alleen pdf-bestanden kunnen we uitlezen. Heb je een foto, vul de posten dan zelf in."; return; }
+      if (bestand.type !== "application/pdf" && !/\.pdf$/i.test(bestand.name)) { melding.textContent = "Alleen pdf-bestanden kunnen we uitlezen. Heb je een foto, vul de posten dan zelf in."; return; }
       melding.textContent = "Bezig met uitlezen…";
       pdfNaarTekst(bestand).then(function (t) {
         if (t.replace(/\s/g, "").length < 30) {
           melding.textContent = "Deze pdf bevat geen leesbare tekst, waarschijnlijk een scan. Vul de posten zelf in.";
           return;
         }
-        vulIn(leesTekst(t));
+        vulIn(O.leesOfferte(t));
       }).catch(function () { melding.textContent = "Deze pdf konden we niet openen. Vul de posten zelf in."; });
     } else if (tekst.trim().length > 10) {
-      vulIn(leesTekst(tekst));
+      vulIn(O.leesOfferte(tekst));
     } else {
       melding.textContent = "Kies een pdf of plak eerst de tekst van de offerte.";
     }
   });
 
-  /* --------------------------- vergelijken */
-  var CHECKS = {
-    lagen: "Het aantal lagen (bijvoorbeeld een grondlaag en twee aflakken)",
-    merk: "Het verfmerk en type verf",
-    voorbereiding: "Wat er aan voorbereiding gebeurt (schuren, ontvetten, kitten)",
-    steiger: "Of steiger of hoogwerker in de prijs zit",
-    houtrot: "Hoe houtrot wordt afgerekend",
-    garantie: "De garantie: hoe lang en waarop",
-    btw: "Het btw-tarief per post",
-    planning: "Wanneer het werk wordt uitgevoerd"
-  };
-
+  /* --------------------------- uitslag */
   // Link naar het aanvraagformulier met klus en plaats alvast ingevuld.
-  function aanvraagLink() {
-    var cats = [].slice.call(rijen.querySelectorAll("select")).map(function (s) { return s.value; });
+  function aanvraagLink(posten) {
+    var cats = posten.map(function (p) { return p.type; });
     var heeft = function (c) { return cats.indexOf(c) >= 0; };
-    var dienst = (heeft("buitenkozijn") || heeft("steiger")) ? "Buitenschilderwerk"
-      : heeft("houtrot_plek") ? "Houtrot reparatie"
+    var dienst = (heeft("buitenkozijn") || heeft("steiger") || heeft("boeidelen") || heeft("buitendeur") || heeft("dakkapel")) ? "Buitenschilderwerk"
+      : heeft("houtrot") ? "Houtrot reparatie"
       : (heeft("keukenfront") && cats.length === 1) ? "Spuitwerk"
-      : (heeft("behang_m2") && cats.length === 1) ? "Behangen"
+      : (heeft("behang") && cats.length === 1) ? "Behangen"
       : "Binnenschilderwerk";
     var naam = plaats.value && plaats.value !== "1" ? plaats.options[plaats.selectedIndex].text : "";
     return "/offerte-aanvragen/?dienst=" + encodeURIComponent(dienst) +
       (naam ? "&plaats=" + encodeURIComponent(naam) : "") + "&via=offertecheck#offerte";
   }
 
-  box.querySelector("[data-oc-check]").addEventListener("click", function () {
+  $("[data-oc-check]").addEventListener("click", function () {
     fout.classList.remove("show");
     if (!plaats.value) { fout.textContent = "Kies je plaats."; fout.classList.add("show"); return; }
     var index = parseFloat(plaats.value) || 1;
-    var excl = box.querySelector("[name=btwsoort]:checked").value === "excl";
-    var btw = (parseFloat(box.dataset.btw) || 9) / 100;
+    var b = basis();
+    var tarief = vTarief.value === "21" ? 21 : 9;
+    var posten = leesRijen().filter(function (p) { return p.bedrag != null || p.alleenTarief; });
+    var tex = getal(vTex.value), tin = getal(vTin.value);
+    if (!posten.length && tex == null && tin == null) { fout.textContent = "Vul minstens één post of het totaal in."; fout.classList.add("show"); return; }
+
     var LABEL = { laag: "Onder de richtprijs", binnen: "Binnen de richtprijs", hoog: "Boven de richtprijs" };
-    var tel = { laag: 0, binnen: 0, hoog: 0 }, som = 0, html = "";
-
-    [].slice.call(rijen.children).forEach(function (r) {
-      var v = r.querySelectorAll("select,input");
-      var cat = v[0].value, q = getal(v[1].value), bedrag = getal(v[2].value);
-      if (bedrag == null) return;
-      som += bedrag;
-      var b = BANDEN[cat];
-      var naam = b ? b.naam : "Overig";
-      if (!b || !q || q <= 0) {
-        html += "<li><div class='oc-post'><strong>" + esc(naam) + "</strong><span class='oc-oordeel oc-geen'>Niet te vergelijken</span></div><small>" +
-          euro(bedrag) + (excl ? " excl. btw" : "") + (b ? " · vul het aantal in om te vergelijken" : "") + "</small></li>";
-        return;
+    var tel = { laag: 0, binnen: 0, hoog: 0 }, html = "", postVragen = [];
+    posten.forEach(function (p) {
+      var o = O.beoordeelPost(p, BANDEN, index, b, tarief);
+      var naam = p.omschrijving || O.TYPES[p.type].naam;
+      var soort = O.TYPES[p.type].naam;
+      var detail = [];
+      if (p.aantal != null) detail.push(nl(p.aantal) + " " + (O.EENHEDEN[p.eenheid] || ""));
+      if (p.bedrag != null) detail.push(euro(p.bedrag) + (b === "incl" ? " incl." : " excl.") + " btw" + (p.btw ? " (" + p.btw + "%)" : ""));
+      else if (p.eenheidsprijs != null) detail.push(euro(p.eenheidsprijs) + " per " + (O.EENHEDEN[p.eenheid] || "eenheid"));
+      if (!p.meetellen) detail.push("telt niet mee in het totaal");
+      var badge;
+      if (o.oordeel) {
+        tel[o.oordeel]++;
+        badge = "<span class='oc-oordeel oc-" + o.oordeel + "'>" + LABEL[o.oordeel] + "</span>";
+        if (o.inclBtw && b === "excl") detail.push("met btw " + euro(Math.round(o.vergelijk)));
+        detail.push("richtprijs " + euro(o.van) + " – " + euro(o.tot) + (o.inclBtw ? " incl." : " excl.") + " btw");
+      } else {
+        var waarom = { "geen richtprijs": "geen richtprijs voor dit soort werk", "geen aantal": "vul het aantal in om te vergelijken",
+          "andere eenheid": "vergelijken kan in " + (O.EENHEDEN[(O.TYPES[p.type] || {}).eenheid] || "een andere eenheid"), "korting": "korting", "geen bedrag": "geen bedrag" }[o.reden] || "";
+        badge = "<span class='oc-oordeel oc-geen'>Niet te vergelijken</span>";
+        if (waarom && o.reden !== "korting") detail.push(waarom);
       }
-      // Banden zijn incl. btw, behalve uurloon. Reken het bedrag om naar dezelfde basis.
-      var vgl = b.excl_btw ? (excl ? bedrag : bedrag / (1 + btw)) : (excl ? bedrag * (1 + btw) : bedrag);
-      var van = b.van * index * q, tot = b.tot * index * q;
-      var o = vgl < van * 0.9 ? "laag" : vgl > tot * 1.1 ? "hoog" : "binnen";
-      tel[o]++;
-      html += "<li><div class='oc-post'><strong>" + esc(naam) + "</strong><span class='oc-oordeel oc-" + o + "'>" + LABEL[o] + "</span></div><small>" +
-        esc(String(q).replace(".", ",")) + " × " + esc(b.eenheid.replace("per ", "")) + " · offerte " + euro(vgl) + (b.excl_btw ? " excl." : " incl.") + " btw" +
-        " · richtprijs " + euro(van) + " – " + euro(tot) + "</small></li>";
+      // In de lijst onderaan alleen de posten die opvallen; de rest staat bij de post zelf.
+      if (o.oordeel === "hoog") postVragen.push(naam + ": waarom ligt deze post boven de richtprijs? Wat zit er precies in?");
+      else if (o.oordeel === "laag") postVragen.push(naam + ": zitten alle lagen en het voorwerk in deze prijs?");
+      o.vragen.forEach(function (v) { if (/stelpost|21% btw/.test(v) && postVragen.indexOf(v) < 0) postVragen.push(naam + ": " + v.charAt(0).toLowerCase() + v.slice(1)); });
+      html += "<li><div class='oc-post'><strong>" + esc(naam) + "</strong>" + badge + "</div>" +
+        "<small>" + esc(soort) + " · " + esc(detail.join(" · ")) + "</small>" +
+        (o.vragen.length ? "<p class='oc-vraag'>" + esc(o.vragen[0]) + "</p>" : "") + "</li>";
     });
-    if (!html) { fout.textContent = "Vul minstens één post met een bedrag in."; fout.classList.add("show"); return; }
 
-    var buiten = [].slice.call(rijen.querySelectorAll("select")).some(function (sel) {
-      return ["buitenkozijn", "houtrot_plek", "steiger"].indexOf(sel.value) >= 0;
-    });
-    var mist = [].slice.call(box.querySelectorAll("[name=lijst]")).filter(function (c) {
-      return !c.checked && (buiten || (c.value !== "steiger" && c.value !== "houtrot"));
-    })
-      .map(function (c) { return CHECKS[c.value]; });
+    var lijst = {};
+    box.querySelectorAll("[name=lijst]").forEach(function (c) { lijst[c.value] = c.checked; });
+    var res = gelezen || { posten: posten, termijnen: [], lijst: lijst };
+    var buiten = posten.some(function (p) { return ["buitenkozijn", "buitendeur", "boeidelen", "dakkapel", "steiger", "houtrot"].indexOf(p.type) >= 0; });
+    var c = controle();
+    var info = { buiten: buiten || !!res.buiten, termijnen: res.termijnen || [], concept: res.concept, garantie: res.garantie,
+      controle: c, btwTarieven: vTarief.value === "gemengd" ? [9, 21] : vTarief.value ? [parseInt(vTarief.value, 10)] : [], posten: posten };
+    var algemeen = O.algemeneVragen(info, lijst);
+    // Uurloon voor meerwerk naast de richtprijs leggen.
+    if (gelezen && gelezen.uurloon && BANDEN.uurloon && !posten.some(function (p) { return p.type === "uren"; })) {
+      var ul = O.beoordeelPost({ type: "uren", aantal: 1, eenheid: "uur", bedrag: gelezen.uurloon }, BANDEN, index, gelezen.basis, tarief);
+      if (ul.oordeel === "hoog") algemeen.push("Het uurloon voor meerwerk (" + euro(gelezen.uurloon) + ") ligt boven de richtprijs. Vraag of daar iets over te zeggen valt.");
+    }
+    var vragen = algemeen.concat(postVragen.filter(function (v) { return algemeen.indexOf(v) < 0; }));
+
     var kop = tel.hoog > 0 ? "Een deel van je offerte ligt boven de richtprijs"
       : tel.laag > 0 ? "Je offerte ligt deels onder de richtprijs"
-      : tel.binnen > 0 ? "Je offerte ligt binnen de richtprijzen" : "We konden de posten niet vergelijken";
+      : tel.binnen > 0 ? "Je offerte ligt binnen de richtprijzen" : "We konden de posten niet naast de richtprijs leggen";
     var uitleg = tel.hoog > 0 ? "Dat kan kloppen, bijvoorbeeld bij slecht hout of veel voorwerk. Vraag de schilder waar het verschil in zit, of leg er een tweede offerte naast."
       : tel.laag > 0 ? "Een lage prijs is niet altijd slecht. Check wel of alles erin zit, zoals het aantal lagen, de steiger en houtrot."
       : tel.binnen > 0 ? "Check hieronder of er niets ontbreekt. Dan weet je zeker dat je appels met appels vergelijkt."
-      : "Vul bij de posten het aantal in, dan kunnen we ze naast de richtprijs leggen.";
-    var totaal = parseFloat(box.dataset.totaal);
+      : "Vul bij de posten het soort werk en het aantal in, dan kunnen we ze naast de richtprijs leggen.";
+    var totaalTekst = [tex != null ? euro(tex) + " excl. btw" : "", tin != null ? euro(tin) + " incl. btw" : ""].filter(Boolean).join(" · ");
+    var tarTekst = vTarief.value === "gemengd" ? " (9% en 21% btw)" : vTarief.value ? " (" + vTarief.value + "% btw)" : "";
 
     uitslag.innerHTML = "<h2>" + kop + "</h2><p>" + uitleg + "</p>" +
-      "<p><strong>Opgeteld:</strong> " + euro(som) + (excl ? " excl. btw" : " incl. btw") +
-      (totaal && Math.abs(totaal - som) > 1 && Math.abs(totaal - som * (1 + btw)) > 1 && Math.abs(totaal * (1 + btw) - som) > 1 ? " <small>(het totaal op de offerte is " + euro(totaal) + ")</small>" : "") + "</p>" +
-      "<h3>Per post</h3><ul class='oc-posten'>" + html + "</ul>" +
-      "<h3>" + (mist.length ? "Vraag de schilder hiernaar" : "Alles staat erin") + "</h3>" +
-      (mist.length ? "<ul>" + mist.map(function (m) { return "<li>" + m + "</li>"; }).join("") + "</ul>" : "<p>De belangrijkste punten staan in de offerte. Goed teken.</p>") +
+      (totaalTekst ? "<p><strong>Totaal van de offerte:</strong> " + totaalTekst + tarTekst + "</p>" : "") +
+      (c.n ? "<p class='oc-controle " + (c.klopt === false ? "oc-let" : c.klopt ? "oc-ok" : "") + "'>" + esc(ctrl.textContent) + "</p>" : "") +
+      (html ? "<h3>Per post</h3><ul class='oc-posten'>" + html + "</ul>" : "") +
+      "<h3>" + (vragen.length ? "Vraag de schilder" : "Alles staat erin") + "</h3>" +
+      (vragen.length ? "<ul class='oc-vragen'>" + vragen.map(function (m) { return "<li>" + esc(m) + "</li>"; }).join("") + "</ul>" : "<p>De belangrijkste punten staan in de offerte. Goed teken.</p>") +
       "<p class='formfoot'>Vergeleken met onze richtprijzen voor jouw regio. Dit is een indicatie, geen oordeel over het bedrijf.</p>" +
-      "<div class='formnav'><a class='btn btn-primary' href='" + aanvraagLink() + "'>" +
+      "<div class='formnav'><a class='btn btn-primary' href='" + aanvraagLink(posten) + "'>" +
       (tel.hoog > 0 ? "Leg er een tweede offerte naast" : "Vraag vergelijkende offertes aan") + "</a></div>";
     uitslag.hidden = false;
     uitslag.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1893,4 +1962,281 @@ STYLE_CSS += r'''
 @media(max-width:560px){.pc-wijken th,.pc-wijken td{padding:10px 8px;font-size:.88rem}}
 @media(max-width:480px){.pc-wijken .pc-groep{display:none}.pc-wijken th{letter-spacing:0;font-size:.72rem}.pc-wijken td:first-child{hyphens:auto;overflow-wrap:anywhere}}
 @media(max-width:480px){.pc-bars li{grid-template-columns:6.4em 1fr 3em;gap:8px;font-size:.86rem}.pc-n{display:none}}
+'''
+
+
+# =========================================================================
+# EFFECTEN (ronde 4) — scroll-onthulling, optellende cijfers, hero-diepte,
+# hover/focus, sticky CTA, menu en micro-interacties in de tools.
+# Eén los blok (CSS + JS) aan het eind, zodat samenvoegen makkelijk blijft.
+# Alles respecteert prefers-reduced-motion; animaties gebruiken alleen
+# transform/opacity (geen layout shift). LCP-elementen (hero-foto, h1) worden
+# niet verborgen of vertraagd.
+# =========================================================================
+
+STYLE_CSS += r'''
+/* ---------- Effecten: basis ---------- */
+:root{--ease-uit:cubic-bezier(.2,.7,.2,1);--veer:cubic-bezier(.34,1.56,.64,1);
+  --penseel-vol:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 24' preserveAspectRatio='none'%3E%3Cpath d='M3 13C38 6 88 4 129 6s61 2 88 0l-2 9c-29 5-61 4-95 3S41 16 5 21z' fill='%23f4820b'/%3E%3Cpath d='M30 17c40-3 90-4 150-2' stroke='%23ffb15c' stroke-width='1.6' fill='none' stroke-linecap='round' opacity='.7'/%3E%3C/svg%3E")}
+h1{font-weight:800;letter-spacing:-.03em}
+h2{letter-spacing:-.025em}
+
+/* ---------- Hero (home): diepte, bewegende gloed, verfstreek ---------- */
+.hero-foto .hero-bg{will-change:transform;transform:translate3d(0,var(--hero-y,0px),0) scale(1.06);transform-origin:50% 30%}
+.hero-foto::after{inset:auto -15% -70% 30%;height:640px;background:radial-gradient(closest-side,rgba(244,130,11,.30),transparent);animation:ts-drift 16s ease-in-out infinite alternate}
+.hero-foto .hero-in::before{content:"";position:absolute;width:420px;height:420px;left:-180px;top:-160px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,177,92,.16),transparent);pointer-events:none;z-index:-1;animation:ts-drift 20s ease-in-out -6s infinite alternate-reverse}
+@keyframes ts-drift{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(-60px,-40px,0) scale(1.12)}}
+.hero h1::after,.section-sm:has(> .wrap > .g2 .formcard) h1::after,.kosten-kop h1::after,.tool-hero h1::after{
+  content:"";display:block;width:min(230px,58%);height:13px;margin-top:.32em;background:var(--penseel-vol) 0 0/100% 100% no-repeat;
+  clip-path:inset(0 100% 0 0);animation:ts-streep .9s var(--ease-uit) .25s forwards}
+@keyframes ts-streep{to{clip-path:inset(0 0 0 0)}}
+.hero-usps li,.hero-tags{animation:ts-op .6s var(--ease-uit) both}
+.hero-usps li:nth-child(1){animation-delay:.1s}.hero-usps li:nth-child(2){animation-delay:.18s}.hero-usps li:nth-child(3){animation-delay:.26s}.hero-tags{animation-delay:.34s}
+.hero .formcard{animation:ts-kaart .7s var(--ease-uit) .05s both}
+@keyframes ts-op{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes ts-kaart{from{transform:translateY(22px)}to{transform:none}}
+.hero .check{animation:ts-pop .45s var(--veer) both}
+.hero-usps li:nth-child(1) .check{animation-delay:.3s}.hero-usps li:nth-child(2) .check{animation-delay:.38s}.hero-usps li:nth-child(3) .check{animation-delay:.46s}
+@keyframes ts-pop{from{transform:scale(.4)}to{transform:none}}
+
+/* ---------- Pagina-intro's (dienst, plaats, kosten, tools): gradient-mesh ---------- */
+.section-sm:has(> .wrap > .g2 .formcard),.kosten-kop,.tool-hero{position:relative;isolation:isolate;overflow:clip;
+  background:radial-gradient(620px 380px at 92% 18%,rgba(255,214,166,.55),transparent 70%),
+             radial-gradient(520px 340px at 70% 100%,rgba(255,232,204,.6),transparent 70%),
+             radial-gradient(460px 300px at 0% 0%,rgba(251,239,222,.9),transparent 70%),
+             linear-gradient(180deg,#fffaf3 0%,#fff 85%)}
+/* overflow:clip (geen hidden) zodat het sticky formulier blijft werken; zonder clip-ondersteuning geen streep */
+@supports not (overflow:clip){.section-sm:has(> .wrap > .g2 .formcard)::before,.kosten-kop::before,.tool-hero::before{display:none!important}}
+.section-sm:has(> .wrap > .g2 .formcard)::before,.kosten-kop::before,.tool-hero::before{content:"";position:absolute;right:-60px;top:24px;width:340px;height:60px;z-index:-1;pointer-events:none;
+  background:var(--penseel-vol) 0 0/100% 100% no-repeat;opacity:.13;transform:rotate(-8deg)}
+@media(max-width:900px){.section-sm:has(> .wrap > .g2 .formcard)::before,.kosten-kop::before,.tool-hero::before{width:200px;height:36px;right:-50px;top:10px}}
+
+/* ---------- Kaarten: lift, spotlicht onder de muis, focus = hover ---------- */
+a.card::before,.tool-kaart::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;opacity:0;transition:opacity .25s ease;
+  background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),rgba(244,130,11,.10),transparent 70%)}
+.tool-kaart{position:relative}
+a.card:hover::before,.tool-kaart:hover::before,a.card:focus-visible::before{opacity:1}
+a.card > *,.tool-kaart > *{position:relative;z-index:1}
+a.card > .card-chip{position:absolute}
+a.card{transition:box-shadow .25s var(--ease-uit),transform .25s var(--ease-uit),border-color .2s}
+a.card:focus-visible{box-shadow:var(--shadow-lg);transform:translateY(-4px);border-color:#ecd9bd;outline:3px solid #ffb15c;outline-offset:3px}
+a.card:focus-visible::after{transform:scaleX(1)}
+a.card:active{transform:translateY(-1px) scale(.995);transition-duration:.08s}
+.tool-kaart:focus-visible{transform:translateY(-6px);outline:3px solid #ffb15c;outline-offset:3px}
+.g4 > .card,.feit{transition:transform .25s var(--ease-uit),box-shadow .25s,border-color .2s}
+.g4 > .card:hover,.feit:hover{transform:translateY(-3px)}
+.card .ic{transition:transform .35s var(--veer)}
+.card:hover .ic{transform:rotate(-6deg) scale(1.06)}
+a.card .go{transition:gap .2s ease,color .2s}
+a.card:hover .go,a.card:focus-visible .go{gap:10px}
+
+/* ---------- Knoppen: indrukken, ghost-lift, focus ---------- */
+.btn{transition:transform .15s var(--ease-uit),box-shadow .15s ease,background .15s ease,border-color .15s,color .15s}
+.btn:active{transform:translateY(1px)}
+.btn-primary:active{box-shadow:0 1px 0 var(--accent-dark)}
+.btn-ghost:hover{box-shadow:0 6px 16px rgba(60,41,15,.08);background:#fff}
+.btn:focus-visible{outline:3px solid #ffb15c;outline-offset:3px}
+.chips a:focus-visible{outline:3px solid #ffb15c;outline-offset:2px;border-color:var(--accent)}
+.choice label:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(60,41,15,.07)}
+.choice label:active{transform:scale(.985)}
+
+/* ---------- Sectiekoppen: accentstreep groeit bij in beeld komen ---------- */
+.section .center > h2.rv::after{transform:scaleX(0);transition:transform .6s var(--ease-uit) .2s}
+.section .center > h2.rv-in::after{transform:none}
+
+/* ---------- Scroll-onthulling: kleine vertraging per kaart in een rij ---------- */
+.rv{transition-delay:calc(var(--rv-i,0) * 70ms)}
+.reveal.in .pb-balk{transition-delay:.25s}
+.prijs-balken.reveal li:nth-child(2) .pb-balk{transition-delay:.35s}.prijs-balken.reveal li:nth-child(3) .pb-balk{transition-delay:.45s}
+.prijs-balken.reveal li:nth-child(4) .pb-balk{transition-delay:.55s}.prijs-balken.reveal li:nth-child(n+5) .pb-balk{transition-delay:.65s}
+
+/* ---------- Bouwjaargrafiek (plaatsen): balken vullen ---------- */
+.pc-fig.rv .pc-bar span{transform:scaleX(0);transform-origin:left center;transition:transform .9s var(--ease-uit)}
+.pc-fig.rv-in .pc-bar span{transform:none}
+.pc-fig.rv-in li:nth-child(2) .pc-bar span{transition-delay:.06s}.pc-fig.rv-in li:nth-child(3) .pc-bar span{transition-delay:.12s}
+.pc-fig.rv-in li:nth-child(4) .pc-bar span{transition-delay:.18s}.pc-fig.rv-in li:nth-child(5) .pc-bar span{transition-delay:.24s}
+.pc-fig.rv-in li:nth-child(n+6) .pc-bar span{transition-delay:.3s}
+
+/* ---------- Optellende cijfers ---------- */
+.telt{font-variant-numeric:tabular-nums}
+
+/* ---------- Leesvoortgang (pagina's met lopende tekst) ---------- */
+@supports (animation-timeline: scroll()){
+  body:has(.prose) .header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:linear-gradient(90deg,var(--accent),#ffb15c);
+    transform-origin:0 50%;transform:scaleX(0);animation:ts-voortgang linear both;animation-timeline:scroll(root)}
+  @keyframes ts-voortgang{to{transform:scaleX(1)}}
+}
+
+/* ---------- Mobiel menu: items schuiven één voor één in ---------- */
+@media(max-width:900px){
+  .nav.open > a,.nav.open > .nav-noot{animation:ts-menu .32s var(--ease-uit) both}
+  .nav.open > :nth-child(2){animation-delay:.03s}.nav.open > :nth-child(3){animation-delay:.06s}.nav.open > :nth-child(4){animation-delay:.09s}
+  .nav.open > :nth-child(5){animation-delay:.12s}.nav.open > :nth-child(6){animation-delay:.15s}.nav.open > :nth-child(7){animation-delay:.18s}
+  .nav a:not(.btn):active{background:var(--accent-soft)}
+  .nav a:not(.btn) .nav-ic{transition:transform .25s var(--veer)}
+  .nav a:not(.btn):hover .nav-ic{transform:scale(1.08) rotate(-4deg)}
+}
+@keyframes ts-menu{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+
+/* ---------- Sticky CTA (mobiel): leesbare achtergrond, veer-in en glans ---------- */
+@media(max-width:760px){
+  .sticky-cta::before{content:"";position:absolute;inset:-18px 0 0;background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.92) 55%);z-index:-1;pointer-events:none;transition:opacity .3s}
+  .sticky-cta{transition:transform .45s var(--veer),opacity .25s ease}
+  .sticky-cta.is-weg::before{opacity:0}
+  .sticky-cta:not(.is-weg) .btn::after{animation:ts-glans 1.1s ease .5s}
+  .sticky-cta .pijl{display:inline-block;margin-left:6px;transition:transform .2s}
+  .sticky-cta .btn:active .pijl{transform:translateX(3px)}
+}
+.sticky-cta .pijl{display:inline-block;margin-left:6px}
+@keyframes ts-glans{from{transform:translateX(0) skewX(-18deg)}to{transform:translateX(450%) skewX(-18deg)}}
+
+/* ---------- Tools: micro-interacties ---------- */
+.ts-tik{animation:ts-tik .45s var(--veer)}
+@keyframes ts-tik{0%{transform:scale(1)}40%{transform:scale(1.045)}100%{transform:scale(1)}}
+[data-vc-uitkomst].ts-tik,.kk-kleurinfo.ts-tik,.sw-conclusie.ts-tik{animation-name:ts-tik-klein}
+@keyframes ts-tik-klein{0%{transform:scale(1)}40%{transform:scale(1.015);box-shadow:0 8px 24px rgba(217,111,0,.14)}100%{transform:scale(1)}}
+.calc-uit .bedrag,.hc-regel,.ohc-teller,.sw-conclusie{display:inline-block}
+.calc-uit .bedrag{display:block}
+.hc-opts label,.ohc-opts label,.ohc-opts button,.kk-stijl,.sw-dag{transition:transform .15s var(--ease-uit),box-shadow .15s,border-color .15s,background .15s}
+.hc-opts label:hover,.ohc-opts label:hover,.ohc-opts button:hover,.kk-stijl:hover,.sw-dag:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(60,41,15,.08)}
+.hc-opts label:active,.ohc-opts label:active,.ohc-opts button:active,.kk-stijl:active,.sw-dag:active{transform:scale(.97)}
+.kk-kleur i{transition:transform .2s var(--veer),box-shadow .2s}
+.kk-kleur:hover i{transform:scale(1.14)}
+.kk-kleur.on i{animation:ts-pop .4s var(--veer)}
+input[type=range]{cursor:pointer}
+input[type=range]:active{accent-color:var(--accent-dark)}
+
+@media(prefers-reduced-motion:reduce){
+  .hero-foto .hero-bg{transform:none;will-change:auto}
+  .hero-foto::after,.hero-foto .hero-in::before,.hero-usps li,.hero-tags,.hero .formcard,.hero .check,
+  .nav.open > a,.nav.open > .nav-noot,.sticky-cta .btn::after,.ts-tik,.kk-kleur.on i{animation:none!important}
+  .hero h1::after,.section-sm:has(> .wrap > .g2 .formcard) h1::after,.kosten-kop h1::after,.tool-hero h1::after{animation:none;clip-path:none}
+  .section .center > h2.rv::after,.pc-fig.rv .pc-bar span{transform:none;transition:none}
+  a.card,a.card:focus-visible,a.card:active,.g4 > .card:hover,.feit:hover,.card:hover .ic,.tool-kaart:focus-visible,.btn:active,
+  .choice label:hover,.hc-opts label:hover,.ohc-opts label:hover,.ohc-opts button:hover,.kk-stijl:hover,.sw-dag:hover,.kk-kleur:hover i{transform:none}
+  .sticky-cta{transition:none}
+  body:has(.prose) .header::after{display:none}
+}
+'''
+
+APP_JS += r'''
+/* ---------- Effecten (ronde 4): parallax, onthulling, optellen, spotlicht, tools ---------- */
+(function () {
+  "use strict";
+  var rust = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var heeftIO = "IntersectionObserver" in window;
+
+  /* Vangnet: heel hoge .reveal-blokken (lange teksten) halen de drempel van 5% soms nooit.
+     Elke zichtbare pixel is hier genoeg. */
+  if (heeftIO && !rust) {
+    var vang = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); vang.unobserve(e.target); } });
+    }, { threshold: 0 });
+    document.querySelectorAll(".reveal:not(.in)").forEach(function (el) { vang.observe(el); });
+  }
+
+  if (rust || !heeftIO) return;
+
+  /* Hero-foto beweegt iets langzamer mee dan de pagina (alleen desktop). */
+  var bg = document.querySelector(".hero-foto .hero-bg");
+  if (bg && window.matchMedia("(min-width: 921px)").matches) {
+    var hero = bg.closest(".hero"), wacht = false;
+    var zetY = function () {
+      wacht = false;
+      var y = window.scrollY;
+      if (y < hero.offsetHeight + 100) hero.style.setProperty("--hero-y", (y * 0.22).toFixed(1) + "px");
+    };
+    window.addEventListener("scroll", function () { if (!wacht) { wacht = true; requestAnimationFrame(zetY); } }, { passive: true });
+  }
+
+  /* Meer onderdelen onthullen bij scrollen; alleen wat bij het laden onder de vouw staat. */
+  var buiten = function (el) { return document.querySelector(".ip-galerij") || el.closest(".reveal, .rv, [class*='ip-'], [data-oc], .oc-uitslag"); };
+  var sel = ".section .center > h2, .grid > .card:not(.reveal), .tools-grid > .tool-kaart, .chips, .places, .pc-fig, .kaart-grid, .cta, .stat, .steps3 > li:not(.reveal)";
+  var vouw = window.innerHeight;
+  var lijst = [].slice.call(document.querySelectorAll(sel)).filter(function (el) {
+    return !buiten(el.parentElement || el) && el.getBoundingClientRect().top > vouw;
+  });
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("rv-in"); io.unobserve(e.target); } });
+  }, { rootMargin: "0px 0px -6% 0px", threshold: 0 });
+  lijst.forEach(function (el) {
+    var p = el.parentElement, i = 0;
+    if (p && (p.classList.contains("grid") || p.classList.contains("tools-grid") || p.classList.contains("steps3"))) {
+      i = Math.min([].indexOf.call(p.children, el) % 4, 3);
+    }
+    if (i) el.style.setProperty("--rv-i", i);
+    el.classList.add("rv");
+    io.observe(el);
+  });
+
+  /* Cijfers in het feitenblok tellen op zodra ze in beeld komen. */
+  var getal = /\d{1,3}(?:\.\d{3})+|\d+/g;
+  var nl = function (n) { return n.toLocaleString("nl-NL"); };
+  var tellers = [].slice.call(document.querySelectorAll(".feit-getal, .stat .n")).filter(function (el) {
+    var t = el.textContent;
+    return el.children.length === 0 && getal.test(t) && !/,\d|\b(1[89]|20)\d\d\b/.test(t.replace(/\./g, "")) &&
+           el.getBoundingClientRect().top > vouw;
+  });
+  var tel = function (el) {
+    var doel = el.textContent, delen = [], m;
+    getal.lastIndex = 0;
+    while ((m = getal.exec(doel))) delen.push({ i: m.index, s: m[0], n: parseInt(m[0].replace(/\./g, ""), 10) });
+    if (!delen.length) return;
+    el.style.minWidth = el.getBoundingClientRect().width + "px";
+    el.classList.add("telt");
+    var t0 = performance.now(), duur = 1100;
+    (function stap(t) {
+      var f = Math.min(1, (t - t0) / duur), e = 1 - Math.pow(1 - f, 3), uit = "", pos = 0;
+      delen.forEach(function (d) {
+        uit += doel.slice(pos, d.i) + (f < 1 ? nl(Math.round(d.n * e)) : d.s);
+        pos = d.i + d.s.length;
+      });
+      el.textContent = uit + doel.slice(pos);
+      if (f < 1) requestAnimationFrame(stap); else el.style.minWidth = "";
+    })(t0);
+  };
+  if (tellers.length) {
+    var tio = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { tio.unobserve(e.target); setTimeout(function () { tel(e.target); }, 150); } });
+    }, { threshold: 0.6 });
+    tellers.forEach(function (el) { tio.observe(el); });
+  }
+
+  /* Zacht spotlicht onder de muis op kaarten (alleen bij een echte muis). */
+  if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    document.addEventListener("pointermove", function (ev) {
+      var k = ev.target.closest && ev.target.closest("a.card, .tool-kaart");
+      if (!k) return;
+      var r = k.getBoundingClientRect();
+      k.style.setProperty("--mx", (ev.clientX - r.left) + "px");
+      k.style.setProperty("--my", (ev.clientY - r.top) + "px");
+    }, { passive: true });
+  }
+
+  /* Tools: uitkomst wipt even op als die verandert. */
+  var uitkomst = ".calc-uit .bedrag, .hc-regel, .ohc-teller, .kk-kleurinfo, .sw-conclusie, [data-vc-uitkomst]";
+  var tik = function (el) {
+    el.classList.remove("ts-tik"); void el.offsetWidth; el.classList.add("ts-tik");
+  };
+  var gezien = new WeakMap();
+  var mo = new MutationObserver(function (ms) {
+    ms.forEach(function (m) {
+      var n = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      var kand = [n && n.closest && n.closest(uitkomst)];
+      [].forEach.call(m.addedNodes, function (a) {
+        if (a.nodeType !== 1) return;
+        if (a.matches(uitkomst)) kand.push(a);
+        else kand.push(a.querySelector(uitkomst));
+      });
+      kand.forEach(function (el) {
+        if (!el || gezien.get(el) === el.textContent) return;
+        gezien.set(el, el.textContent);
+        tik(el);
+      });
+    });
+  });
+  document.querySelectorAll(".calc, .hc-pagina, .kk-tool, .ohc-quiz, .ohc-card, .sw-app, [data-verfcalc]").forEach(function (root) {
+    mo.observe(root, { subtree: true, childList: true, characterData: true });
+  });
+})();
 '''

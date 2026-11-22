@@ -37,6 +37,16 @@ DIENST_ARTIKELEN = {
     "zakelijk-schilderwerk": ["goede-offerte-schilderwerk", "verfschade-en-garantie", "verf-op-waterbasis-of-terpentinebasis"],
 }
 
+# seo-ronde 4: nieuwe artikelen bij de dienstpagina's (alleen als ze bestaan)
+for _dienst, _extra in {
+    "binnenschilderwerk": ["nieuw-stucwerk-schilderen", "schimmel-op-muur"],
+    "buitenschilderwerk": ["hoe-vaak-buitenschilderwerk", "sikkens-sigma-of-histor"],
+    "houtrot-reparatie": ["verf-bladdert-af"],
+    "spuitwerk": ["trap-verven"],
+    "behangen": ["nieuw-stucwerk-schilderen"],
+}.items():
+    DIENST_ARTIKELEN[_dienst] = DIENST_ARTIKELEN[_dienst] + [s for s in _extra if any(a["slug"] == s for a in ARTIKELEN)]
+
 _PER_SLUG = {a["slug"]: a for a in ARTIKELEN}
 _KOSTEN = {k["slug"]: k for k in KOSTEN}
 _DIENST = {d["slug"]: d for d in DIENSTEN}
@@ -134,7 +144,7 @@ def _artikel(a, write, today):
   {credit}
   <div class="callout"><p><strong>Kort antwoord:</strong> {a['kort_antwoord']}</p></div>
   {secties}
-  <h2>Stap voor stap</h2>
+  <h2 id="stappen">Stap voor stap</h2>
   <ol>{stappen}</ol>
   {_kosten_blok(a)}
   <h2>Bronnen</h2>
@@ -156,7 +166,17 @@ def _artikel(a, write, today):
         "mainEntityOfPage": SITE["url"] + url,
         "isPartOf": {"@type": "CollectionPage", "@id": SITE["url"] + "/kennisbank/"},
     }
-    write(url, page(title(a["seo_titel"]), a["description"], url, body, [cr_ld, faq_ld, art_ld]), prio=0.7)
+    # seo-ronde 4: het stappenplan ook als HowTo-schema
+    howto_ld = {
+        "@context": "https://schema.org", "@type": "HowTo",
+        "name": a.get("howto_naam") or a["titel"].split(":")[0],
+        "description": a["kort_antwoord"],
+        "image": art_ld["image"], "inLanguage": "nl-NL",
+        "step": [{"@type": "HowToStep", "position": i + 1, "name": t, "text": p,
+                  "url": SITE["url"] + url + "#stappen"}
+                 for i, (t, p) in enumerate(a["stappen"])],
+    }
+    write(url, page(title(a["seo_titel"]), a["description"], url, body, [cr_ld, faq_ld, art_ld, howto_ld]), prio=0.7)
 
 
 def _kaart(href, titel_, oms, f=None):
@@ -197,7 +217,7 @@ def _hub(write, today):
                 "name": "Kennisbank schilderwerk", "inLanguage": "nl-NL",
                 "mainEntity": {"@type": "ItemList", "itemListElement": items}}
     write("/kennisbank/", page(title("Kennisbank schilderwerk: verf, voorbereiding en offertes"),
-          "Praktische uitleg over schilderwerk: welke verf voor kozijnen, plafond schilderen zonder strepen, houtrot herkennen, behang verwijderen en een goede offerte.",
+          "Praktische uitleg over schilderwerk: welke verf voor kozijnen, nieuw stucwerk schilderen, schimmel op de muur, verf die bladdert, tegels verven en een goede offerte.",
           "/kennisbank/", body, [cr_ld, lijst_ld]), prio=0.8)
 
 

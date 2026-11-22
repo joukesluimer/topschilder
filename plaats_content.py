@@ -234,14 +234,17 @@ def advies_eigendom(p, c):
 
 def wijk_tabel(p, c):
     wijken = c.get("wijken") or []
+    soort = "Wijk"
+    if len(wijken) < 3 and len(c.get("buurten") or []) >= 3:  # seo-ronde 4: middelgrote plaatsen per buurt
+        wijken, soort = c["buurten"], "Buurt"
     if len(wijken) < 3:
         return ""
     rijen = "".join(f"<tr><td>{_wijknaam(w['naam'])}</td><td class=\"num\">{_nl(w['woningen'])}</td>"
                     f"<td class=\"num\">{w['mediaan_bouwjaar']}</td><td class=\"pc-groep\">{w['dominant']}</td></tr>" for w in wijken)
     oudst, jongst = wijken[0], wijken[-1]
-    return f"""<h3>Bouwjaren per wijk</h3>
+    return f"""<h3>Bouwjaren per {soort.lower()}</h3>
   <p>Binnen {p['naam']} verschilt het flink. In {_wijknaam(oudst['naam'])} is de helft van de woningen van vóór {oudst['mediaan_bouwjaar']}, in {_wijknaam(jongst['naam'])} van na {jongst['mediaan_bouwjaar']}. Het mediane bouwjaar is het jaar waarvoor en waarna evenveel woningen zijn gebouwd.</p>
-  <div class="tablewrap"><table class="pc-wijken"><thead><tr><th scope="col">Wijk (CBS)</th><th scope="col" class="num">Woningen</th><th scope="col" class="num">Mediaan bouwjaar</th><th scope="col" class="pc-groep">Grootste groep</th></tr></thead><tbody>{rijen}</tbody></table></div>"""
+  <div class="tablewrap"><table class="pc-wijken"><thead><tr><th scope="col">{soort} (CBS)</th><th scope="col" class="num">Woningen</th><th scope="col" class="num">Mediaan bouwjaar</th><th scope="col" class="pc-groep">Grootste groep</th></tr></thead><tbody>{rijen}</tbody></table></div>"""
 
 
 def bronnen(c, met_wijken=False):

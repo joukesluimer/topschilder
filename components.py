@@ -174,7 +174,7 @@ def footer():
 
 
 def sticky_cta(label="Gratis offertes aanvragen"):
-    return f'<div class="sticky-cta"><a class="btn btn-primary btn-block" href="/offerte-aanvragen/">{label}</a></div>'
+    return f'<div class="sticky-cta"><a class="btn btn-primary btn-block" href="/offerte-aanvragen/">{label}<span class="pijl" aria-hidden="true">→</span></a></div>'
 
 
 def scripts():

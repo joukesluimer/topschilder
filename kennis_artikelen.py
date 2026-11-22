@@ -610,3 +610,22 @@ ARTIKELEN = [
 "gerelateerd": ["verfschade-en-garantie", "houtrot-herkennen-en-herstellen", "kozijnen-schuren-en-voorbereiden"],
 },
 ]
+
+
+# --- seo-ronde 4: nieuwe artikelen (inhoud in kennis_ronde4a.py en kennis_ronde4b.py) ---
+from kennis_ronde4a import ARTIKELEN_RONDE4A  # noqa: E402
+
+ARTIKELEN += ARTIKELEN_RONDE4A
+try:
+    from kennis_ronde4b import ARTIKELEN_RONDE4B  # noqa: E402
+    ARTIKELEN += ARTIKELEN_RONDE4B
+except ImportError:
+    pass
+
+# Bestaande artikelen ook laten verwijzen naar de nieuwe kostenpagina's.
+for _a in ARTIKELEN:
+    _a["kosten"] = list(_a["kosten"]) + {
+        "welke-verf-voor-kozijnen": ["kunststof-kozijnen-schilderen"],
+        "houtrot-herkennen-en-herstellen": ["boeidelen-schilderen"],
+        "latex-of-muurverf": ["gevel-schilderen"],
+    }.get(_a["slug"], [])

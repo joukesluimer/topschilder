@@ -24,6 +24,7 @@ import os
 from components import page, crumbs, offerte_form, faq_blok, title, foto
 from data import PLAATS_BY_SLUG
 from foto_data import FOTOS_INSPIRATIE
+from inspiratie_galerij import galerij, schrijf_svgs, GALERIJ_CSS, GALERIJ_JS  # inspiratie-galerij
 from inspiratie_gids import KLEURCODES, BRONNEN, GIDSEN, ONDERHOUD_ALGEMEEN, bron, kleur_label
 from kleuren_kiezer import (VERFKLEUREN, STENEN, TYPES as KIEZER_TYPES, PAD as KIEZER_PAD,
                             LIJN, _r, _glas, raam, deur, boei, svg_woning,
@@ -546,7 +547,7 @@ def build_gids(write, sleutel, n_start):
   {foto_met_bijschrift(fotos[0], "(max-width:760px) calc(100vw - 40px), 720px", boven_vouw=True)}
   <div class="prose">{tekst}</div>
 </div></section>
-
+{galerij(sleutel, kop=f"Foto’s en kleurideeën: {naam}")}
 <section class="section-sm soft"><div class="wrap">
   <h2>Twee uitgewerkte kleurcombinaties</h2>
   <p class="ip-smal">Probeer een combinatie in de <a href="{KIEZER_PAD}">kleurenkiezer</a>, of vraag er direct een offerte voor aan.</p>
@@ -683,9 +684,10 @@ def build_inspiratie(write, out_dir):
   <span class="badge">Inspiratie en stijlgids</span>
   <h1>Welke kleuren passen bij jouw huis?</h1>
   <p class="lead">Een jaren-30-woning vraagt om andere kleuren dan een strakke nieuwbouwwoning. Hier vind je per woningtype een gids met foto’s, en twee kleurcombinaties voor kozijnen, ramen, voordeur en boeidelen, met RAL-codes en uitleg waarom ze werken. Bevalt er een? Probeer hem in de <a href="{KIEZER_PAD}">kleurenkiezer</a> en pas hem aan.</p>
-  <p class="ip-snel">Direct naar: {snel}</p>
+  <p class="ip-snel">Direct naar: <a href="#galerij">Fotogalerij</a> · {snel}</p>
 </div></section>
 {types_sectie()}
+{galerij(eerst=16, kop="Fotogalerij: kleuren in het echt")}
 
 <section class="ip-galerij"><div class="wrap">
   {ankers}
@@ -785,10 +787,11 @@ def build_inspiratie(write, out_dir):
         if woorden < 400:
             print(f"  LET OP: gids {k} heeft maar {woorden} woorden lopende tekst")
 
-    _schrijf(os.path.join(out_dir, "assets", "css", "inspiratie.css"), INSPIRATIE_CSS)
+    schrijf_svgs(out_dir)  # inspiratie-galerij: illustraties als losse .svg
+    _schrijf(os.path.join(out_dir, "assets", "css", "inspiratie.css"), INSPIRATIE_CSS + GALERIJ_CSS)
     data = {"types": {k: n for k, n, _ in WONINGTYPES}}
     _schrijf(os.path.join(out_dir, "assets", "js", "inspiratie.js"),
-             "var IP_DATA = " + json.dumps(data, ensure_ascii=False) + ";\n" + INSPIRATIE_JS)
+             "var IP_DATA = " + json.dumps(data, ensure_ascii=False) + ";\n" + INSPIRATIE_JS + GALERIJ_JS)
 
 
 def _schrijf(pad, inhoud):

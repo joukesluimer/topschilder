@@ -16,7 +16,7 @@ from data import (SITE, DIENSTEN, PLAATSEN, buurplaatsen,
                   PRIJSINDEX, INDEX_TOELICHTING, lokale_prijs)
 from illustraties import illustratie, voor_na
 from foto_data import FOTOS, FOTO_HOME, FOTOS_PAGINA
-from kosten_data import KOSTEN, PRIJSBANDEN
+from kosten_data import KOSTEN, KOSTEN_BY_SLUG, PRIJSBANDEN
 from wijk_data import WIJKEN
 # --- PLAATSDATA (open data per plaats, zie plaats_content.py) ---
 from plaats_content import plaats_sectie, dienst_blok, bouwperiode_zin
@@ -34,11 +34,15 @@ from kennisbank import build_kennisbank, kennis_links_dienst, kennis_links_koste
 from foto_extra import KOSTEN_FOTOS, KOSTEN_SECTIE, DIENST_EXTRA
 # --- einde kennisbank-sessie ---
 from schilderweer import build_schilderweer, schilderweer_blok, schilderweer_gids
+from actie_paginas import build_actie_paginas  # social-ads-sessie: /actie/-landingspagina's (noindex)
 from components import feiten_blok, stappen_blok, foto_kader, prijs_balken, dienst_icoon  # ronde 3
 from components import (
     page, crumbs, offerte_form, hoe_werkt_het, waarom_blok, dienst_cards,
     faq_blok, cta_blok, prijstabel, icon, eur, title, desc, calculator, foto, werkgebied_kaart,
 )
+
+import lastmod  # seo-ronde 4
+from plaats_buurten import buurt_blok, buurt_faq  # seo-ronde 4
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "site")
@@ -54,6 +58,7 @@ def write(path, html, prio=0.6, freq="monthly", index=True):
         f.write(html)
     if index:
         URLS.append((path, prio, freq))
+        lastmod.onthoud(path, html)  # seo-ronde 4: echte lastmod
 
 
 def wrap(inner, cls="section", extra=""):
@@ -332,11 +337,13 @@ def dienst_body(d, plaats=None):
 </section>"""
 
     if plaats:
+        # seo-ronde 4: de volledige checklist staat op de dienstpagina; hier alleen een korte opsomming,
+        # zodat de 35 plaatsversies niet allemaal dezelfde lijst herhalen.
+        wat_kort = "; ".join(x.split(" (")[0].split(":")[0].rstrip(".").lower() for x in d["wat"][:3])
         content = f"""<section class="section soft"><div class="wrap narrow prose reveal">
   <h2>Wat valt er onder {d['naam'].lower()}?</h2>
-  <ul class="checklist">{wat}</ul>
+  <p>Onder andere {wat_kort}. De volledige lijst, hoe een schilder te werk gaat, wat de prijs bepaalt en waar je op let in de offerte, lees je op onze pagina over <a href="/schilderwerk/{d['slug']}/">{d['naam'].lower()}</a>. Hieronder staat wat specifiek voor {pn} geldt.</p>
   {feiten}
-  <p>Hoe een schilder te werk gaat, wat de prijs bepaalt en waar je op let in de offerte, lees je uitgebreid op onze pagina over <a href="/schilderwerk/{d['slug']}/">{d['naam'].lower()}</a>. Hieronder staat wat specifiek voor {pn} geldt.</p>
   {vn_blok}
 </div></section>"""
         return cr, cr_ld, hero + content
@@ -695,19 +702,18 @@ def build_plaats_dienst_pages():
             seizoen = d["slug"] in ("buitenschilderwerk", "houtrot-reparatie")
 
             # Derde blok rouleert, zodat geen twee combinaties hetzelfde lezen.
+            # seo-ronde 4: waar buurt- of wijkcijfers zijn, komt daar een blok met echte data voor
+            # in de plaats (plaats_buurten.py). Variant 0 noemde zonder cijfers hoeveel schilders er zijn.
             variant = (PLAATSEN.index(p) + DIENSTEN.index(d)) % 4
-            if variant == 0:
-                derde = f"""<h3>Hoeveel schilders zitten er in {p['naam']}?</h3>
-  <p>Met ongeveer {p['inwoners']:,} inwoners is het aantal actieve schildersbedrijven in {p['naam']} overzichtelijk. Dat heeft twee kanten. Positief: je krijgt een lokale partij die je buurt kent en geen anderhalf uur hoeft te rijden. Minder positief: bij weinig aanbod bepaalt de agenda de prijs. Een schilder die tot november volgeboekt zit, geeft simpelweg een hogere offerte dan iemand met drie weken lucht. Precies daarom heeft één offerte opvragen geen zin — je hebt geen enkel ijkpunt.</p>""".replace(",", ".")
-            elif variant == 1:
+            buurten_html = buurt_blok(d, p)
+            if buurten_html:
+                derde = buurten_html
+            elif variant in (0, 1):
                 derde = f"""<h3>Voorrijkosten en bereikbaarheid</h3>
   <p>{p['naam']} ligt in {p['gemeente']}. Voor een meerdaagse klus rekenen schilders hier zelden voorrijkosten — die zitten in de aanneemsom. Gaat het om een kleine klus van een halve dag, dan zie je regelmatig €35 tot €75 aan voorrijkosten op de offerte verschijnen. Vraag dat vooraf, want het verschil tussen twee offertes zit soms alleen daarin. Woon je aan de rand van {p['gemeente']}, meld dat dan meteen: schilders uit de buurgemeente rekenen soms scherper dan die uit je eigen plaats.</p>"""
-            elif variant == 2:
+            elif variant in (2, 3):
                 derde = f"""<h3>Wat de ligging van {p['naam']} betekent</h3>
   <p>{p['naam']} kenmerkt zich door {p['ligging']}. Dat is geen detail: gevels die de meeste wind en regen vangen, verliezen hun verflaag merkbaar eerder dan gevels aan de beschutte kant. Loop bij de opname samen met de schilder rond de woning en let erop dat hij per gevel kijkt in plaats van één prijs voor het geheel te noemen. Een offerte die onderscheid maakt tussen de zwaar belaste en de beschutte zijde, is bijna altijd van iemand die weet wat hij doet.</p>"""
-            else:
-                derde = f"""<h3>Vraag hier expliciet naar</h3>
-  <p>Of je nu in {p['naam']} zit of ergens anders, dit zijn de vragen die het verschil maken tussen een offerte die klopt en een offerte die later duurder uitvalt: hoeveel lagen worden er gerekend, welk verfmerk gebruikt u, wat valt er precies onder de voorbereiding, en wat gebeurt er als er onderweg iets tegenvalt. Een schilder die daar zonder aarzelen antwoord op geeft, is bijna altijd de juiste keuze — ook als hij niet de goedkoopste is.</p>"""
 
             grootte, woningtype = woninggrootte(p)
             klus = TYPISCHE_KLUS.get(d["slug"], {}).get(grootte)
@@ -750,7 +756,7 @@ def build_plaats_dienst_pages():
   <p>Zoek je {d['naam'].lower()} net over de gemeentegrens? Bekijk dan {', '.join(f'<a href="/schilder/{b["slug"]}/{d["slug"]}/">{b["naam"]}</a>' for b in buren)}.</p>
 </div></section>"""
 
-            faqs = list(d["faq"][:2]) + [
+            faqs = (buurt_faq(d, p) or list(d["faq"][:2])) + [  # seo-ronde 4: lokale vragen uit de cijfers
                 (f"Wat kost {d['naam'].lower()} in {p['naam']}?",
                  f"Reken in {p['naam']} op {eur(p_van)} tot {eur(p_tot)} {d['prijs_eenheid']}"
                  + ("" if "excl" in d["prijs_eenheid"] else ", inclusief materiaal en btw")
@@ -832,6 +838,17 @@ def build_offerte_aanvragen():
         "/offerte-aanvragen/", body, [cr_ld]), prio=0.9, freq="weekly")
 
 
+def prijsbanden_offertecheck():
+    """Prijsbanden voor de offertecheck: PRIJSBANDEN plus plafonds en dakkapellen uit de kostenpagina's."""
+    banden = dict(PRIJSBANDEN)
+    for sleutel, slug, naam, eenheid in (("plafond", "plafond-schilderen", "Plafonds", "per m²"),
+                                         ("dakkapel", "dakkapel-schilderen", "Dakkapel", "per dakkapel")):
+        k = KOSTEN_BY_SLUG.get(slug)
+        if k:
+            banden[sleutel] = {"naam": naam, "van": k["van"], "tot": k["tot"], "eenheid": eenheid}
+    return banden
+
+
 def build_offerte_vergelijken():
     cr, cr_ld = crumbs([("Home", "/"), ("Offerte laten checken", None)])
     faqs = [
@@ -884,15 +901,21 @@ def build_offerte_vergelijken():
         <button type="button" class="btn btn-ghost" data-oc-lees>Lees de offerte uit</button>
         <p class="oc-melding" data-oc-melding aria-live="polite"></p>
 
-        <h3 class="oc-stap">2. Controleer de posten</h3>
-        <div class="oc-kop"><span>Soort werk</span><span>Aantal</span><span>Bedrag</span><span></span></div>
-        <div data-oc-rijen></div>
-        <button type="button" class="btn-link" data-oc-plus>+ Post toevoegen</button>
+        <h3 class="oc-stap" data-oc-stap2>2. Controleer wat we hebben gevonden</h3>
+        <div class="oc-gevonden" data-oc-gevonden hidden></div>
+        <div class="oc-totalen">
+          <div class="field"><label for="oc-tex">Totaal excl. btw</label><input type="text" id="oc-tex" inputmode="decimal" placeholder="€" data-oc-tex></div>
+          <div class="field"><label for="oc-tarief">Btw</label><select id="oc-tarief" data-oc-tarief><option value="">Onbekend</option><option value="9">9%</option><option value="21">21%</option><option value="gemengd">9% en 21%</option></select></div>
+          <div class="field"><label for="oc-tin">Totaal incl. btw</label><input type="text" id="oc-tin" inputmode="decimal" placeholder="€" data-oc-tin></div>
+        </div>
         <div class="oc-btw">
-          <span>Bedragen zijn</span>
+          <span>Bedragen bij de posten zijn</span>
           <label><input type="radio" name="btwsoort" value="excl" checked> excl. btw</label>
           <label><input type="radio" name="btwsoort" value="incl"> incl. btw</label>
         </div>
+        <p class="oc-controle" data-oc-controle aria-live="polite"></p>
+        <div data-oc-rijen></div>
+        <button type="button" class="btn-link" data-oc-plus>+ Post toevoegen</button>
         <div class="field" style="margin-top:12px">
           <label for="oc-plaats">Waar woon je?</label>
           <select id="oc-plaats" name="plaats">
@@ -903,7 +926,7 @@ def build_offerte_vergelijken():
         </div>
 
         <h3 class="oc-stap">3. Wat staat er in de offerte?</h3>
-        <div class="oc-lijst">{"".join(f'<label><input type="checkbox" name="lijst" value="{k}"> {t}</label>' for k, t in [("lagen", "Aantal lagen"), ("merk", "Verfmerk en type"), ("voorbereiding", "Voorbereiding (schuren, ontvetten, kitten)"), ("steiger", "Steiger of hoogwerker"), ("houtrot", "Afrekening van houtrot"), ("garantie", "Garantie"), ("btw", "Btw-tarief"), ("planning", "Planning")])}</div>
+        <div class="oc-lijst">{"".join(f'<label><input type="checkbox" name="lijst" value="{k}"> {t}</label>' for k, t in [("lagen", "Aantal lagen"), ("merk", "Verfmerk en type"), ("voorbereiding", "Voorbereiding (schuren, ontvetten, kitten)"), ("steiger", "Steiger of hoogwerker"), ("houtrot", "Afrekening van houtrot"), ("garantie", "Garantie"), ("btw", "Btw-tarief"), ("planning", "Planning"), ("geldigheid", "Hoe lang de offerte geldig is"), ("betaling", "Betalingsafspraken")])}</div>
 
         <div class="err" data-oc-fout></div>
         <div class="formnav"><button type="button" class="btn btn-primary" data-oc-check>Bekijk de uitslag</button></div>
@@ -984,7 +1007,8 @@ def build_offerte_vergelijken():
   <h2>Twee offertes naast elkaar leggen</h2>
   <p>Vergelijk niet alleen het eindbedrag. Zet per offerte op een rij hoeveel lagen er worden gezet, wat er voorbereid wordt en wat er buiten de prijs valt. Is de ene offerte veel goedkoper, zoek dan eerst uit wat er ontbreekt. Pas als de inhoud gelijk is, zegt de prijs iets.</p>
 </div></section>
-<script>window.TS_PRIJSBANDEN = {json.dumps(PRIJSBANDEN, ensure_ascii=False)};</script>
+<script src="/assets/js/offerte-parser.js"></script>
+<script>window.TS_PRIJSBANDEN = {json.dumps(prijsbanden_offertecheck(), ensure_ascii=False)};</script>
 {faq_html}
 {cta_blok("Toch liever direct vergelijken?", "Vraag gratis offertes aan bij maximaal drie schilders en zie zelf hoe de prijzen uiteenlopen.")}"""
     write("/offerte-vergelijken/", page(
@@ -1338,8 +1362,8 @@ def build_kosten():
   </div>
 </div></section>
 {cta_blok()}"""
-    write("/kosten/", page(title("Wat kost schilderwerk? Prijzen per klus"),
-          "Richtprijzen per klus: huis schilderen, keuken en deuren spuiten, latex spuiten, kozijnen, plafond en uurtarief. Met rekenvoorbeelden en prijs per regio.",
+    write("/kosten/", page(title("Kosten schilderwerk per klus: overzicht 2026"),
+          "Overzicht van alle kostenpagina's: van keuken spuiten en kozijnen tot radiatoren, boeidelen en gevel. Per klus rekenvoorbeelden, extra kosten en prijs per regio.",
           "/kosten/", body, [cr_ld]), prio=0.8)
 
 
@@ -1692,8 +1716,8 @@ def build_prijzen():
 {faq_html}
 {cta_blok("Benieuwd wat het bij jou kost?", "Richtprijzen zijn een startpunt. Een echte prijs krijg je pas als een schilder naar jouw situatie kijkt. Vraag gratis drie offertes aan.")}"""
     write("/prijzen/", page(
-        title("Wat kost een schilder in 2026? Alle prijzen op een rij"),
-        "Actuele schilderprijzen 2026: uurtarief €45–€65, binnenschilderwerk vanaf €10/m², buitenschilderwerk vanaf €90 per kozijn. Inclusief btw-regels en bespaartips.",
+        title("Wat kost een schilder in 2026? Prijslijst schilderwerk"),
+        "Prijslijst schilderwerk 2026: wat kost een schilder voor binnen, buiten, spuitwerk, behang en houtrot? Met rekenhulp, btw-regels en tips om offertes te vergelijken.",
         "/prijzen/", body, [cr_ld, faq_ld]), prio=0.9, freq="weekly")
 
 
@@ -1806,7 +1830,7 @@ def build_static_pages():
   <h2>Welke gegevens verzamelen we</h2>
   <ul>
     <li><strong>Aanvraaggegevens:</strong> naam, e-mailadres, telefoonnummer, postcode, plaats, type pand en de omschrijving van je klus.</li>
-    <li><strong>Technische gegevens:</strong> de pagina waarop je de aanvraag deed, de verwijzende website en eventuele campagneparameters (utm-tags, gclid).</li>
+    <li><strong>Technische gegevens:</strong> de pagina waarop je de aanvraag deed, de verwijzende website en eventuele campagneparameters (utm-tags, gclid of fbclid). Daaraan zien we via welke advertentie of website je aanvraag binnenkwam.</li>
     <li><strong>Advertentiemeting (alleen met toestemming):</strong> via de Meta-pixel de pagina's die je bekijkt, je IP-adres, browsergegevens en het feit dat je een aanvraag hebt verstuurd. Zie hieronder bij Meta.</li>
     <li><strong>Schildersgegevens:</strong> bedrijfsnaam, KvK-nummer, contactpersoon, e-mail, telefoon en werkgebied.</li>
   </ul>
@@ -1863,6 +1887,10 @@ def build_static_pages():
     from inspiratie import WONINGTYPES as _IP_TYPES
     groepen += [(f"Inspiratie: {_n}", FOTOS_INSPIRATIE[_k]) for _k, _n, _ in _IP_TYPES if _k in FOTOS_INSPIRATIE]
     # --- einde inspiratie-content ---
+    # --- inspiratie-galerij: extra foto's in de galerij op /inspiratie/ ---
+    from inspiratie_galerij import fotogroepen as _galerij_fotogroepen
+    groepen += _galerij_fotogroepen()
+    # --- einde inspiratie-galerij ---
     # --- kennisbank-sessie: extra foto's op dienst-, kosten- en kennisbankpagina's ---
     groepen += [(f"{d['naam']} (extra foto)", [DIENST_EXTRA[d['slug']]]) for d in DIENSTEN if d['slug'] in DIENST_EXTRA]
     groepen += [(f"Kosten: {(k.get('kruimel') or k['klus'].removeprefix('een ')).capitalize()}", [KOSTEN_FOTOS[k['slug']]] + ([KOSTEN_SECTIE[k['slug']]] if k['slug'] in KOSTEN_SECTIE else [])) for k in KOSTEN if k['slug'] in KOSTEN_FOTOS]
@@ -1940,7 +1968,7 @@ def build_static_pages():
   <h3>ts_attr <small style="font-weight:400">(lokale opslag)</small></h3>
   <ul>
     <li><strong>Van:</strong> Topschilder</li>
-    <li><strong>Waarvoor:</strong> Bewaart de campagneparameters waarmee je op de site kwam (zoals utm-tags of een gclid van Google Ads). Bij een aanvraag sturen we die mee, zodat we zien via welke campagne de aanvraag binnenkwam. Dit gaat niet naar Meta.</li>
+    <li><strong>Waarvoor:</strong> Bewaart de campagneparameters waarmee je op de site kwam (zoals utm-tags, een gclid van Google Ads of een fbclid van Facebook of Instagram). Bij een aanvraag sturen we die mee, zodat we zien via welke campagne de aanvraag binnenkwam. Dit gaat niet naar Meta.</li>
     <li><strong>Hoelang:</strong> We gebruiken ze tot 90 dagen na je bezoek</li>
   </ul>
   <h3>_fbp <small style="font-weight:400">(cookie)</small></h3>
@@ -2012,6 +2040,7 @@ def build_assets():
     bestanden = {
         "css/style.css":  css_klein(STYLE_CSS),
         "js/app.js":      APP_JS,
+        "js/offerte-parser.js": open(os.path.join(ROOT, "offerte_parser.js"), encoding="utf-8").read(),
         "js/config.js":   CONFIG_JS,
         "js/toestemming.js": TOESTEMMING_JS,
         "img/favicon.svg": FAVICON_SVG,
@@ -2035,8 +2064,9 @@ def build_assets():
 
 
 def build_sitemap():
+    lm = lastmod.datums(TODAY)  # seo-ronde 4: lastmod alleen bij echte wijziging
     urls = "".join(
-        f"<url><loc>{SITE['url']}{p}</loc><lastmod>{TODAY}</lastmod>"
+        f"<url><loc>{SITE['url']}{p}</loc><lastmod>{lm.get(p, TODAY)}</lastmod>"
         f"<changefreq>{freq}</changefreq><priority>{prio}</priority></url>"
         for p, prio, freq in sorted(set(URLS))
     )
@@ -2128,6 +2158,7 @@ def main():
     build_onderhoudscheck(write)
     build_schilderweer(write, OUT)
     build_tools_pagina(write, beschikbare_tools(globals()))
+    build_actie_paginas(write)  # social-ads-sessie
     build_static_pages()
     build_assets()
     build_sitemap()

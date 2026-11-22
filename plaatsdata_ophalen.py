@@ -7,7 +7,8 @@ De site zelf doet nooit live API-calls; build.py leest alleen plaats_cijfers.py.
 Bronnen (allemaal open data, hergebruik toegestaan):
 - BAG, Kadaster, via PDOK-WFS (CC0): bouwjaar van elke woning (verblijfsobject met woonfunctie).
 - CBS Kerncijfers wijken en buurten 2024 (tabel 85984NED, CC BY 4.0): eigendom en woningtype.
-- CBS Wijk- en buurtkaart 2024 via PDOK (CC BY 4.0): wijkgrenzen.
+- CBS Wijk- en buurtkaart 2024 via PDOK (CC BY 4.0): wijk- en buurtgrenzen.
+  Alleen de buurten bijwerken (plaatsen van 5.000 tot 40.000 inwoners): python3 plaatsdata_ophalen.py --buurten
 - Rijksdienst voor het Cultureel Erfgoed (CC BY 4.0): Rijksmonumentenregister (linked data) en
   geodata van rijksmonumenten en rijksbeschermde stads- en dorpsgezichten.
 
@@ -356,7 +357,84 @@ def plaats_cijfers(p, alle_gezichten):
     return p["slug"], res
 
 
+# ---------------------------------------------------------------- buurten (seo-ronde 4)
+# Middelgrote plaatsen hebben te weinig CBS-wijken (vaak maar één). Daar rekenen we per
+# CBS-buurt: bouwjaren uit de BAG-punten binnen de buurtgrens, eigendom en woningtype uit CBS.
+BUURT_MIN_INWONERS = 5000
+BUURT_MAX_INWONERS = WIJK_MIN_INWONERS
+BUURT_MIN_WONINGEN = 100
+
+
+def cbs_buurt_rijen(gm):
+    nr = gm[2:]
+    d = get(CBS, {
+        "$filter": f"startswith(WijkenEnBuurten,'BU{nr}')",
+        "$select": ("WijkenEnBuurten,Woningvoorraad_35,PercentageEengezinswoning_40,"
+                    "PercentageMeergezinswoning_45,Koopwoningen_47,HuurwoningenTotaal_48,"
+                    "InBezitWoningcorporatie_49"),
+        "$format": "json"}, f"cbsbu-{gm}.json")
+    uit = {}
+    for r in d["value"]:
+        uit[r["WijkenEnBuurten"].strip()] = {
+            "woningvoorraad": r["Woningvoorraad_35"], "koop_pct": r["Koopwoningen_47"],
+            "huur_pct": r["HuurwoningenTotaal_48"], "corporatie_pct": r["InBezitWoningcorporatie_49"],
+            "eengezins_pct": r["PercentageEengezinswoning_40"], "meergezins_pct": r["PercentageMeergezinswoning_45"],
+        }
+    return uit
+
+
+def buurt_geoms(gm):
+    d = get(WB, {"service": "WFS", "version": "2.0.0", "request": "GetFeature",
+                 "typeNames": "wijkenbuurten:buurten", "outputFormat": "application/json",
+                 "propertyName": "buurtcode,buurtnaam,gemeentecode,geom",
+                 "filter": fes_eq("gemeentecode", gm)}, f"buurten-{gm}.json")
+    uit = []
+    for f in d["features"]:
+        if not f.get("geometry"):
+            continue
+        rs = ringen(f["geometry"])
+        uit.append((f["properties"]["buurtcode"], f["properties"]["buurtnaam"], rs, bbox(rs)))
+    return uit
+
+
+def plaats_buurten(p):
+    wp = BAG_NAAM.get(p["slug"], p["naam"])
+    pts = bag_woningen(wp)
+    gm = GEMEENTECODE[p["gemeente"]]
+    cbs = cbs_buurt_rijen(gm)
+    buurten = []
+    for code, naam, rs, (x0, y0, x1, y1) in buurt_geoms(gm):
+        jaren = [j for x, y, j in pts if x0 <= x <= x1 and y0 <= y <= y1 and in_ringen(x, y, rs)]
+        if len(jaren) < BUURT_MIN_WONINGEN:
+            continue
+        v = verdeling(jaren)
+        c = cbs.get(code, {})
+        buurten.append({"code": code, "naam": naam, "woningen": v["woningen"],
+                        "mediaan_bouwjaar": v["mediaan_bouwjaar"], "dominant": v["dominant"],
+                        "voor_1945_pct": v["klassen"][0][2], "voor_1975_pct": v["voor_1975_pct"],
+                        "jaren_1975_1994_pct": v["jaren_1975_1994_pct"], "vanaf_2005_pct": v["vanaf_2005_pct"],
+                        "koop_pct": c.get("koop_pct"), "corporatie_pct": c.get("corporatie_pct"),
+                        "eengezins_pct": c.get("eengezins_pct")})
+    buurten.sort(key=lambda b: (b["mediaan_bouwjaar"] or 0, b["naam"]))
+    return p["slug"], buurten
+
+
+def alleen_buurten():
+    """Voegt 'buurten' toe aan de bestaande cijfers, zonder de rest opnieuw op te halen."""
+    from plaats_cijfers import CIJFERS as uit
+    doel = [p for p in PLAATSEN if BUURT_MIN_INWONERS <= p["inwoners"] < BUURT_MAX_INWONERS]
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        for slug, buurten in ex.map(plaats_buurten, doel):
+            if len(buurten) >= 3:
+                uit[slug]["buurten"] = buurten
+            print(f"  {slug}: {len(buurten)} buurten", file=sys.stderr)
+    return uit
+
+
 def main():
+    if "--buurten" in sys.argv:
+        from plaats_cijfers import META as oud
+        return schrijf(alleen_buurten(), opgehaald=oud["opgehaald"])
     if "--alleen-monumenten" in sys.argv:
         # Snel bijwerken van alleen de RCE-velden; de rest blijft uit plaats_cijfers.py.
         from plaats_cijfers import CIJFERS as uit
@@ -369,12 +447,16 @@ def main():
     alle = gezichten()
     with ThreadPoolExecutor(max_workers=6) as ex:
         uit = dict(ex.map(lambda p: plaats_cijfers(p, alle), PLAATSEN))
+    for slug, buurten in (plaats_buurten(p) for p in PLAATSEN
+                          if BUURT_MIN_INWONERS <= p["inwoners"] < BUURT_MAX_INWONERS):
+        if len(buurten) >= 3:
+            uit[slug]["buurten"] = buurten
     schrijf(uit)
 
 
-def schrijf(uit):
+def schrijf(uit, opgehaald=None):
     meta = {
-        "opgehaald": datetime.date.today().isoformat(),
+        "opgehaald": opgehaald or datetime.date.today().isoformat(),
         "bronnen": {
             "bag": "Basisregistratie Adressen en Gebouwen (Kadaster), via PDOK, CC0",
             "cbs": "CBS, Kerncijfers wijken en buurten 2024 (85984NED), CC BY 4.0",

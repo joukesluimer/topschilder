@@ -663,7 +663,7 @@ UITBREIDING = {
             ("Opdekdeur of stompe deur: maakt het uit?",
              "<p>Een opdekdeur valt met een rand over het kozijn, een stompe deur ligt vlak in het kozijn. Voor het spuiten maakt het weinig uit: beide gaan uit de scharnieren en worden rondom gelakt. Bij een opdekdeur let de schilder extra op de sponning, omdat de rand daar tegen het kozijn slijt. Wil je van opdek naar stomp, dan moet het kozijn worden aangepast. Dat is timmerwerk en geen spuitwerk.</p>"),
             ("Binnendeuren en kozijnen samen laten doen",
-             "<p>Nieuwe witte deuren in vergeelde kozijnen vallen op. Laat de kozijnen daarom in dezelfde ronde meenemen. De deuren gaan meestal naar de werkplaats, de kozijnen worden op locatie gelakt of gespoten. Een deurkozijn binnen kost €45 tot €95. Op de offerte horen deuren en kozijnen als aparte posten te staan.</p>"),
+             "<p>Nieuwe witte deuren in vergeelde kozijnen vallen op. Laat de kozijnen daarom in dezelfde ronde meenemen. De deuren gaan meestal naar de werkplaats, de kozijnen worden op locatie gelakt of gespoten. Een deurkozijn binnen kost €35 tot €75. Op de offerte horen deuren en kozijnen als aparte posten te staan.</p>"),
             ("En de voordeur?",
              "<p>Een voordeur krijgt zon, regen en veel handen te verduren. Daarom krijgt hij een buitenlak die tegen weer en slijtage kan. Spuiten op locatie is lastig, dus vaak gaat de deur een dag of twee naar de werkplaats en zet de schilder er tijdelijk een noodvoorziening in. Vraag hoe dat geregeld wordt voordat je tekent.</p>"),
         ],
@@ -678,7 +678,7 @@ UITBREIDING = {
              "<p>Aan de achterkant kan een schilder vaak via het dak werken, met een dakladder en valbeveiliging. Aan de straatkant, of bij een hoog dak, is een steiger of hoogwerker nodig. Een hoogwerker staat er alleen op de dagen dat er gewerkt wordt en is snel opgebouwd. Een steiger blijft staan en is handiger als er ook houtrot hersteld of meerdere dagen gewerkt moet worden. Los kost een steiger of hoogwerker meestal €300 tot €900 per gevel, afhankelijk van de hoogte en hoe lang hij nodig is.</p>"
              "<p>Vraag of de steiger of hoogwerker in de prijs zit, en zo niet, wat hij apart kost. Laat de dakkapel bij voorkeur meenemen met de rest van het buitenschilderwerk: de steiger staat er dan toch.</p>"),
             ("Waar zit bij een dakkapel vaak houtrot?",
-             "<p>In de onderdorpel van het kozijn, in de hoeken van de boeidelen en waar de zijwangen op het dak aansluiten. Daar blijft water het langst staan. Een schilder prikt bij de opname met een priem in het hout om te voelen of het zacht is. Reken houtrot per plek: €85 tot €275 per reparatieplek.</p>"),
+             "<p>In de onderdorpel van het kozijn, in de hoeken van de boeidelen en waar de zijwangen op het dak aansluiten. Daar blijft water het langst staan. Een schilder prikt bij de opname met een priem in het hout om te voelen of het zacht is. Reken houtrot per plek: €50 tot €275 per reparatieplek.</p>"),
         ],
         "faq_extra": [
             ("Wat kost een dakkapel schilderen met een hoogwerker?",
@@ -695,3 +695,10 @@ for _k in KOSTEN:
                 _k[_veld] = _u[_veld]
         _k["verdieping"] = _u["verdieping"]
         _k["faq"] = list(_k["faq"]) + _u["faq_extra"]
+
+
+# --- seo-ronde 4: zes nieuwe kostenpagina's (inhoud in kosten_ronde4.py) ---
+from kosten_ronde4 import KOSTEN_RONDE4  # noqa: E402
+
+KOSTEN += KOSTEN_RONDE4
+KOSTEN_BY_SLUG.update({k["slug"]: k for k in KOSTEN_RONDE4})

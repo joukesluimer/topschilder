@@ -107,6 +107,54 @@ for p in problems[:40]:
 if len(problems) > 40:
     print(f"  ... en nog {len(problems)-40}")
 
+# --- extra SEO-controles (seo-ronde 4) ---
+indexeerbaar = {u for u, h in pages.items() if 'content="noindex' not in h} - {"/404.html"}
+
+# 1. dubbele H1's op indexeerbare pagina's
+h1_teller = Counter()
+for u in indexeerbaar:
+    m = re.search(r"<h1[^>]*>(.*?)</h1>", pages[u], re.S)
+    if m:
+        h1_teller[htmllib.unescape(re.sub(r"<[^>]+>", "", m.group(1))).strip()] += 1
+for tekst, n in h1_teller.items():
+    if n > 1:
+        problems.append(f"DUBBELE H1 ({n}x): {tekst}")
+
+# 2. canonical moet naar de pagina zelf wijzen
+for u in indexeerbaar:
+    m = re.search(r'<link rel="canonical" href="https://topschilder\.nl([^"]*)">', pages[u])
+    if m and m.group(1) != u:
+        problems.append(f"{u}: canonical wijst naar {m.group(1)}")
+
+# 3. interne links met een #anker: het id moet bestaan (JS-state zoals #type=... telt niet)
+inlinks = defaultdict(set)
+for u, h in pages.items():
+    for href in re.findall(r'href="(/[^"?]*)"', h):
+        pad, _, anker = href.partition("#")
+        doel = pad or u
+        if not doel.endswith("/") and "." not in doel.rsplit("/", 1)[-1]:
+            doel += "/"
+        if doel != u:
+            inlinks[doel].add(u)
+        if anker and "=" not in anker and doel in pages and f'id="{anker}"' not in pages[doel]:
+            problems.append(f"{u}: anker bestaat niet: {href}")
+
+# 4. wezen: indexeerbare pagina's zonder enige interne link ernaartoe
+for u in sorted(indexeerbaar - {"/"}):
+    if not inlinks.get(u):
+        problems.append(f"WEES (geen interne links ernaartoe): {u}")
+
+# 5. afbeeldingen zonder alt-attribuut
+for u, h in pages.items():
+    if re.search(r"<img(?![^>]*\balt=)[^>]*>", h):
+        problems.append(f"{u}: <img> zonder alt")
+
+# 6. FAQPage-schema zonder zichtbare vragen, of zichtbare FAQ zonder schema
+for u in indexeerbaar:
+    h = pages[u]
+    if '"FAQPage"' in h and "<details" not in h:
+        problems.append(f"{u}: FAQPage-schema maar geen zichtbare vragen")
+
 # sitemap-check
 sm = open(os.path.join(SITE, "sitemap.xml"), encoding="utf-8").read()
 locs = re.findall(r"<loc>https://topschilder\.nl(.*?)</loc>", sm)
@@ -116,7 +164,13 @@ print(f"  niet op schijf: {not_on_disk[:5] if not_on_disk else 'geen'}")
 indexable = {u for u in exists if 'name="robots" content="noindex' not in pages[u]} - {"/404.html"}
 not_in_sitemap = sorted(indexable - set(locs))
 print(f"  indexeerbaar maar niet in sitemap: {not_in_sitemap[:5] if not_in_sitemap else 'geen'}")
+noindex_in_sitemap = sorted(set(locs) - indexable - {"/404.html"})
+print(f"  noindex maar wel in sitemap: {noindex_in_sitemap[:5] if noindex_in_sitemap else 'geen'}")
+lastmods = re.findall(r"<lastmod>(.*?)</lastmod>", sm)
+foute_lastmod = [d for d in lastmods if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", d)]
+print(f"  lastmod-datums: {len(set(lastmods))} verschillend" + (f", {len(foute_lastmod)} ongeldig" if foute_lastmod else ""))
 
-ok = not missing and not asset_missing and not dupes and not dd and not problems and not not_on_disk
+ok = (not missing and not asset_missing and not dupes and not dd and not problems and not not_on_disk
+      and not noindex_in_sitemap and not foute_lastmod)
 print("\n" + ("✅ ALLES OK" if ok else "⚠️  zie punten hierboven"))
 sys.exit(0)
