@@ -15,8 +15,6 @@ SITE = {
     "btw": "",  # <- vul hier je btw-id in zodra je die hebt; blijft verborgen zolang het leeg is
     "adres": "Zeewolde",
     "provincie_hq": "Flevoland",
-    "review_score": "4.8",
-    "review_aantal": "1.247",
     "oprichting": "2026",
 }
 

@@ -460,7 +460,7 @@ def build_plaats_pages():
         <li>Gratis vergelijken, geen abonnement, geen verplichtingen</li>
       </ul>
     </div>
-    <div>{offerte_form(f"Offertes van schilders in {p['naam']}", "Vier korte vragen · reactie meestal binnen 24 uur")}</div>
+    <div>{offerte_form(f"Offertes van schilders in {p['naam']}", "Vier korte vragen · gratis en vrijblijvend")}</div>
   </div>
 </div>
 </section>"""

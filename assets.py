@@ -468,7 +468,10 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
         ? "Schilder: " + (d.bedrijfsnaam || "") + " (" + (d.werkgebied || "") + ")"
         : soort + " — " + (d.naam || "");
 
+    if (d.opslag_mislukt) titel = "LET OP, niet opgeslagen: " + titel;
+
     var regels = [
+      d.opslag_mislukt ? "LET OP: deze aanvraag is NIET in Supabase opgeslagen (" + (d.fout || "onbekende fout") + "). Zet hem handmatig over.\n" : "",
       soort,
       "",
       d.dienst      ? "Klus:        " + d.dienst : "",
@@ -562,6 +565,15 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
           problem = "Controleer je e-mailadres.";
           el.style.borderColor = "#c0392b";
         }
+        if (el.name === "postcode" && el.value) {
+          var pc = el.value.replace(/\s+/g, "").toUpperCase();
+          if (/^[1-9]\d{3}[A-Z]{2}$/.test(pc)) {
+            el.value = pc.slice(0, 4) + " " + pc.slice(4);
+          } else {
+            problem = "Controleer je postcode (bijvoorbeeld 3892 AA).";
+            el.style.borderColor = "#c0392b";
+          }
+        }
         if (el.type === "tel" && el.value && el.value.replace(/\D/g, "").length < 9) {
           problem = "Controleer je telefoonnummer.";
           el.style.borderColor = "#c0392b";
@@ -644,10 +656,16 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
         })
         .catch(function (err) {
           console.error(err);
+          // Opslaan mislukt: stuur de aanvraag toch naar de webhook, zodat hij
+          // niet verloren gaat. Eén keer per formulier, om dubbele mails te voorkomen.
+          if (!form.dataset.noodverstuurd) {
+            form.dataset.noodverstuurd = "1";
+            postToWebhook(table, Object.assign({}, payload, { opslag_mislukt: "ja", fout: String(err).slice(0, 300) }));
+          }
           if (btn) { btn.disabled = false; btn.textContent = original; }
           var msg = steps[idx].querySelector(".err");
           if (msg) {
-            msg.textContent = "Er ging iets mis bij het versturen. Probeer het nog eens of mail ons direct.";
+            msg.innerHTML = 'Er ging iets mis bij het versturen. Probeer het nog eens, of neem <a href="/contact/">contact</a> met ons op.';
             msg.classList.add("show");
           }
         });
@@ -740,14 +758,21 @@ APP_JS = r'''/* Topschilder.nl — formulierlogica, tracking en Supabase-verzend
 
   /* --------------------------------------------- pagina-context voorvullen */
   var ctx = document.body.dataset;
+  var url = new URLSearchParams(location.search);
+  var vDienst = url.get("dienst") || ctx.dienst;
+  var vPlaats = url.get("plaats") || ctx.plaats;
   document.querySelectorAll("form[data-wizard]").forEach(function (f) {
-    if (ctx.dienst) {
-      var d = f.querySelector('input[name=dienst][value="' + ctx.dienst + '"]');
+    if (vDienst) {
+      var d = [].slice.call(f.querySelectorAll("input[name=dienst]")).filter(function (i) { return i.value === vDienst; })[0];
       if (d) d.checked = true;
     }
-    if (ctx.plaats) {
+    if (vPlaats) {
       var p = f.querySelector("input[name=plaats]");
-      if (p && !p.value) p.value = ctx.plaats;
+      if (p && !p.value) p.value = vPlaats.slice(0, 60);
+    }
+    if (url.get("via") === "offertecheck") {
+      var o = f.querySelector("textarea[name=omschrijving]");
+      if (o && !o.value) o.value = "Ik heb al een offerte en zoek een vergelijkende offerte. ";
     }
   });
 })();
@@ -1104,6 +1129,20 @@ APP_JS += r"""
     planning: "Wanneer het werk wordt uitgevoerd"
   };
 
+  // Link naar het aanvraagformulier met klus en plaats alvast ingevuld.
+  function aanvraagLink() {
+    var cats = [].slice.call(rijen.querySelectorAll("select")).map(function (s) { return s.value; });
+    var heeft = function (c) { return cats.indexOf(c) >= 0; };
+    var dienst = (heeft("buitenkozijn") || heeft("steiger")) ? "Buitenschilderwerk"
+      : heeft("houtrot_plek") ? "Houtrot reparatie"
+      : (heeft("keukenfront") && cats.length === 1) ? "Spuitwerk"
+      : (heeft("behang_m2") && cats.length === 1) ? "Behangen"
+      : "Binnenschilderwerk";
+    var naam = plaats.value && plaats.value !== "1" ? plaats.options[plaats.selectedIndex].text : "";
+    return "/offerte-aanvragen/?dienst=" + encodeURIComponent(dienst) +
+      (naam ? "&plaats=" + encodeURIComponent(naam) : "") + "&via=offertecheck#offerte";
+  }
+
   box.querySelector("[data-oc-check]").addEventListener("click", function () {
     fout.classList.remove("show");
     if (!plaats.value) { fout.textContent = "Kies je plaats."; fout.classList.add("show"); return; }
@@ -1159,7 +1198,8 @@ APP_JS += r"""
       "<h3>" + (mist.length ? "Vraag de schilder hiernaar" : "Alles staat erin") + "</h3>" +
       (mist.length ? "<ul>" + mist.map(function (m) { return "<li>" + m + "</li>"; }).join("") + "</ul>" : "<p>De belangrijkste punten staan in de offerte. Goed teken.</p>") +
       "<p class='formfoot'>Vergeleken met onze richtprijzen voor jouw regio. Dit is een indicatie, geen oordeel over het bedrijf.</p>" +
-      "<div class='formnav'><a class='btn btn-primary' href='/offerte-aanvragen/'>Vraag vergelijkende offertes aan</a></div>";
+      "<div class='formnav'><a class='btn btn-primary' href='" + aanvraagLink() + "'>" +
+      (tel.hoog > 0 ? "Leg er een tweede offerte naast" : "Vraag vergelijkende offertes aan") + "</a></div>";
     uitslag.hidden = false;
     uitslag.scrollIntoView({ behavior: "smooth", block: "start" });
   });

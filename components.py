@@ -215,7 +215,7 @@ def crumbs(items):
 # Offerteformulier (multi-step)
 # ---------------------------------------------------------------------------
 
-def offerte_form(title="Ontvang gratis 3 offertes", sub="Gemiddeld binnen 24 uur reactie · Volledig vrijblijvend"):
+def offerte_form(title="Ontvang gratis 3 offertes", sub="Gratis · vrijblijvend · maximaal 3 schilders"):
     dienstkeuze = "".join(
         f'<label><input type="radio" name="dienst" value="{d["naam"]}" data-required><span>{d["naam"]}</span></label>'
         for d in DIENSTEN
