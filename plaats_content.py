@@ -139,7 +139,7 @@ def advies_bouwjaren(p, c):
                    f'<a href="{INSPIRATIE}#jaren30">inspiratie voor jaren-30-woningen</a>.') if b["jaren30_pct"] >= 8 else ""
         uit.append(("Veel vooroorlogse woningen",
                     f"{voor45}% van de woningen in {naam} is van vóór 1945.{jaren30} Bij zulke woningen zit er vaak een dik pakket oude verflagen "
-                    f"op het hout. In lagen van vóór ongeveer 1960 kan lood zitten; een zorgvuldige schilder schuurt die nat of stofarm en ruimt "
+                    f"op het hout. In oude lagen kan lood zitten (loodwit was voor buitenwerk pas in 2009 helemaal verboden, volgens OnderhoudNL); een zorgvuldige schilder schuurt die nat of stofarm en ruimt "
                     f"het stof goed op. Reken op meer voorwerk per kozijn dan bij een jonger huis."))
     naoorlogs = _pct(c, "1945–1964", "1965–1974")
     if naoorlogs >= 30:

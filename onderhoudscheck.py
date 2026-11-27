@@ -16,7 +16,7 @@ import json
 import math
 import re
 
-from components import page, crumbs, offerte_form, faq_blok, foto, title, eur
+from components import page, crumbs, offerte_form, faq_blok, foto, foto_alleen_desktop, title, eur
 from foto_data import FOTOS
 from kosten_data import KOSTEN, PRIJSBANDEN
 
@@ -295,7 +295,7 @@ def build_onderhoudscheck(write):
         <li>Richtprijzen voor jouw type woning</li>
         <li>Het beste moment om te plannen, en een herinnering in je agenda</li>
       </ul>
-      <div class="ohc-introfoto">{foto(bladderfoto, "(max-width:980px) calc(100vw - 40px), 520px")}</div>
+      <div class="ohc-introfoto">{foto_alleen_desktop(bladderfoto, "560px")}</div>
     </div>
     <div class="formcard ohc-card" aria-live="polite">
       <div class="ohc-quiz">

@@ -44,7 +44,7 @@ ARTIKELEN_RONDE4A = [
 "groep": "Voorbereiden en uitvoeren",
 "titel": "Nieuw stucwerk schilderen: drogen, voorstrijken en sauzen",
 "seo_titel": "Nieuw stucwerk schilderen: zo doe je het",
-"description": "Hoe lang moet nieuw stucwerk drogen, moet je voorstrijken en hoe saus je het zonder vlekken? Met droogtest, stappenplan en een rekenvoorbeeld in liters en euro's.",
+"description": "Hoe lang moet nieuw stucwerk drogen, moet je voorstrijken en hoe saus je het zonder vlekken? Met droogtest, stappenplan en een rekenvoorbeeld in liters en euro.",
 "kort": "Hoe lang nieuw stucwerk moet drogen, wanneer voorstrijken nodig is en hoe je het egaal saust.",
 "foto": "kwast-tegen-lichte-muur",
 "intro": "Een vers gestucte muur is mooi glad, maar je kunt er niet meteen verf op zetten. Het stucwerk zit nog vol water en het zuigt verf op als een spons. Wie te vroeg begint of de voorstrijk overslaat, krijgt vlekken, aanzetten of verf die later loslaat. Hier lees je hoe lang je moet wachten, wanneer voorstrijken nodig is en hoe je de muur in één keer goed krijgt.",

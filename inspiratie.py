@@ -25,6 +25,7 @@ from components import page, crumbs, offerte_form, faq_blok, title, foto
 from data import PLAATS_BY_SLUG
 from foto_data import FOTOS_INSPIRATIE
 from inspiratie_galerij import galerij, schrijf_svgs, GALERIJ_CSS, GALERIJ_JS  # inspiratie-galerij
+from kleuradvies import build_kleuradvies, kleuradvies_blok  # kleuradvies
 from inspiratie_gids import KLEURCODES, BRONNEN, GIDSEN, ONDERHOUD_ALGEMEEN, bron, kleur_label
 from kleuren_kiezer import (VERFKLEUREN, STENEN, TYPES as KIEZER_TYPES, PAD as KIEZER_PAD,
                             LIJN, _r, _glas, raam, deur, boei, svg_woning,
@@ -538,7 +539,7 @@ def build_gids(write, sleutel, n_start):
         ("Kloppen de RAL-codes met de kleur op mijn scherm?",
          "De codes kloppen; de kleur op je scherm is een benadering. Vraag de schilder om een staal of een "
          "proefvlak op je eigen kozijn voordat je kiest."),
-    ], f"Vragen over een {naam.lower()}")
+    ] + g.get("faq", []), f"Vragen over een {naam.lower()}")  # inspiratie-ronde 2: extra FAQ per gids
 
     body = f"""{cr}
 <section class="section-sm ip-gids"><div class="wrap narrow">
@@ -564,6 +565,7 @@ def build_gids(write, sleutel, n_start):
     <div><h3>Verder kijken</h3><ul><li><a href="{KIEZER_PAD}">Zelf kleuren kiezen in de kleurenkiezer</a></li><li><a href="/onderhoudscheck/">Doe de onderhoudscheck</a></li><li><a href="/schilderwerk/buitenschilderwerk/">Buitenschilderwerk</a></li><li><a href="/schilderwerk/houtrot-reparatie/">Houtrot laten repareren</a></li></ul></div>
   </div>
   <p>Schilders in de buurt van dit soort woningen vind je onder meer in {plaatsen}.</p>
+  {kleuradvies_blok("Kleuradvies voor buiten", ["kozijnen", "grachtengroen", "voordeur", "kleurcombinaties"])}
   <h3>Andere woningtypes</h3>
   <ul class="ip-andere">{andere}</ul>
   <h3>Bronnen</h3>
@@ -596,7 +598,8 @@ def build_gids(write, sleutel, n_start):
     html = page(title(g["titel"]), g["description"], url, body, [cr_ld, artikel_ld, faq_ld])
     html = html.replace('<link rel="stylesheet" href="/assets/css/style.css">',
                         '<link rel="stylesheet" href="/assets/css/style.css">'
-                        '<link rel="stylesheet" href="/assets/css/inspiratie.css">')
+                        '<link rel="stylesheet" href="/assets/css/inspiratie.css">'
+                        '<link rel="stylesheet" href="/assets/css/kleuradvies.css">')
     html = html.replace("</body>", '<script src="/assets/js/inspiratie.js" defer></script></body>')
     write(url, html, prio=0.6)
     return _woorden(tekst)
@@ -697,6 +700,7 @@ def build_inspiratie(write, out_dir):
   <p class="ip-schermnoot">De tekeningen zijn voorbeelden, geen foto's. Kleuren op een scherm wijken altijd wat af van echte verf; bij elke kleur staat de RAL-code.</p>
 </div></section>
 {kleurnamen_sectie()}
+<section class="section-sm"><div class="wrap narrow">{kleuradvies_blok("Meer kleuradvies: kozijnen, voordeur, kamers en trends")}</div></section>
 
 <section class="section soft"><div class="wrap">
   <h2>Zo kies je zelf een combinatie</h2>
@@ -732,7 +736,7 @@ def build_inspiratie(write, out_dir):
     </div>
   </div>
   <div class="ip-deuren">{deuren}</div>
-  <p>Binnen laten schilderen? Lees meer over <a href="/schilderwerk/binnenschilderwerk/">binnenschilderwerk</a>.</p>
+  <p>Binnen laten schilderen? Lees meer over <a href="/schilderwerk/binnenschilderwerk/">binnenschilderwerk</a>. Kleuradvies per ruimte vind je bij <a href="/kleuradvies/woonkamer/">woonkamer</a>, <a href="/kleuradvies/slaapkamer/">slaapkamer</a> en <a href="/kleuradvies/keuken-en-hal/">keuken en hal</a>, en over licht bij <a href="/kleuradvies/lichtval/">kleur en lichtval</a>.</p>
 </div></section>
 
 <section class="section soft"><div class="wrap">
@@ -775,7 +779,8 @@ def build_inspiratie(write, out_dir):
         PAD, body, [cr_ld, lijst_ld, faq_ld])
     html = html.replace('<link rel="stylesheet" href="/assets/css/style.css">',
                         '<link rel="stylesheet" href="/assets/css/style.css">'
-                        '<link rel="stylesheet" href="/assets/css/inspiratie.css">')
+                        '<link rel="stylesheet" href="/assets/css/inspiratie.css">'
+                        '<link rel="stylesheet" href="/assets/css/kleuradvies.css">')
     html = html.replace("</body>", '<script src="/assets/js/inspiratie.js" defer></script></body>')
     write(PAD, html, prio=0.7)
 
@@ -787,6 +792,7 @@ def build_inspiratie(write, out_dir):
         if woorden < 400:
             print(f"  LET OP: gids {k} heeft maar {woorden} woorden lopende tekst")
 
+    build_kleuradvies(write, out_dir)  # kleuradvies: /kleuradvies/ en onderwerpen
     schrijf_svgs(out_dir)  # inspiratie-galerij: illustraties als losse .svg
     _schrijf(os.path.join(out_dir, "assets", "css", "inspiratie.css"), INSPIRATIE_CSS + GALERIJ_CSS)
     data = {"types": {k: n for k, n, _ in WONINGTYPES}}

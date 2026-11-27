@@ -219,7 +219,7 @@ def _form(a):
   <div class="success">
     <div class="big">{icon('check', 26)}</div>
     <h2>Aanvraag ontvangen</h2>
-    <p>We zoeken nu schilders in jouw regio die bij deze klus passen. Je krijgt meteen een bevestiging per mail, en je hoort doorgaans binnen één werkdag iets van de schilders. Houd ook je spambox even in de gaten.</p>
+    <p>We zoeken nu schilders in jouw regio die bij deze klus passen. Je krijgt meteen een bevestiging per mail. Daarna nemen de schilders zelf contact met je op. Houd ook je spambox even in de gaten.</p>
     <p><a class="btn btn-ghost" href="/prijzen/">Bekijk alvast wat schilderwerk kost</a></p>
   </div>
 </div>

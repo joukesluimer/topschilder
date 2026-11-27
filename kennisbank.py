@@ -47,6 +47,25 @@ for _dienst, _extra in {
 }.items():
     DIENST_ARTIKELEN[_dienst] = DIENST_ARTIKELEN[_dienst] + [s for s in _extra if any(a["slug"] == s for a in ARTIKELEN)]
 
+# content-ronde 5: nieuwe artikelen bij de dienstpagina's
+for _dienst, _extra in {
+    "binnenschilderwerk": ["muur-plamuren", "binnendeuren-verven"],
+    "buitenschilderwerk": ["ral-9010-of-ral-9001", "voordeur-schilderen"],
+    "houtrot-reparatie": ["glaslatten-vervangen", "oude-verf-verwijderen"],
+    "spuitwerk": ["binnendeuren-verven"],
+    "zakelijk-schilderwerk": ["schilderwerk-vve"],
+}.items():
+    DIENST_ARTIKELEN[_dienst] = DIENST_ARTIKELEN[_dienst] + [s for s in _extra if any(a["slug"] == s for a in ARTIKELEN)]
+
+# kennis-ronde 6: nieuwe artikelen bij de dienstpagina's
+for _dienst, _extra in {
+    "binnenschilderwerk": ["scheuren-in-muur-en-plafond", "vlekken-overschilderen", "kalkverf-of-krijtverf"],
+    "buitenschilderwerk": ["buitenmuur-verven", "gevel-impregneren", "vochtige-muur"],
+    "spuitwerk": ["keukenkastjes-verven", "radiator-verven"],
+    "behangen": ["behang-verven", "renovlies-of-glasvlies"],
+}.items():
+    DIENST_ARTIKELEN[_dienst] = DIENST_ARTIKELEN[_dienst] + [s for s in _extra if any(a["slug"] == s for a in ARTIKELEN)]
+
 _PER_SLUG = {a["slug"]: a for a in ARTIKELEN}
 _KOSTEN = {k["slug"]: k for k in KOSTEN}
 _DIENST = {d["slug"]: d for d in DIENSTEN}
@@ -182,7 +201,7 @@ def _artikel(a, write, today):
 def _kaart(href, titel_, oms, f=None):
     beeld = foto(f, "(max-width:600px) calc(100vw - 40px), 360px") if f else ""
     return (f'<div class="card">{beeld}<h3 style="font-size:1.08rem"><a href="{href}">{titel_}</a></h3>'
-            f'<p>{oms}</p><p><a class="go" href="{href}">Lees meer →</a></p></div>')
+            f'<p>{oms}</p><p><a class="go" href="{href}" tabindex="-1" aria-hidden="true">Lees meer →</a></p></div>')  # seo-ronde 5: dubbele link, de titel is het anker
 
 
 def _hub(write, today):
@@ -217,7 +236,7 @@ def _hub(write, today):
                 "name": "Kennisbank schilderwerk", "inLanguage": "nl-NL",
                 "mainEntity": {"@type": "ItemList", "itemListElement": items}}
     write("/kennisbank/", page(title("Kennisbank schilderwerk: verf, voorbereiding en offertes"),
-          "Praktische uitleg over schilderwerk: welke verf voor kozijnen, nieuw stucwerk schilderen, schimmel op de muur, verf die bladdert, tegels verven en een goede offerte.",
+          "Praktische uitleg over schilderwerk: verf voor kozijnen, nieuw stucwerk schilderen, schimmel op de muur, verf die bladdert, tegels verven en offertes.",
           "/kennisbank/", body, [cr_ld, lijst_ld]), prio=0.8)
 
 

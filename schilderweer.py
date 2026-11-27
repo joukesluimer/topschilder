@@ -250,6 +250,9 @@ SW_CSS = """/* Schilderweer-check */
 .sw-kies select{font:inherit;font-size:1rem;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);min-width:0;flex:1 1 180px;max-width:300px}
 .sw-kies .btn{padding:10px 16px}
 .sw-laden{color:var(--muted);margin:0;padding:30px 0;text-align:center}
+/* seo-ronde 5: ruimte vrijhouden tot de verwachting er is, anders schuift de pagina (CLS 0,2-0,3) */
+.sw-app[data-sw="vol"] .sw-doel:has(> .sw-laden){min-height:900px}
+@media(max-width:600px){.sw-app[data-sw="vol"] .sw-doel:has(> .sw-laden){min-height:1240px}}
 .sw-conclusie{display:flex;gap:14px;align-items:flex-start;border-radius:var(--radius);padding:16px 18px;margin-bottom:18px;background:var(--bg-soft);border-left:5px solid var(--line)}
 .sw-conclusie.sw-g{background:#e9f6ef;border-left-color:#0f8a5f}
 .sw-conclusie.sw-o{background:var(--accent-soft);border-left-color:var(--accent)}

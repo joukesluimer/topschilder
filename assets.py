@@ -2314,3 +2314,30 @@ STYLE_CSS += r'''
 .grid > div.card:has(> p:last-child > .go:only-child){display:flex;flex-direction:column}
 .grid > div.card > p:last-child:has(> .go:only-child){margin-top:auto;margin-bottom:0;padding-top:4px}
 '''
+
+# --- LOKAAL (lokale gids top 10 en dienstuitleg; lokaal_top.py, dienst_uitleg.py) ---
+STYLE_CSS += r'''
+.lt-klimaat th{white-space:normal;text-transform:none;letter-spacing:0;font-size:.92rem;width:65%}
+.lt-wijken td small{display:block;margin-top:4px;color:var(--muted,#6b5a45)}
+.lt-wijken tbody th{white-space:nowrap;vertical-align:top;text-transform:none;letter-spacing:0}
+.du-kort ul{margin:6px 0 0;padding-left:1.1em}
+.du-kort li{margin:4px 0}
+@media (max-width:640px){
+  .lt-wijken thead{display:none}
+  .lt-wijken,.lt-wijken tbody,.lt-wijken tr,.lt-wijken td{display:block;width:100%}
+  .lt-wijken tr{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .lt-wijken td{padding:2px 0;border:0;white-space:normal}
+  .lt-wijken tbody th{display:block;width:100%;padding:0 0 4px;border:0;font-size:1rem}
+  .lt-wijken td.lt-naam{font-weight:750;font-size:1rem}
+  .lt-wijken td.num{display:inline-block;width:auto;margin-right:14px;font-size:.9rem}
+  .lt-wijken td.num::before{content:attr(data-label) ": ";font-weight:500;color:var(--muted,#6b5a45)}
+  .du-tabel thead{display:none}
+  .du-tabel,.du-tabel tbody,.du-tabel tr,.du-tabel td{display:block;width:100%}
+  .du-tabel tr{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .du-tabel td{padding:3px 0;border:0;white-space:normal}
+  .du-tabel td:first-child{font-weight:750;color:var(--ink)}
+  .du-tabel td+td::before{content:attr(data-label) ": ";font-weight:650;color:var(--muted,#6b5a45)}
+}
+'''
+# --- einde LOKAAL ---
+from stijl_v2 import CSS as _STIJL_V2, FAVICON_SVG; STYLE_CSS += _STIJL_V2  # design v2: logo-favicon en site-brede opmaak

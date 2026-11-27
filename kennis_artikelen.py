@@ -86,7 +86,7 @@ ARTIKELEN = [
 "groep": "Verf kiezen",
 "titel": "Grondverf of voorlak: wat is het verschil?",
 "seo_titel": "Grondverf of voorlak? Het verschil uitgelegd",
-"description": "Grondverf zorgt voor hechting op kaal hout, voorlak bouwt de laag op voor de aflak. Wanneer je welke gebruikt, hoe lang je moet wachten en wat er misgaat zonder.",
+"description": "Grondverf zorgt voor hechting op kaal hout, voorlak bouwt de laag op voor de aflak. Wanneer je welke gebruikt en hoe lang je moet wachten.",
 "kort": "Wat grondverf, voorlak en aflak doen, wanneer je welke laag nodig hebt en hoe lang je moet wachten.",
 "foto": "witte-grondverf-rollen-op-hout",
 "intro": "In de bouwmarkt staan grondverf, voorlak, primer en aflak naast elkaar, en op de offerte van een schilder kom je ze ook tegen. Ze lijken op elkaar, maar ze doen elk iets anders. Wie een laag overslaat, merkt dat vaak pas na een paar jaar: de verf bladdert, of het hout schemert door.",
@@ -389,7 +389,7 @@ ARTIKELEN = [
 "groep": "Voorbereiden en uitvoeren",
 "titel": "Kozijnen schuren en voorbereiden voor het schilderen",
 "seo_titel": "Kozijnen schuren en voorbereiden: stappenplan",
-"description": "Goede voorbereiding bepaalt hoe lang je schilderwerk meegaat. Zo reinig, schraap en schuur je kozijnen, welke korrel je gebruikt en waar je op let bij oude verf.",
+"description": "Goede voorbereiding bepaalt hoe lang je schilderwerk meegaat. Zo reinig, schraap en schuur je kozijnen en zo kies je de juiste korrel.",
 "kort": "Reinigen, schrapen, schuren en afplakken: de voorbereiding die bepaalt hoe lang je verf het houdt.",
 "foto": "wit-kozijn-afbladderend-oude-gevel",
 "intro": "Schilders zeggen het vaak: de voorbereiding is het halve werk. Eerlijker is: het is meer dan de helft. Een dure verf op een slecht voorbereid kozijn bladdert binnen een paar jaar, terwijl een gewone verf op een goed geschuurd en gereinigd kozijn veel langer meegaat. Zo pak je de voorbereiding aan.",
@@ -552,7 +552,7 @@ ARTIKELEN = [
 "groep": "Offerte, kosten en btw",
 "titel": "Wat staat er in een goede offerte voor schilderwerk?",
 "seo_titel": "Goede offerte schilderwerk: checklist van 12 punten",
-"description": "Waar herken je een goede schildersofferte aan? Checklist met 12 punten: omschrijving, verf en lagen, voorbereiding, btw, meerwerk, planning, betaling en garantie.",
+"description": "Waar herken je een goede schildersofferte aan? Checklist met 12 punten: omschrijving, verf en lagen, voorbereiding, btw, meerwerk, planning en garantie.",
 "kort": "Een checklist van twaalf punten om een schildersofferte te beoordelen en offertes eerlijk te vergelijken.",
 "foto": "villa-in-de-steigers-achtergevel-elburg",
 "intro": "Twee offertes voor dezelfde klus kunnen honderden euro's uit elkaar liggen. Vaak zit het verschil niet in de prijs per uur, maar in wat er wel en niet in staat. Een goede offerte maakt precies duidelijk wat je krijgt. Met deze checklist beoordeel je een offerte en vergelijk je er meerdere op dezelfde basis.",
@@ -629,3 +629,41 @@ for _a in ARTIKELEN:
         "houtrot-herkennen-en-herstellen": ["boeidelen-schilderen"],
         "latex-of-muurverf": ["gevel-schilderen"],
     }.get(_a["slug"], [])
+
+
+# --- content-ronde 5: acht nieuwe artikelen (inhoud in kennis_ronde5.py) ---
+from kennis_ronde5 import ARTIKELEN_RONDE5  # noqa: E402
+
+ARTIKELEN += ARTIKELEN_RONDE5
+
+# Bestaande artikelen ook laten verwijzen naar de nieuwe kostenpagina's van ronde 5.
+for _a in ARTIKELEN:
+    _a["kosten"] = list(_a["kosten"]) + {
+        "houtrot-herkennen-en-herstellen": ["houtrot-herstellen"],
+        "hoe-vaak-buitenschilderwerk": ["buitenschilderwerk"],
+        "verf-bladdert-af": ["buitenschilderwerk"],
+        "plafond-schilderen-zonder-strepen": ["binnenschilderwerk"],
+        "binnen-schilderen-in-de-winter": ["binnenschilderwerk"],
+        "goede-offerte-schilderwerk": ["buitenschilderwerk", "binnenschilderwerk"],
+    }.get(_a["slug"], [])
+
+# content-ronde 5: verdieping van de vijf dunste bestaande artikelen
+from kennis_ronde5 import VERDIEPING_R5  # noqa: E402
+
+for _a in ARTIKELEN:
+    _v = VERDIEPING_R5.get(_a["slug"])
+    if _v:
+        _a["secties"] = list(_a["secties"]) + _v["secties"]
+        _a["faq"] = list(_a["faq"]) + _v["faq"]
+
+# --- kennis-ronde 6: tien nieuwe artikelen en verdieping van vijf dunne (inhoud in kennis_ronde6.py) ---
+from kennis_ronde6 import ARTIKELEN_RONDE6, VERDIEPING_R6  # noqa: E402
+
+ARTIKELEN += ARTIKELEN_RONDE6
+for _a in ARTIKELEN:
+    _v = VERDIEPING_R6.get(_a["slug"])
+    if _v:
+        _a["secties"] = list(_a["secties"]) + _v["secties"]
+        _a["faq"] = list(_a["faq"]) + _v["faq"]
+        _a["bronnen"] = list(_a["bronnen"]) + [b for b in _v.get("bronnen", []) if b not in _a["bronnen"]]
+        _a["gerelateerd"] = list(_a["gerelateerd"]) + [s for s in _v.get("gerelateerd", []) if s not in _a["gerelateerd"]]

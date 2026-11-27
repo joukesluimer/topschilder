@@ -70,9 +70,18 @@ for url, html in pages.items():
     # JSON-LD
     for m in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S):
         try:
-            json.loads(m)
+            ld = json.loads(m)
         except Exception as e:
             problems.append(f"{url}: JSON-LD kapot — {e}")
+            continue
+        # seo-ronde 5: geen review- of ratingschema (we hebben geen echte reviews) en
+        # Article moet compleet zijn
+        if re.search(r'"(?:Review|AggregateRating|aggregateRating|review|reviewRating)"', m):
+            problems.append(f"{url}: review- of ratingschema gevonden; dat gebruiken we niet")
+        if isinstance(ld, dict) and ld.get("@type") == "Article":
+            mist = [k for k in ("headline", "author", "publisher", "dateModified", "image") if k not in ld]
+            if mist:
+                problems.append(f"{url}: Article-schema mist {', '.join(mist)}")
 
     # onopgeloste template-placeholders
     if "{plaats}" in html or "{d[" in html or "None" in re.sub(r"<script.*?</script>", "", html, flags=re.S):

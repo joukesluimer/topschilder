@@ -216,7 +216,7 @@ KOSTEN_RONDE4 = [
         "kruimel": "Gevel en buitenmuur schilderen",
         "h1": "Wat kost een buitenmuur of gevel schilderen per m²?",
         "title": "Gevel schilderen kosten 2026: prijs per m²",
-        "description": "Een gevel of buitenmuur laten schilderen kost €20 tot €40 per m², inclusief gevelverf en btw. Met rekenvoorbeelden, steigerkosten en wanneer je beter niet schildert.",
+        "description": "Een gevel of buitenmuur laten schilderen kost €20 tot €40 per m², inclusief gevelverf en btw. Met rekenvoorbeelden, steigerkosten en het beste moment.",
         "dienst": "buitenschilderwerk",
         "eenheid": "per m² gevel",
         "van": 20,

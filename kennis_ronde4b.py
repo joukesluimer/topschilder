@@ -44,7 +44,7 @@ ARTIKELEN_RONDE4B = [
 "dienst": "buitenschilderwerk",
 "titel": "Sikkens, Sigma, Histor of Flexa: wie maakt wat?",
 "seo_titel": "Sikkens, Sigma of Histor? De merken uitgelegd",
-"description": "Sikkens en Flexa zijn van AkzoNobel, Sigma en Histor van PPG. Het verschil tussen vakhandel en bouwmarkt, wat Rubbol, S2U en Perfect Finish zijn en wat verf kost.",
+"description": "Sikkens en Flexa zijn van AkzoNobel, Sigma en Histor van PPG. Vakhandel of bouwmarkt, wat Rubbol, S2U en Perfect Finish zijn en wat verf kost.",
 "kort": "Wie Sikkens, Sigma, Histor en Flexa maakt, waar je ze koopt en waarom je schilder vaak bij één merk blijft.",
 "foto": "verfbak-kwasten-en-roller-zwartwit",
 "intro": "Op een offerte voor buitenschilderwerk staat vaak een merknaam: Sikkens, Sigma of soms Histor. In de bouwmarkt zie je ook Flexa. Veel mensen vragen zich af welk merk het beste is. Dat is lastig te zeggen, en wij doen dat ook niet. Wel kunnen we uitleggen wie wat maakt, voor wie de merken bedoeld zijn en waar je echt op moet letten. Het merk blijkt vaak minder belangrijk dan je denkt.",

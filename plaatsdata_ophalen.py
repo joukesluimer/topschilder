@@ -422,7 +422,9 @@ def plaats_buurten(p):
 def alleen_buurten():
     """Voegt 'buurten' toe aan de bestaande cijfers, zonder de rest opnieuw op te halen."""
     from plaats_cijfers import CIJFERS as uit
-    doel = [p for p in PLAATSEN if BUURT_MIN_INWONERS <= p["inwoners"] < BUURT_MAX_INWONERS]
+    # lokale ronde: ook grotere plaatsen die bij het CBS maar uit één of twee wijken bestaan (Kampen)
+    doel = [p for p in PLAATSEN if BUURT_MIN_INWONERS <= p["inwoners"] < BUURT_MAX_INWONERS
+            or (p["inwoners"] >= BUURT_MAX_INWONERS and len(uit[p["slug"]].get("wijken") or []) < 3)]
     with ThreadPoolExecutor(max_workers=4) as ex:
         for slug, buurten in ex.map(plaats_buurten, doel):
             if len(buurten) >= 3:

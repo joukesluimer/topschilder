@@ -702,3 +702,17 @@ from kosten_ronde4 import KOSTEN_RONDE4  # noqa: E402
 
 KOSTEN += KOSTEN_RONDE4
 KOSTEN_BY_SLUG.update({k["slug"]: k for k in KOSTEN_RONDE4})
+
+
+# --- content-ronde 5: drie nieuwe kostenpagina's en verdieping (inhoud in kosten_ronde5.py) ---
+from kosten_ronde5 import KOSTEN_RONDE5, UITBREIDING_R5  # noqa: E402
+
+KOSTEN += KOSTEN_RONDE5
+KOSTEN_BY_SLUG.update({k["slug"]: k for k in KOSTEN_RONDE5})
+for _slug, _u in UITBREIDING_R5.items():
+    _k = KOSTEN_BY_SLUG[_slug]
+    for _veld in ("h1", "title", "description", "direct", "prijstabel", "valkuilen"):
+        if _veld in _u:
+            _k[_veld] = _u[_veld]
+    _k["verdieping"] = list(_k.get("verdieping", [])) + _u.get("verdieping", [])
+    _k["faq"] = list(_k["faq"]) + _u.get("faq_extra", [])

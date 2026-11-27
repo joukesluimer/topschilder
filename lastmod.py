@@ -59,6 +59,31 @@ def _lees():
     return oud
 
 
+def echte_datum(pad, html, vandaag):
+    """seo-ronde 5: de lastmod-datum van deze pagina, al tijdens het schrijven.
+    Zelfde regel als datums(): onveranderde inhoud houdt de oude datum."""
+    global _OUD
+    if _OUD is None:
+        _OUD = _lees()
+    oud = _OUD.get(pad)
+    return oud[1] if oud and oud[0] == vingerafdruk(html) else vandaag
+
+
+def zet_datums(pad, html, vandaag):
+    """Vervangt de builddatum in "Bijgewerkt op", "Laatst bijgewerkt" en dateModified
+    door de echte lastmod. Anders zegt elke pagina bij elke build dat hij vandaag is bijgewerkt."""
+    d = echte_datum(pad, html, vandaag)
+    if d == vandaag:
+        return html
+    nl_v, nl_d = f"{vandaag[8:10]}-{vandaag[5:7]}-{vandaag[:4]}", f"{d[8:10]}-{d[5:7]}-{d[:4]}"
+    return (html.replace(f'"dateModified": "{vandaag}"', f'"dateModified": "{d}"')
+                .replace(f"Laatst bijgewerkt: {vandaag}", f"Laatst bijgewerkt: {d}")
+                .replace(f"Bijgewerkt op {nl_v}", f"Bijgewerkt op {nl_d}"))
+
+
+_OUD = None
+
+
 def datums(vandaag):
     """Geeft {pad: datum} voor alle onthouden pagina's en werkt lastmod.txt bij."""
     oud = _lees()

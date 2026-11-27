@@ -628,7 +628,7 @@ def _panel_html():
     <div class="kk-kleurinfo" data-kleurinfo><i class="kk-stip"></i><div><p class="kk-ki-kop"><strong data-ki-naam></strong> <span class="kk-code" data-ki-code></span></p><p data-ki-uitleg></p><p class="kk-ki-delen" data-ki-delen></p></div></div>
     <h2 class="kk-kop">Of begin met een stijl</h2>
     <div class="kk-stijlen">{stijlen}<button type="button" class="kk-stijl kk-gok" data-gok>Verras me</button></div>
-    <p class="kk-uitleg" style="margin:10px 0 0">Meer ideeën, met uitleg per woningtype? Bekijk de <a href="/inspiratie/">inspiratie en stijlgids</a>.</p>
+    <p class="kk-uitleg" style="margin:10px 0 0">Meer ideeën, met uitleg per woningtype? Bekijk de <a href="/inspiratie/">inspiratie en stijlgids</a>, of lees ons <a href="/kleuradvies/">kleuradvies</a> voor kozijnen, voordeur en elke kamer.</p>
     <div class="kk-acties">
       <a class="btn btn-primary" href="#offerte" data-offerte>Offerte voor deze kleuren</a>
       <button type="button" class="btn btn-ghost" data-deel-link>Deel je ontwerp</button>

@@ -48,6 +48,17 @@ def foto(f, sizes, boven_vouw=False):
             f'sizes="{sizes}" width="{f["w"]}" height="{f["h"]}" alt="{alt}" {laden} decoding="async"></figure>')
 
 
+
+def foto_alleen_desktop(f, sizes, breekpunt=980):
+    """seo-ronde 5: voor een foto die onder `breekpunt` op display:none staat en op desktop
+    boven de vouw (vaak de LCP) staat. Niet lazy, maar met een lege bron voor smalle schermen,
+    zodat een telefoon hem niet downloadt."""
+    leeg = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+    return (foto(f, sizes)
+            .replace("<img ", f'<picture><source media="(max-width:{breekpunt}px)" srcset="{leeg}"><img ', 1)
+            .replace(' loading="lazy"', ' loading="eager"', 1)
+            .replace("</figure>", "</picture></figure>", 1))
+
 def icon(name, size=23):
     p = ICONS.get(name, ICONS["check"])
     return (
@@ -87,7 +98,7 @@ def head(title, description, canonical, jsonld=None, depth_ok=True, noindex=Fals
 <meta property="og:url" content="{SITE['url']}{canonical}">
 <meta property="og:locale" content="nl_NL">
 <meta name="theme-color" content="#3c290f">
-<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml"><meta property="og:image" content="https://topschilder.nl/assets/merk/logo.svg">
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/assets/merk/apple-touch-icon.png"><meta property="og:image" content="https://topschilder.nl/assets/merk/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Topschilder.nl: vergelijk schilders bij jou in de buurt"><meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/assets/css/style.css">
 {ld}
 </head>"""
@@ -98,7 +109,7 @@ def header():
     return f"""<header class="header">
 <div class="wrap header-in">
   <a class="logo" href="/" aria-label="Topschilder.nl, naar de homepage">
-    <img src="/assets/merk/logo.svg" alt="Topschilder.nl — de schilder bij u in de buurt" width="843" height="367">
+    <img src="/assets/merk/logo.svg" alt="Topschilder.nl" width="816" height="144">
   </a>
   <button class="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="hoofdmenu"><span></span><span></span><span></span></button>
   <nav class="nav" id="hoofdmenu" aria-label="Hoofdmenu">
@@ -130,7 +141,7 @@ def footer():
   </div>
   <div class="footer-grid">
     <div>
-      <a class="logo" href="/" aria-label="Topschilder.nl"><img src="/assets/merk/logo-wit.svg" alt="Topschilder.nl" width="843" height="367" loading="lazy"></a>
+      <a class="logo" href="/" aria-label="Topschilder.nl"><img src="/assets/merk/logo-wit.svg" alt="Topschilder.nl" width="816" height="144" loading="lazy"></a>
       <p style="margin-top:14px;max-width:34ch">Vergelijk vrijblijvend offertes van schilders bij jou in de buurt. Gratis, zonder verplichtingen en met maximaal drie bedrijven die contact opnemen.</p>
       <ul class="footer-tools">
         <li><a href="/tools/">{icon('match', 18)}Gratis tools</a></li>
@@ -192,6 +203,7 @@ HONEYPOT = (
 def page(title, description, canonical, body, jsonld=None, body_attrs="", noindex=False):
     # Honeypot in elk formulier: bots vullen dit veld, echte bezoekers zien het niet.
     body = body.replace(" novalidate>", " novalidate>" + HONEYPOT)
+    body = __import__("stijl_v2").zachte_spaties(body)  # design v2: bedragen niet middenin afbreken
     return (
         head(title, description, canonical, jsonld, noindex=noindex)
         + f"<body{(' ' + body_attrs) if body_attrs else ''}>"
@@ -348,7 +360,7 @@ def offerte_form(title="Ontvang gratis 3 offertes", sub="Gratis · vrijblijvend 
   <div class="success">
     <div class="big">{icon('check', 26)}</div>
     <h2>Aanvraag ontvangen</h2>
-    <p>We zoeken nu schilders in jouw regio die bij deze klus passen. Je krijgt meteen een bevestiging per mail, en je hoort doorgaans binnen één werkdag iets van de schilders. Houd ook je spambox even in de gaten.</p>
+    <p>We zoeken nu schilders in jouw regio die bij deze klus passen. Je krijgt meteen een bevestiging per mail. Daarna nemen de schilders zelf contact met je op. Houd ook je spambox even in de gaten.</p>
     <p><a class="btn btn-ghost" href="/prijzen/">Bekijk alvast wat schilderwerk kost</a></p>
   </div>
 </div>"""
@@ -391,11 +403,11 @@ def hoe_werkt_het(plaats=None):
 def waarom_blok():
     items = [
         ("shield", "Voorgeselecteerde bedrijven",
-         "We werken alleen met schildersbedrijven met een geldige KvK-inschrijving en aansprakelijkheidsverzekering. Klachten betekenen dat we de samenwerking stopzetten."),
+         "We bellen elke schilder voordat hij aanvragen krijgt en vragen om bewijs van KvK-inschrijving en aansprakelijkheidsverzekering. Bij herhaalde klachten stoppen we de samenwerking."),
         ("euro", "Prijsverschillen zijn groot",
          "De ene schilder rekent voor hetzelfde werk meer dan de andere, en uit één offerte zie je dat niet. Vergelijken is letterlijk het best betaalde uur van je klus."),
-        ("clock", "Snel duidelijkheid",
-         "Je aanvraag gaat dezelfde dag door naar schilders in jouw regio. Meestal heb je binnen één werkdag de eerste reactie."),
+        ("clock", "Eén keer je verhaal doen",
+         "Je vult één formulier in en krijgt direct een bevestiging per mail. Wij zoeken de schilders erbij; jij hoeft niet zelf rond te bellen."),
         ("users", "Maximaal 3 schilders",
          "Genoeg om echt te kunnen vergelijken, weinig genoeg om niet plat gebeld te worden. Je nummer gaat nooit naar meer partijen dan dat."),
     ]

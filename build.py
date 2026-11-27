@@ -17,9 +17,13 @@ from data import (SITE, DIENSTEN, PLAATSEN, buurplaatsen,
 from illustraties import illustratie, voor_na
 from foto_data import FOTOS, FOTO_HOME, FOTOS_PAGINA
 from kosten_data import KOSTEN, KOSTEN_BY_SLUG, PRIJSBANDEN
+from kosten_ronde5 import KOSTEN_OVERZICHT, kosten_r5_kop, kosten_r5_valkuilen  # content-ronde 5
 from wijk_data import WIJKEN
 # --- PLAATSDATA (open data per plaats, zie plaats_content.py) ---
-from plaats_content import plaats_sectie, dienst_blok, bouwperiode_zin
+from plaats_content import plaats_sectie, dienst_blok, bouwperiode_zin, cijfers as cijfers_van
+from lokaal_top import lokaal_sectie, lokaal_dienst_blok, is_top, bouwgolven  # lokale ronde: top 10 op zoekvolume
+from plaats_variatie import plaats_faq, dienst_vraag  # lokale ronde: vragen uit de cijfers
+from plaats_vast import varieer_plaats  # ronde plaatsen 2: data-gestuurde vaste blokken
 # --- einde PLAATSDATA ---
 from huiscalculator import build_huiscalculator, teaser_blok
 import json
@@ -28,7 +32,7 @@ from kleuren_kiezer import (build_kleurenkiezer, kleuren_teaser, kleuren_home_se
 from onderhoudscheck import build_onderhoudscheck, teaser_home, teaser_kort
 from inspiratie import build_inspiratie, inspiratie_teaser, inspiratie_home_sectie
 from tools import beschikbare_tools, tools_sectie, build_tools_pagina
-from components import prijskaart, cta_midden
+from components import prijskaart, cta_midden, foto_alleen_desktop  # foto_alleen_desktop: seo-ronde 5
 # --- kennisbank-sessie: kennisbank en extra foto's ---
 from kennisbank import build_kennisbank, kennis_links_dienst, kennis_links_kosten, fotogroepen as kennis_fotogroepen
 from foto_extra import KOSTEN_FOTOS, KOSTEN_SECTIE, DIENST_EXTRA
@@ -43,6 +47,10 @@ from components import (
 
 import lastmod  # seo-ronde 4
 from plaats_buurten import buurt_blok, buurt_faq  # seo-ronde 4
+from dienst_uitleg import intentie_blok, uitleg_blok, faq_extra, verdieping_blok  # lokale ronde
+from features import build_features  # features-sessie: onderhoudskalender, verfcalculator
+import seo_extra  # features-sessie: preload, ItemList, gerelateerde pagina's, image-sitemap
+import conversie  # conversie-sessie: voorvullen, voortgang, kosten-tussenstap
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "site")
@@ -52,6 +60,10 @@ URLS = []  # (pad, prioriteit, changefreq)
 
 
 def write(path, html, prio=0.6, freq="monthly", index=True):
+    html = seo_extra.verrijk(path, html)  # features-sessie
+    if index:
+        html = lastmod.zet_datums(path, html, TODAY)  # seo-ronde 5: echte datum in "bijgewerkt" en dateModified
+    html = conversie.verrijk(path, html)  # conversie-sessie
     full = os.path.join(OUT, path.strip("/"), "index.html") if path != "/" else os.path.join(OUT, "index.html")
     os.makedirs(os.path.dirname(full), exist_ok=True)
     with open(full, "w", encoding="utf-8") as f:
@@ -74,22 +86,21 @@ def build_home():
     chips = "".join(f'<li><a href="/schilder/{p["slug"]}/">Schilder {p["naam"]}</a></li>' for p in kern)
 
     hero_bg = FOTOS["buitenschilderwerk"]["hero"]["naam"]
-    hero = f"""<section class="hero hero-foto">
+    hero = f"""<section class="hero hero-foto hero-v2">
 <img class="hero-bg" src="/assets/fotos/{hero_bg}-640.webp" srcset="/assets/fotos/{hero_bg}-640.webp 640w, /assets/fotos/{hero_bg}-1600.webp 1600w" sizes="(max-width:920px) 50vw, 100vw" width="1600" height="1067" alt="" loading="eager" fetchpriority="high" decoding="async">
 <div class="wrap hero-in">
   <div>
     <span class="badge badge-dark badge-live"><i></i>Gratis &amp; vrijblijvend</span>
-    <h1>Vergelijk schilders bij jou in de buurt</h1>
+    <h1>Vergelijk schilders <span class="hero-accent">bij jou in de buurt</span></h1>
     <p class="lead">Eén aanvraag, tot drie offertes van schildersbedrijven uit jouw regio. Zo weet je binnen een paar dagen wat je klus écht hoort te kosten.</p>
     <ul class="hero-usps">
       <li><span class="check">{icon('check',12)}</span><span>Maximaal 3 schilders nemen contact op — niet meer</span></li>
-      <li><span class="check">{icon('check',12)}</span><span>Alleen bedrijven met KvK-inschrijving en verzekering</span></li>
+      <li><span class="check">{icon('check',12)}</span><span>We vragen elke schilder om bewijs van KvK-inschrijving en verzekering</span></li>
       <li><span class="check">{icon('check',12)}</span><span>Je zit nergens aan vast en betaalt niets</span></li>
     </ul>
-    <ul class="hero-tags">
-      <li>Binnen- en buitenschilderwerk</li>
-      <li>Houtrot &amp; spuitwerk</li>
-      <li>Particulier en zakelijk</li>
+    <ul class="hero-routes">
+      <li><a href="/prijzen/">{icon('euro',16)}Eerst de prijzen zien<span class="pijl" aria-hidden="true">→</span></a></li>
+      <li><a href="/offerte-vergelijken/">{icon('match',16)}Offerte laten checken<span class="pijl" aria-hidden="true">→</span></a></li>
     </ul>
   </div>
   <div>{offerte_form()}</div>
@@ -98,7 +109,7 @@ def build_home():
 <div class="trustbar"><div class="wrap"><ul>
   <li>{icon('euro',20)}<span><strong>Gratis</strong> en vrijblijvend</span></li>
   <li>{icon('users',20)}<span><strong>Maximaal 3</strong> schilders</span></li>
-  <li>{icon('clock',20)}<span>Meestal <strong>binnen 1 werkdag</strong> reactie</span></li>
+  <li>{icon('clock',20)}<span><strong>Direct</strong> een bevestiging per mail</span></li>
   <li>{icon('house',20)}<span>Actief in <strong>{len(PLAATSEN)} plaatsen</strong></span></li>
 </ul></div></div>"""
 
@@ -180,9 +191,9 @@ def build_home():
         ("Ben ik verplicht een offerte te accepteren?",
          "Nee. Je vergelijkt de offertes, kiest wat je wilt en kunt alle drie afwijzen zonder opgaaf van reden. Er zijn geen kosten en geen kleine lettertjes."),
         ("Hoe snel heb ik een reactie?",
-         "Aanvragen worden dezelfde werkdag doorgezet naar schilders in jouw regio. In de praktijk belt de eerste schilder meestal binnen één werkdag. In het hoogseizoen (april tot september) kan dat iets langer duren."),
+         "Je krijgt direct een bevestiging per mail. Daarna bekijken we je aanvraag zelf en zetten hem zo snel mogelijk door naar schilders in jouw regio. Die nemen zelf contact met je op. Hoe snel dat gaat, hangt af van hoe druk ze zijn; in het voorjaar en de zomer duurt het vaak langer. Hebben we in jouw plaats (nog) geen passende schilder, dan laten we je dat weten."),
         ("Hoe worden schilders geselecteerd?",
-         "We controleren KvK-inschrijving en aansprakelijkheidsverzekering, en we kijken of het bedrijf het gevraagde type werk daadwerkelijk uitvoert. Bij herhaalde klachten stoppen we de samenwerking."),
+         "We bellen elke schilder voordat hij aanvragen krijgt. We vragen naar het werkgebied en het soort werk, en we vragen om bewijs van KvK-inschrijving en aansprakelijkheidsverzekering. Bij herhaalde klachten stoppen we de samenwerking."),
         ("Wat gebeurt er met mijn gegevens?",
          "Je gegevens gaan alleen naar maximaal 3 schilders uit jouw regio. Zij betalen ons een vergoeding om je aanvraag te ontvangen. Andere partijen krijgen je gegevens niet en we gebruiken ze niet voor ongevraagde reclame. Zie onze privacyverklaring."),
     ]
@@ -324,6 +335,7 @@ def dienst_body(d, plaats=None):
       <h1>{h1}</h1>
       <p class="lead">{d['intro']}</p>
       {intro_extra}
+      {'' if plaats else intentie_blok(d)}
       <div class="callout callout-prijs">
         <p><strong>Richtprijs{inplaats}:</strong> {eur(p_van)} – {eur(p_tot)} {d['prijs_eenheid']}{'' if 'excl' in d['prijs_eenheid'] else ', inclusief materiaal en btw'}.{prijsnoot}</p>
         <p style="font-size:.93rem;margin-top:8px">{d['prijs_extra']}</p>
@@ -360,6 +372,8 @@ def dienst_body(d, plaats=None):
 
   {vn_blok}
 
+  {uitleg_blok(d)}
+
   <h2>Waar hangt de prijs vanaf?</h2>
   {foto(DIENST_EXTRA[d['slug']], "(max-width:760px) calc(100vw - 40px), 720px") if d['slug'] in DIENST_EXTRA else ''}
   <p>Twee offertes voor ogenschijnlijk dezelfde klus kunnen honderden euro's uit elkaar liggen. Dat komt zelden door de winstmarge en bijna altijd door deze factoren:</p>
@@ -379,7 +393,7 @@ def dienst_body(d, plaats=None):
     <li>De garantietermijn en wat daar wel en niet onder valt</li>
   </ul>
   <p>De volledige checklist staat in <a href="/kennisbank/goede-offerte-schilderwerk/">wat staat er in een goede offerte</a>.</p>
-  {kennis_links_dienst(d['slug'])}
+  {verdieping_blok(d) or kennis_links_dienst(d['slug'])}
 </div></section>"""
 
     return cr, cr_ld, hero + content
@@ -388,7 +402,7 @@ def dienst_body(d, plaats=None):
 def build_dienst_pages():
     for d in DIENSTEN:
         cr, cr_ld, body_top = dienst_body(d)
-        faq_html, faq_ld = faq_blok(d["faq"], f"Veelgestelde vragen over {d['naam'].lower()}")
+        faq_html, faq_ld = faq_blok(d["faq"] + faq_extra(d), f"Veelgestelde vragen over {d['naam'].lower()}")
 
         andere = f"""<section class="section"><div class="wrap">
   <h2>Ander schilderwerk</h2>
@@ -428,7 +442,7 @@ def build_dienst_pages():
 
         write(f"/schilderwerk/{d['slug']}/", page(
             title(d.get("seo_titel") or f"{d['naam']} kosten {eur(d['prijs_van'])}–{eur(d['prijs_tot'])} {d['prijs_eenheid']}"),
-            desc(f"Wat kost {d.get('naam_lang', d['naam']).lower()}?",
+            d.get("seo_desc") or desc(f"Wat kost {d.get('naam_lang', d['naam']).lower()}?",
                  f"Richtprijzen {d['prijs_eenheid']}, werkwijze en prijsfactoren.",
                  "Plus waar je op let in een offerte.",
                  "Vergelijk gratis 3 schilders bij jou in de buurt."),
@@ -499,11 +513,11 @@ def build_plaats_pages():
       <p>{p['hook']}</p>
       <ul class="checklist">
         <li>Schilders die {p['naam']} en omgeving als vast werkgebied hebben</li>
-        <li>Gecontroleerd op KvK-inschrijving en aansprakelijkheidsverzekering</li>
+        <li>We vragen elke schilder om bewijs van KvK-inschrijving en verzekering</li>
         <li>Gratis vergelijken, geen abonnement, geen verplichtingen</li>
       </ul>
       <div class="callout callout-prijs"><p><strong>Richtprijs in {p['naam']}:</strong> {eur(int(round(45 * PRIJSINDEX.get(p["provincie"], 1.0))))} – {eur(int(round(65 * PRIJSINDEX.get(p["provincie"], 1.0))))} per uur exclusief btw. De prijzen per klus zie je <a href="#prijzen">hieronder</a>.</p></div>
-      <div class="plaats-foto">{foto(FOTOS_PAGINA["diensten"], "536px")}</div>
+      <div class="plaats-foto">{foto_alleen_desktop(FOTOS_PAGINA["diensten"], "536px")}</div>
     </div>
     <div>{offerte_form(f"Offertes van schilders in {p['naam']}", "Vier korte vragen · gratis en vrijblijvend")}</div>
   </div>
@@ -543,6 +557,9 @@ def build_plaats_pages():
             blok_b = f"""<h3>Wachttijden in {p['gemeente']}</h3>
   <p>Buiten het hoogseizoen kun je in {p['naam']} meestal binnen twee tot vier weken terecht. Tussen april en september loopt dat op tot zes weken of meer, zeker voor buitenwerk. Ben je flexibel in je planning, zeg dat er dan bij: schilders vullen graag gaten tussen twee grote klussen en zijn daar vaak scherper voor geprijsd dan voor een klus die op een vaste datum moet vallen.</p>"""
 
+        if not is_top(p) and cijfers_van(p):  # lokale ronde: bouwgolven uit de BAG i.p.v. een rouleerblok
+            blok_a = f"<h3>Bouwgolven in {p['naam']}</h3>{bouwgolven(p)}"
+
         prijs_sec = f"""<section class="section" id="prijzen"><div class="wrap narrow prose">
   <h2>Wat kost een schilder in {p['naam']}?</h2>
   <p>Schilders in {p['gemeente']} rekenen doorgaans <strong>{eur(uur_van)} tot {eur(uur_tot)} per uur exclusief btw</strong>. {INDEX_TOELICHTING.get(p['provincie'], '')} In de praktijk zie je dat uurtarief zelden terug op een offerte: het meeste werk wordt aangeboden per vierkante meter of per stuk, omdat je dan vooraf weet waar je aan toe bent.</p>
@@ -551,8 +568,7 @@ def build_plaats_pages():
   {cta_midden(f"Prijzen van schilders in {p['naam']} vergelijken?", "Eén aanvraag, maximaal drie offertes van schilders die in " + p['naam'] + " werken.")}
 
   <h3>De woningvoorraad van {p['naam']}</h3>
-  <p>{bouwperiode_zin(p)} Het gaat overwegend om {p['woningmix']}. Dat is relevant voor je offerte, want het bepaalt hoeveel kozijnen er zijn, hoe hoog er gewerkt moet worden en of er een steiger nodig is. Bij {'ruime, vrijstaande bouw loopt het aantal te schilderen kozijnen snel op' if 'vrijstaande' in p['woningmix'] or 'villa' in p['woningmix'] else 'rijwoningen blijft het aantal kozijnen beperkt, maar is de bereikbaarheid van de achtergevel soms lastig'}.</p>
-  <p>Daarnaast telt de ligging mee: {p['naam']} kenmerkt zich door {p['ligging']}. Gevels die het meeste weer vangen, vragen eerder onderhoud dan de beschutte kant van hetzelfde huis. Een schilder die daar bij de opname onderscheid in maakt, weet waar hij het over heeft.</p>
+  <p>{bouwperiode_zin(p)} Het gaat overwegend om {p['woningmix']}, in een omgeving met {p['ligging']}. Die twee bepalen hoeveel kozijnen er zijn, of er een steiger nodig is en welke gevels het eerst aan de beurt zijn.</p>
 
   {blok_a}
 
@@ -577,6 +593,7 @@ def build_plaats_pages():
             ("Kan ik ook zakelijk schilderwerk aanvragen?",
              f"Zeker. Kantoren, winkels, VvE's en bedrijfspanden in {p['naam']} kunnen dezelfde route volgen. Kies bij de eerste vraag voor zakelijk schilderwerk, dan komt je aanvraag bij bedrijven terecht die dit type werk aankunnen."),
         ]
+        faqs = plaats_faq(p, [faqs[0], faqs[3]])  # lokale ronde: vragen uit BAG, CBS en RCE
         faq_html, faq_ld = faq_blok(faqs, f"Veelgestelde vragen over schilders in {p['naam']}")
 
         svc_ld = {
@@ -605,11 +622,13 @@ def build_plaats_pages():
 
         # --- PLAATSDATA: sectie 'woningen in cijfers' (BAG, CBS, RCE) ---
         prijs_sec += plaats_sectie(p)
+        wijk_sec = lokaal_sectie(p) or wijk_sec  # top 10: lokale gids met bronnen i.p.v. globale wijktekst
         # --- einde PLAATSDATA ---
         body = (cr + hero + diensten_sec + hoe_werkt_het(p["naam"]) + prijs_sec + wijk_sec
                 + faq_html + buren_sec
                 + cta_blok(f"Schilder zoeken in {p['naam']}?",
                            f"Vul het formulier in en ontvang vrijblijvend offertes van maximaal drie schildersbedrijven die in {p['naam']} werken."))
+        body = varieer_plaats(p, body)  # ronde plaatsen 2
 
         write(f"/schilder/{p['slug']}/", page(
             title(f"Schilder {p['naam']}: vergelijk gratis 3 offertes"),
@@ -676,8 +695,8 @@ def lokaal_advies(d, p):
         elif slug == "binnenschilderwerk":
             delen.append("Bij nieuwbouw is de eerste klus vaak het sauzen van kale wanden en plafonds. Reken dan op een voorstrijklaag extra.")
     if buiten:
-        if any(x in l for x in ("ijsselmeer", "meer", "water", "ijssel", "vecht", "zout")):
-            delen.append(f"Door de ligging bij het water heeft houtwerk in {p['naam']} het zwaarder: vocht, wind en soms zoutlucht. Vooral west- en zuidgevels hebben eerder een beurt nodig dan het landelijke gemiddelde van zes tot acht jaar.")
+        if any(x in l for x in ("ijsselmeer", "meer", "water", "ijssel", "vecht")):
+            delen.append(f"Door de ligging bij het water heeft houtwerk in {p['naam']} het zwaarder: vocht en wind. Het water hier is zoet, dus zoutlucht zoals aan de kust speelt geen rol. Vooral west- en zuidgevels hebben eerder een beurt nodig dan het landelijke gemiddelde van zes tot acht jaar.")
         elif "bos" in l:
             delen.append(f"Rond {p['naam']} staan veel bomen. Noordgevels en houtwerk in de schaduw krijgen sneller groene aanslag; laat dat vóór het schilderen goed reinigen.")
         elif any(x in l for x in ("wind", "open", "polder")):
@@ -729,7 +748,7 @@ def build_plaats_dienst_pages():
                           + (", ".join(kl[:-1]) + " en " + kl[-1] if len(kl) > 1 else kl[0]) + ".</p>") if ks else ""
 
             # --- PLAATSDATA: dienstspecifieke cijfers (BAG, CBS, RCE) ---
-            data_blok = dienst_blok(d, p)
+            data_blok = dienst_blok(d, p) + lokaal_dienst_blok(d, p)
             # --- einde PLAATSDATA ---
             lokaal = f"""<section class="section"><div class="wrap narrow prose">
   <h2>{d['naam']} in {p['naam']}: wat je moet weten</h2>
@@ -737,7 +756,6 @@ def build_plaats_dienst_pages():
 
   <h3>Richtprijs in {p['provincie']}</h3>
   <p>Voor {d['naam'].lower()} in {p['naam']} zie je prijzen tussen <strong>{eur(p_van)} en {eur(p_tot)}</strong> {d['prijs_eenheid']}. {INDEX_TOELICHTING.get(p['provincie'], '')}</p>
-  <p>Ligt een offerte daar duidelijk boven, vraag dan om een specificatie per onderdeel. Ligt hij er ver ónder, wees dan juist alert: dat verschil zit meestal niet in de marge maar in het aantal lagen of in voorbereiding die stilzwijgend wordt overgeslagen.</p>
 
   {voorbeeld}
 
@@ -747,8 +765,7 @@ def build_plaats_dienst_pages():
   {kostenlink}
 
   <h3>Het beste moment om in te plannen</h3>
-  {'<p>Meer over het weer, de temperatuur en de beste maanden lees je in <a href="/gids/wanneer-buiten-schilderen/">wanneer kun je buiten schilderen</a>.</p>' if seizoen else ''}
-  <p>{'Buitenwerk kan in ' + p['naam'] + ' van maart tot en met oktober, maar de scherpste prijzen liggen in september en oktober. De piek is dan voorbij en schilders willen hun najaar volmaken. Wacht je tot het voorjaar, dan sta je achter in de rij bij iedereen die de winter heeft afgewacht.' if seizoen else 'Dit werk kan het hele jaar door, en juist daarom loont het om het in de winter te plannen. Tussen november en februari hebben schilders in ' + p['gemeente'] + ' nauwelijks buitenwerk en dus ruimte in de agenda. Je hebt meer keuze én meer onderhandelingsruimte.'}</p>
+  <p>{'Buiten schilderen kan van maart tot en met oktober; in september en oktober is de agenda vaak ruimer. Meer in <a href="/gids/wanneer-buiten-schilderen/">wanneer kun je buiten schilderen</a>.' if seizoen else 'Dit werk kan het hele jaar door. Tussen november en februari hebben schilders weinig buitenwerk en dus meer ruimte in de agenda.'}</p>
 
   {derde}
 
@@ -763,9 +780,9 @@ def build_plaats_dienst_pages():
                  + (f". Voor {klus[1]} kom je uit op {eur(klus[0] * p_van)} tot {eur(klus[0] * p_tot)}." if klus else ".")),
                 (f"Komen schilders uit {buren[0]['naam']} of {buren[1]['naam']} ook naar {p['naam']}?",
                  f"Vaak wel. Veel schildersbedrijven werken in een straal van twintig tot dertig kilometer. We zoeken eerst bedrijven met {p['naam']} in hun werkgebied, en daarna in de buurt, zoals {buren[0]['naam']} en {buren[1]['naam']}."),
-                (f"Werken jullie schilders ook in {p['naam']}?",
-                 f"Ja. We koppelen je alleen aan bedrijven die {p['naam']} in hun werkgebied hebben staan, zodat je geen onnodige voorrijkosten betaalt."),
             ]
+            faqs += [v for v in [dienst_vraag(d, p)] if v]  # lokale ronde: lokale vraag i.p.v. 'werken jullie schilders ook in ...'
+
             faq_html, faq_ld = faq_blok(faqs, f"Vragen over {d['naam'].lower()} in {p['naam']}")
 
             andere = f"""<section class="section soft"><div class="wrap">
@@ -1286,6 +1303,7 @@ def build_kosten():
   {kaart}
 </div></div></section>
 <section class="section-sm kosten-inhoud"><div class="wrap narrow prose">
+  {kosten_r5_kop(k)}
   <h2>Rekenvoorbeelden</h2>
   {balken}
   <div class="tablewrap"><table>
@@ -1323,6 +1341,7 @@ def build_kosten():
   <h2>Zo bespaar je zonder in te leveren op kwaliteit</h2>
   <ul class="checklist">{tips}</ul>
 
+  {kosten_r5_valkuilen(k)}
   <h2>Heb je al een offerte?</h2>
   <p>Leg hem naast deze richtprijzen, of <a href="/offerte-vergelijken/">laat je offerte checken</a>. Meer prijzen vind je op <a href="/prijzen/">wat kost een schilder</a> en op de pagina over <a href="/schilderwerk/{d['slug']}/">{d['naam'].lower()}</a>.</p>
   {deelblok(k)}
@@ -1336,11 +1355,12 @@ def build_kosten():
 
     # overzicht
     cr, cr_ld = crumbs([("Home", "/"), ("Kosten", None)])
+    ov_faq_html, ov_faq_ld = faq_blok(KOSTEN_OVERZICHT["faq"], "Veelgestelde vragen over de kosten van schilderwerk")  # content-ronde 5
     kaarten = "".join(f"""<div class="card">
     <h2 style="font-size:1.15rem"><a href="/kosten/{k['slug']}/">Wat kost {k['klus']}?</a></h2>
     <p><strong>{k['kort']}</strong></p>
     <p>{k['description'].split('. ')[1] if k['description'].count('. ') > 1 else ''}</p>
-    <p><a href="/kosten/{k['slug']}/">Bekijk de prijzen →</a></p>
+    <p><a href="/kosten/{k['slug']}/" tabindex="-1" aria-hidden="true">Bekijk de prijzen →</a></p>
   </div>""" for k in KOSTEN)
     tabel = "".join(f'<tr><td><a href="/kosten/{k["slug"]}/">{(k.get("kruimel") or k["klus"].removeprefix("een ")).capitalize()}</a></td>'
                     f'<td class="num">{k["kort"]}</td></tr>' for k in KOSTEN)
@@ -1349,6 +1369,7 @@ def build_kosten():
   <div class="narrow prose">
     <h1>Wat kost schilderwerk per klus?</h1>
     <p class="lead">Richtprijzen voor de klussen waar het meest naar wordt gevraagd, met rekenvoorbeelden, prijs per regio en wat er vaak bij komt. De prijzen zijn inclusief materiaal en btw, behalve het uurtarief.</p>
+    {KOSTEN_OVERZICHT["kop"]}
     {teaser_blok("margin:6px 0 10px")}
     <h2>Alle prijzen op een rij</h2>
     <div class="tablewrap"><table>
@@ -1358,13 +1379,15 @@ def build_kosten():
   </div>
   <div class="grid g3" style="margin-top:28px">{kaarten}</div>
   <div class="narrow prose" style="margin-top:32px">
+    {KOSTEN_OVERZICHT["verdieping"]}
     <p>Zoek je het uurtarief of prijzen per m²? Kijk op <a href="/prijzen/">wat kost een schilder in {TODAY[:4]}</a>. Heb je al een offerte, <a href="/offerte-vergelijken/">laat hem dan checken</a>.</p>
   </div>
 </div></section>
+{ov_faq_html}
 {cta_blok()}"""
     write("/kosten/", page(title("Kosten schilderwerk per klus: overzicht 2026"),
-          "Overzicht van alle kostenpagina's: van keuken spuiten en kozijnen tot radiatoren, boeidelen en gevel. Per klus rekenvoorbeelden, extra kosten en prijs per regio.",
-          "/kosten/", body, [cr_ld]), prio=0.8)
+          "Alle kostenpagina's op een rij: van keuken spuiten en kozijnen tot radiatoren, boeidelen en gevel. Per klus rekenvoorbeelden, extra kosten en regioprijzen.",
+          "/kosten/", body, [cr_ld, ov_faq_ld]), prio=0.8)
 
 
 
@@ -1717,7 +1740,7 @@ def build_prijzen():
 {cta_blok("Benieuwd wat het bij jou kost?", "Richtprijzen zijn een startpunt. Een echte prijs krijg je pas als een schilder naar jouw situatie kijkt. Vraag gratis drie offertes aan.")}"""
     write("/prijzen/", page(
         title("Wat kost een schilder in 2026? Prijslijst schilderwerk"),
-        "Prijslijst schilderwerk 2026: wat kost een schilder voor binnen, buiten, spuitwerk, behang en houtrot? Met rekenhulp, btw-regels en tips om offertes te vergelijken.",
+        "Prijslijst schilderwerk 2026: wat kost een schilder voor binnen, buiten, spuitwerk, behang en houtrot? Met rekenhulp, btw-regels en tips voor offertes.",
         "/prijzen/", body, [cr_ld, faq_ld]), prio=0.9, freq="weekly")
 
 
@@ -2007,7 +2030,7 @@ def build_static_pages():
     body = f"""<section class="section"><div class="wrap narrow center">
   <div class="big" style="width:64px;height:64px;border-radius:50%;background:#e7f7ef;color:var(--green);display:grid;place-items:center;font-size:1.7rem;margin:0 auto 20px">{icon('check',28)}</div>
   <h1>Bedankt voor je aanvraag</h1>
-  <p class="lead">We zoeken nu schilders in jouw regio die bij deze klus passen. Je hoort doorgaans binnen één werkdag iets.</p>
+  <p class="lead">We zoeken nu schilders in jouw regio die bij deze klus passen. Je krijgt direct een bevestiging per mail. De schilders nemen daarna zelf contact met je op.</p>
   <p><a class="btn btn-primary" href="/prijzen/">Bekijk alvast wat schilderwerk kost</a></p>
 </div></section>"""
     write("/bedankt/", page("Bedankt voor je aanvraag | Topschilder",
@@ -2061,6 +2084,7 @@ def build_assets():
     for naam, data in MERK.items():
         with open(os.path.join(merkmap, naam), "w", encoding="utf-8") as f:
             f.write(data)
+    shutil.copytree(os.path.join(ROOT, "merk"), merkmap, dirs_exist_ok=True)  # og-image en iconen (merk_maken.py)
 
 
 def build_sitemap():
@@ -2157,11 +2181,14 @@ def main():
     build_inspiratie(write, OUT)
     build_onderhoudscheck(write)
     build_schilderweer(write, OUT)
+    build_features(write, OUT)  # features-sessie
     build_tools_pagina(write, beschikbare_tools(globals()))
     build_actie_paginas(write)  # social-ads-sessie
     build_static_pages()
     build_assets()
+    conversie.schrijf_js(OUT)  # conversie-sessie
     build_sitemap()
+    seo_extra.na_build(OUT, URLS)  # features-sessie: image-sitemap, JS kleiner
 
     n = sum(len(files) for _, _, files in os.walk(OUT) if True)
     pages = len(URLS)

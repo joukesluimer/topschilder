@@ -380,3 +380,71 @@ GIDSEN = {
         "bronnen": ["consumentenbond"],
     },
 }
+
+
+# --- inspiratie-ronde 2: verdieping van de dunste gidsen (jaren70, nieuwbouw, polder) ---
+# Extra kleuralinea's en extra FAQ's. Alleen algemeen kleuradvies, geen nieuwe historische
+# claims. Links naar de nieuwe kleuradviespagina's (kleuradvies.py).
+GIDSEN["jaren70"]["kleuren"] += [
+    "Veel jaren-70-woningen hebben brede, liggende kozijnen en houten delen tussen de ramen, zoals "
+    "borstweringen en betimmering onder de ramen. Geef je die allemaal dezelfde kleur als de kozijnen, dan "
+    "wordt de gevel één rustig vlak. Geef je ze een eigen kleur, dan zie je juist de horizontale lijnen goed. "
+    "Kies dan een tint uit dezelfde familie, bijvoorbeeld kwartsgrijs (RAL 7039) bij antraciet.",
+    "Bruine en oranjebruine baksteen, veel gebruikt in deze periode, gaat goed samen met warme tinten: crèmewit, "
+    "licht ivoor (RAL 1015), olijfgroen of een warm grijs. Koel helder wit kan er hard tegen afsteken. "
+    "Op <a href=\"/kleuradvies/kozijnen/\">kleur kozijnen kiezen</a> zie je voorbeelden per steenkleur.",
+    "In een rij woningen kijk je ook naar de buren. Een andere kleur mag meestal, maar een rij met dezelfde "
+    "kleuren oogt rustig. Wil je een eigen accent zonder uit de toon te vallen? Gebruik dat dan op de voordeur; "
+    "zie <a href=\"/kleuradvies/voordeur/\">kleur voordeur kiezen</a>.",
+]
+GIDSEN["jaren70"]["faq"] = [
+    ("Welke kleur kozijnen past bij een jaren-70-woning met bruine steen?",
+     "Warme lichte tinten zoals crèmewit of licht ivoor geven contrast en maken de gevel lichter. Antraciet of "
+     "zwartgrijs maakt het geheel strak en modern. Koel helder wit steekt vaak hard af tegen bruine steen."),
+    ("Kan ik de betimmering onder de ramen een andere kleur geven?",
+     "Ja. Dezelfde kleur als de kozijnen geeft rust; een tint uit dezelfde kleurfamilie laat de liggende lijnen "
+     "van de gevel juist zien. Laat bij gebeitst hout eerst kijken wat er nu op zit."),
+]
+
+GIDSEN["nieuwbouw"]["kleuren"] += [
+    "Bij nieuwbouw zijn de kozijnen vaak van kunststof of aluminium, en worden ze niet geschilderd zolang ze "
+    "goed zijn. Wat wél vaak houtwerk is: de voordeur, boeidelen, dakkapellen en soms een houten gevel- of "
+    "dakrand. Daar kies je een kleur die aansluit bij de kozijnen die blijven, of een bewust accent.",
+    "Moderne gevels hebben vaak meerdere materialen: baksteen, stucwerk, hout en metaal. Houd dan het aantal "
+    "kleuren klein. Laat de materialen het werk doen, en kies voor het geschilderde werk één kleur die al in de "
+    "gevel zit, zoals het grijs van de kozijnen of de toon van de steen.",
+    "Binnen begin je bij nieuwbouw vaak met witte muren. Wil je kleur, kijk dan eerst naar de lichtval: een "
+    "woonkamer met grote ramen op het zuiden kan koele tinten aan, een kamer op het noorden vraagt warmere. "
+    "Lees meer op <a href=\"/kleuradvies/lichtval/\">kleur en lichtval</a> en "
+    "<a href=\"/kleuradvies/woonkamer/\">kleur woonkamer kiezen</a>. Nieuw stucwerk moet eerst goed droog zijn "
+    "en een voorstrijklaag krijgen; zie <a href=\"/kennisbank/nieuw-stucwerk-schilderen/\">nieuw stucwerk schilderen</a>.",
+]
+GIDSEN["nieuwbouw"]["faq"] = [
+    ("Mag ik kunststof kozijnen van een nieuwbouwwoning schilderen?",
+     "Dat kan met een speciale verf, maar kijk eerst in je opleverdossier of de garantie van de fabrikant iets "
+     "zegt over overschilderen. Lees ook wat het kost op <a href=\"/kosten/kunststof-kozijnen-schilderen/\">kunststof "
+     "kozijnen schilderen</a>."),
+    ("Welke kleur voordeur past bij een moderne woning?",
+     "Antraciet en zwart passen bij bijna elke moderne gevel. Wil je een accent, dan geeft een warme kleur zoals "
+     "maisgeel of een houtkleur juist warmte bij grijze of donkere steen."),
+]
+
+GIDSEN["polder"]["kleuren"] += [
+    "In het open polderlandschap zie je een huis of boerderij van ver. Kleuren die passen bij het land, zoals "
+    "gebroken wit, zacht groen, grijsblauw en de rode of grijze kleur van het dak, vallen dan minder hard op dan "
+    "felle tinten. Dat is geen regel, maar wel de reden dat die kleuren hier zo vaak terugkomen.",
+    "Grote houten vlakken, zoals deuren van een schuur of betimmering, vangen veel zon en wind. Lichte en "
+    "middentinten blijven daar vaak langer mooi dan heel donkere kleuren. Kies je toch donker, dan is goede "
+    "verf en tijdig onderhoud extra belangrijk. Lees meer over donkergroen op "
+    "<a href=\"/kleuradvies/grachtengroen/\">grachtengroen en monumentengroen</a>, en over kleuren combineren op "
+    "<a href=\"/kleuradvies/kleurcombinaties/\">kleurcombinaties</a>.",
+]
+GIDSEN["polder"]["faq"] = [
+    ("Welke kleuren passen bij een boerderij in de polder?",
+     "Gebroken wit, zacht groen, grijsblauw en donkergroen passen goed bij het open, groene land en bij een rood "
+     "of grijs pannendak. Felle kleuren vallen in het open landschap sterk op."),
+    ("Zijn donkere kleuren een probleem op een schuur of boerderij?",
+     "Op grote houten vlakken in de volle zon worden donkere kleuren warm, waardoor het hout meer werkt. Met "
+     "goede verf gaat het prima, maar reken op iets vaker onderhoud. Lichte tinten zijn de veiligere keuze."),
+]
+# --- einde inspiratie-ronde 2 ---
